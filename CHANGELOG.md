@@ -14,6 +14,12 @@
 - `unraid/README.md`: Raw-URL auf Repo `crowdsec-threat-map-docker` korrigiert, Extra-Params-Doku angepasst
 - `README.md` und `docker/docker-compose.yml`: Docker-GID-Beispiele und Kommentare an Unraid-typische Werte angeglichen
 
+### Dashboard (responsive)
+- Schmaleres Desktop-Sidebar-Layout per `--sidebar-w` (Breakpoints unter 1200 px / 920 px), mehr Platz für die Karte
+- Stärkere Basis-Skalierung der Karte bei geringer `#map-wrap`-Breite; Auto-Fit mit weniger Rand + Min-Zoom auch bei schmalem Desktop-Fenster
+- `onResize`: Zoom/Canvas-Status nach Auto-Fit an `fitTransform` angeglichen (Linien/Canvas passen zur Karte)
+- Länder-Labels: etwas größere Mindest-Schrift bei schmaler Karte
+
 ---
 
 ## v1.4.1 — 22.04.2026
