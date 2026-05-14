@@ -7,6 +7,7 @@
     CrowdSec Threat Map ist mein erstes öffentliches Projekt.
   </Profile>
   <WebPage>https://github.com/kabelsalatundklartext/crowdsec-threat-map-docker</WebPage>
+  <Forum>https://forums.unraid.net/topic/198800-support-crowdsec-threat-map-docker-unraid/</Forum>
   <DonateText>Wenn dir das Projekt gefällt, gib gerne einen Stern auf GitHub!</DonateText>
   <DonateLink>https://github.com/kabelsalatundklartext/crowdsec-threat-map-docker</DonateLink>
 </Maintainer>
