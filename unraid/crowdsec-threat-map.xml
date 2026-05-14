@@ -9,7 +9,7 @@
 
   <Name>CrowdSec-Threat-Map</Name>
   <Repository>ghcr.io/kabelsalatundklartext/crowdsec-threat-map-docker:latest</Repository>
-  <Registry>https://github.com/kabelsalatundklartext/crowdsec-threat-map-docker/pkgs/container/crowdsec-threat-map</Registry>
+  <Registry>https://ghcr.io</Registry>
   <Network>bridge</Network>
   <MyIP/>
   <Shell>sh</Shell>
@@ -29,6 +29,9 @@
     &#xD;&#xA;
     Voraussetzung: CrowdSec muss als Docker-Container auf Unraid laufen.&#xD;&#xA;
     &#xD;&#xA;
+    Docker-Socket: Standard-Extra-Parameter nutzt --group-add 281 (typisch auf Unraid).&#xD;&#xA;
+    GID immer prüfen: getent group docker | cut -d: -f3 — bei Abweichung in den Extra Parameters anpassen.&#xD;&#xA;
+    &#xD;&#xA;
     Tipp — CrowdSec Datenpfad herausfinden:&#xD;&#xA;
     docker inspect crowdsec | grep -A5 "Mounts"
   </Overview>
@@ -36,7 +39,7 @@
   <WebUI>http://[IP]:[PORT:8080]/</WebUI>
   <TemplateURL>https://raw.githubusercontent.com/kabelsalatundklartext/crowdsec-threat-map-docker/main/unraid/crowdsec-threat-map.xml</TemplateURL>
   <Icon>https://raw.githubusercontent.com/kabelsalatundklartext/crowdsec-threat-map-docker/main/unraid/icon.png</Icon>
-  <ExtraParams>--group-add 999</ExtraParams>
+  <ExtraParams>--group-add 281</ExtraParams>
   <PostArgs/>
   <CPUset/>
   <DateInstalled/>
@@ -84,7 +87,7 @@
     Target="/var/run/docker.sock"
     Default="/var/run/docker.sock"
     Mode="ro"
-    Description="Docker Socket — wird für IP-Unban und dynamische Whitelist (CrowdSec-Neustart) benötigt."
+    Description="Docker Socket — wird für IP-Unban und dynamische Whitelist (CrowdSec-Neustart) benötigt. Zusammen mit Extra Parameters --group-add &lt;GID&gt; (GID der Host-Gruppe docker; auf Unraid oft 281, mit getent group docker prüfen)."
     Type="Path"
     Display="always"
     Required="false"

@@ -4,6 +4,12 @@
 
 ## v1.4.1 — 22.04.2026
 
+### Unraid / Community Apps (14.05.2026)
+- Docker-Template: `Registry` auf `https://ghcr.io`, Standard `--group-add 281` statt 999, Hinweis zur GID-Prüfung in `Overview` und Docker-Socket-Beschreibung
+- Doppelte `unraid/ca_profile.xml` entfernt (Profil nur noch `ca_profile.xml` im Repo-Root)
+- `unraid/README.md`: Raw-URL auf Repo `crowdsec-threat-map-docker` korrigiert, Extra-Params-Doku angepasst
+- `README.md` und `docker/docker-compose.yml`: Docker-GID-Beispiele und Kommentare an Unraid-typische Werte angeglichen
+
 ### 〰️ Linien-Toggle
 - Neuer **LINIE**-Button in Desktop-Sidebar und Mobile-Tab-Leiste
 - Blendet alle Angriffspfeile UND die drei Radar-Ringe um den Serverstandort ein/aus

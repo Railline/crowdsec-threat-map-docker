@@ -91,7 +91,7 @@ docker run -d \
   -v /path/to/crowdsec/data:/crowdsec/data:ro \
   -v /path/to/crowdsec/postoverflows:/crowdsec/postoverflows \
   -v /var/run/docker.sock:/var/run/docker.sock:ro \
-  --group-add 999 \
+  --group-add 281 \
   -e SERVER_LAT=52.5200 \
   -e SERVER_LON=13.4050 \
   -e SERVER_NAME=Berlin \
@@ -142,7 +142,7 @@ The built-in background thread checks your current public IP every 15 minutes an
 - `WHITELIST_ENABLED=true` (default)
 - Volume `/crowdsec/postoverflows` mounted
 - `/var/run/docker.sock` mounted
-- Correct Docker GID set (`--group-add 999` or `group_add` in Unraid)
+- Correct Docker GID set (`--group-add <gid>` — on Unraid often `281`; run `getent group docker | cut -d: -f3` on the host)
 
 **How it works:**
 1. Exporter detects your current public IP
@@ -328,7 +328,7 @@ docker run -d \
   -v /pfad/zu/crowdsec/data:/crowdsec/data:ro \
   -v /pfad/zu/crowdsec/postoverflows:/crowdsec/postoverflows \
   -v /var/run/docker.sock:/var/run/docker.sock:ro \
-  --group-add 999 \
+  --group-add 281 \
   -e SERVER_LAT=52.5200 \
   -e SERVER_LON=13.4050 \
   -e SERVER_NAME=Berlin \
@@ -378,7 +378,7 @@ Heimanschlüsse bekommen meist täglich eine neue IP. Ohne Whitelist kann CrowdS
 - `WHITELIST_ENABLED=true` (Standard)
 - Volume `/crowdsec/postoverflows` eingebunden
 - `/var/run/docker.sock` eingebunden
-- Docker-GID korrekt gesetzt (`--group-add 999` bzw. in Unraid über `group_add`)
+- Docker-GID korrekt gesetzt (`--group-add <gid>` — auf Unraid oft `281`; auf dem Host mit `getent group docker | cut -d: -f3` prüfen)
 
 **Wie es funktioniert:**
 1. Exporter ermittelt eure aktuelle öffentliche IP

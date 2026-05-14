@@ -7,7 +7,7 @@ Falls das Template noch nicht in CA gelistet ist:
 1. Unraid → **Apps** → oben rechts **"..." → "Add"**
 2. URL eintragen:
    ```
-   https://raw.githubusercontent.com/kabelsalatundklartext/crowdsec-threat-map/main/unraid/crowdsec-threat-map.xml
+   https://raw.githubusercontent.com/kabelsalatundklartext/crowdsec-threat-map-docker/main/unraid/crowdsec-threat-map.xml
    ```
 3. Speichern → in CA nach "CrowdSec" suchen
 
@@ -42,4 +42,4 @@ Alternativ: im [Unraid Forum](https://forums.unraid.net/forum/35-docker-containe
 | Optionale Variablen | `WHITELIST_ENABLED`, `WHITELIST_INTERVAL`, `CACHE_TTL`, `DAYS_BACK`, `CROWDSEC_RESTART_WAIT` |
 | Ports | `8080` (Dashboard) |
 | Volumes | `/crowdsec/data` (ro), `/crowdsec/postoverflows` (rw), `/var/run/docker.sock` (ro) |
-| Extra Params | `--group-add 999` (Docker-Socket-Zugriff) |
+| Extra Params | `--group-add 281` (typische Docker-GID auf Unraid; mit `getent group docker` prüfen) |

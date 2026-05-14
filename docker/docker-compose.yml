@@ -45,6 +45,7 @@ services:
       - CROWDSEC_RESTART_WAIT=15
 
     # Docker-Gruppe für Socket-Zugriff (Unban + Whitelist-Restart)
-    # GID anpassen falls nötig: getent group docker | cut -d: -f3
+    # GID immer auf dem Host prüfen: getent group docker | cut -d: -f3
+    # 281 ist häufig auf Unraid; auf anderen Systemen oft anders.
     group_add:
-      - "999"
+      - "281"
