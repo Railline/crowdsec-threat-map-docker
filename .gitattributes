@@ -1,0 +1,2 @@
+# Shell scripts must use LF so Docker/Linux shebang works (Windows CRLF breaks ENTRYPOINT)
+docker/entrypoint.sh text eol=lf
