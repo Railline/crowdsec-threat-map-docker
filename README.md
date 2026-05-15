@@ -2,7 +2,7 @@
 
 **Real-time attack map — directly from your local CrowdSec database**
 
-![Version](https://img.shields.io/badge/version-v1.4.2-00ffe0?style=flat-square)
+![Version](https://img.shields.io/badge/version-v1.4.3-00ffe0?style=flat-square)
 ![License](https://img.shields.io/badge/license-GPL--3.0-00ff88?style=flat-square)
 ![Platform](https://img.shields.io/badge/platform-Docker%20%7C%20Unraid-orange?style=flat-square)
 ![Python](https://img.shields.io/badge/python-3.12-blue?style=flat-square)

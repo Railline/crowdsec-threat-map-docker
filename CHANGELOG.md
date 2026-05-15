@@ -2,6 +2,13 @@
 
 ---
 
+## v1.4.3 — 14.05.2026
+
+### Dashboard
+- **Ländernamen beim Zoomen:** `font-size` nutzte `Math.max(7.5*ik, 5)` — ab höherem Zoom gewann die Konstante (ohne `1/k`), die Schrift skalierte mit der Karte und wirkte viel zu groß. Jetzt durchgehend `(W<720 ? 6.8 : 7.5) * ik` (User-Einheiten kompensieren die `mapG`-Zoom-Transform).
+
+---
+
 ## v1.4.2 — 14.05.2026
 
 ### Image / Metadaten

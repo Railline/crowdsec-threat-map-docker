@@ -375,7 +375,7 @@
 <!-- Map overlay title (always visible, centered on map) -->
 <div id="map-title-overlay">
   <span id="h-title">CROWD<span>SEC</span> // THREAT MAP</span>
-  <span id="map-version-badge">v1.4.2</span>
+  <span id="map-version-badge">v1.4.3</span>
 </div>
 <!-- hidden lang refs removed - sidebar has the real IDs -->
 
@@ -577,7 +577,7 @@ const SERVER_NAME_MAP = 'MEIN-SERVER';
 // Ab hier nichts mehr ändern
 // ============================================================
 
-const APP_VERSION  = 'v1.4.2';
+const APP_VERSION  = 'v1.4.3';
 const REFRESH_MS   = 30000;  // Aktualisierung alle 30 Sekunden
 const localUnbanned = new Set(); // lokal entsperrte IPs
 const ARC_FPS      = 10;     // Frames/Sek für Animation
@@ -2025,7 +2025,8 @@ function drawCountryLabels(){
       .attr('text-anchor','middle')
       .attr('fill',accent)
       .attr('opacity','0.5')
-      .attr('font-size',`${Math.max(7.5*ik,W<720?6.2:5)}px`)
+      /* mapG is scaled by zoom k — font must always include ik=1/k or text grows with zoom (Math.max(..., const) was wrong). */
+      .attr('font-size',`${(W<720?6.8:7.5)*ik}px`)
       .attr('font-family','Share Tech Mono,monospace')
       .attr('pointer-events','none')
       .text(label);
