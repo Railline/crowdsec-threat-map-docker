@@ -124,6 +124,17 @@
     Required="true"
     Mask="false">MeinServer</Config>
 
+  <Config
+    Name="Sprache (LANGUAGE)"
+    Target="LANGUAGE"
+    Default="de"
+    Mode=""
+    Description="Oberflächensprache des Dashboards: de (Deutsch) oder en (Englisch)."
+    Type="Variable"
+    Display="always"
+    Required="false"
+    Mask="false">de</Config>
+
   <!-- ═══════ CROWDSEC-CONTAINER ═══════ -->
   <Config
     Name="CrowdSec Container-Name"
