@@ -2,14 +2,14 @@
 <Container version="2">
 
   <!-- ═══════════════════════════════════════════════════
-       CrowdSec Threat Map — Unraid CA template (DE/EN UI strings)
-       Maintainer: kabelsalatundklartext
+       CrowdSec Threat Map — Unraid CA Template
+       Autor: kabelsalatundklartext
        https://github.com/kabelsalatundklartext/crowdsec-threat-map-docker
        ═══════════════════════════════════════════════════ -->
 
   <Name>CrowdSec-Threat-Map</Name>
   <Repository>ghcr.io/kabelsalatundklartext/crowdsec-threat-map-docker:latest</Repository>
-  <Registry>https://ghcr.io</Registry>
+  <Registry>https://github.com/kabelsalatundklartext/crowdsec-threat-map-docker/pkgs/container/crowdsec-threat-map</Registry>
   <Network>bridge</Network>
   <MyIP/>
   <Shell>sh</Shell>
@@ -17,7 +17,6 @@
   <Support>https://github.com/kabelsalatundklartext/crowdsec-threat-map-docker/issues</Support>
   <Project>https://github.com/kabelsalatundklartext/crowdsec-threat-map-docker</Project>
   <Overview>
-    DE — Deutsch&#xD;&#xA;
     Echtzeit-Angriffskarte direkt aus eurer lokalen CrowdSec-Datenbank.&#xD;&#xA;
     &#xD;&#xA;
     Features:&#xD;&#xA;
@@ -30,201 +29,201 @@
     &#xD;&#xA;
     Voraussetzung: CrowdSec muss als Docker-Container auf Unraid laufen.&#xD;&#xA;
     &#xD;&#xA;
-    Docker-Socket: Standard-Extra-Parameter nutzt --group-add 281 (typisch auf Unraid).&#xD;&#xA;
-    GID immer prüfen: getent group docker | cut -d: -f3 — bei Abweichung in den Extra Parameters anpassen.&#xD;&#xA;
-    &#xD;&#xA;
-    Tipp — CrowdSec-Datenpfad herausfinden:&#xD;&#xA;
-    docker inspect crowdsec | grep -A5 "Mounts"&#xD;&#xA;
-    &#xD;&#xA;
-    EN — English&#xD;&#xA;
-    Real-time attack map from your local CrowdSec database.&#xD;&#xA;
-    &#xD;&#xA;
-    Features:&#xD;&#xA;
-    - Interactive world map with animated attack arcs (D3.js)&#xD;&#xA;
-    - Live feed with search, filters, and pagination&#xD;&#xA;
-    - Ban status and IP unban directly from the dashboard&#xD;&#xA;
-    - Dynamic IP whitelist (avoids self-ban when your public IP changes)&#xD;&#xA;
-    - Four color themes, sound alerts, CSV export&#xD;&#xA;
-    - Fully responsive — desktop and mobile&#xD;&#xA;
-    &#xD;&#xA;
-    Prerequisite: CrowdSec must run as a Docker container on Unraid.&#xD;&#xA;
-    &#xD;&#xA;
-    Docker socket: default Extra Parameters use --group-add 281 (typical on Unraid).&#xD;&#xA;
-    Always verify the GID: getent group docker | cut -d: -f3 — adjust Extra Parameters if yours differs.&#xD;&#xA;
-    &#xD;&#xA;
-    Tip — find your CrowdSec host data path:&#xD;&#xA;
+    Tipp — CrowdSec Datenpfad herausfinden:&#xD;&#xA;
     docker inspect crowdsec | grep -A5 "Mounts"
   </Overview>
   <Category>Tools: Network:Other</Category>
   <WebUI>http://[IP]:[PORT:8080]/</WebUI>
   <TemplateURL>https://raw.githubusercontent.com/kabelsalatundklartext/crowdsec-threat-map-docker/main/unraid/crowdsec-threat-map.xml</TemplateURL>
   <Icon>https://raw.githubusercontent.com/kabelsalatundklartext/crowdsec-threat-map-docker/main/unraid/icon.png</Icon>
-  <ExtraParams>--group-add 281</ExtraParams>
+  <ExtraParams>--group-add 999</ExtraParams>
   <PostArgs/>
   <CPUset/>
   <DateInstalled/>
-  <DonateText>EN: Like the project? Star us on GitHub! — DE: Gefällt dir das Projekt? Stern auf GitHub!</DonateText>
+  <DonateText>Gefällt dir das Projekt? Gib einen Stern auf GitHub!</DonateText>
   <DonateLink>https://github.com/kabelsalatundklartext/crowdsec-threat-map-docker</DonateLink>
-  <Requires>CrowdSec Docker container (required) — CrowdSec-Docker-Container (Pflicht)</Requires>
+  <Requires>CrowdSec Docker Container</Requires>
 
-  <!-- PORT / Port -->
+  <!-- ═══════ PORT ═══════ -->
   <Config
-    Name="Dashboard port / Dashboard-Port"
+    Name="Dashboard Port"
     Target="8080"
     Default=""
     Mode="tcp"
-    Description="DE: Port für das Web-Dashboard, frei wählbar (z. B. 8080, 5757). EN: Web dashboard host port, pick any free port (e.g. 8080, 5757)."
+    Description="Port für das Web-Dashboard — frei wählbar, z.B. 8080, 5757, etc."
     Type="Port"
     Display="always"
     Required="true"
     Mask="false"></Config>
 
-  <!-- VOLUMES / Volumes -->
+  <!-- ═══════ VOLUMES ═══════ -->
   <Config
-    Name="CrowdSec data path / CrowdSec-Datenpfad"
+    Name="CrowdSec Datenpfad"
     Target="/crowdsec/data"
     Default=""
     Mode="ro"
-    Description="DE: Host-Pfad zum CrowdSec-data-Ordner (crowdsec.db, optional GeoLite2-City.mmdb). Tipp: docker inspect crowdsec | grep -A5 Mounts. EN: Host path to CrowdSec data (crowdsec.db, optional GeoLite2-City.mmdb). Tip: docker inspect crowdsec | grep -A5 Mounts."
+    Description="Pfad zum CrowdSec data-Verzeichnis (enthält crowdsec.db und optional GeoLite2-City.mmdb). Tipp: docker inspect crowdsec | grep -A5 Mounts"
     Type="Path"
     Display="always"
     Required="true"
     Mask="false"></Config>
 
   <Config
-    Name="Postoverflows path / Postoverflows-Pfad"
+    Name="CrowdSec Postoverflows-Pfad"
     Target="/crowdsec/postoverflows"
     Default=""
     Mode="rw"
-    Description="DE: Host-Pfad zu postoverflows; für dynamische IP-Whitelist (WHITELIST_ENABLED=true). Leer lassen, wenn Whitelist aus. EN: Host path to postoverflows; needed for dynamic IP whitelist (WHITELIST_ENABLED=true). Leave empty if whitelist is off."
+    Description="Pfad zum postoverflows-Verzeichnis. Wird für die dynamische IP-Whitelist benötigt (WHITELIST_ENABLED=true). Kann leer gelassen werden wenn Whitelist deaktiviert."
     Type="Path"
     Display="always"
     Required="false"
     Mask="false"></Config>
 
   <Config
-    Name="Docker socket / Docker-Socket"
+    Name="Docker Socket"
     Target="/var/run/docker.sock"
     Default="/var/run/docker.sock"
     Mode="ro"
-    Description="DE: Für IP-Unban und dynamische Whitelist (CrowdSec-Neustart). Zusammen mit Extra Parameters --group-add &lt;GID&gt; (Host-Gruppe docker; auf Unraid oft 281, mit getent group docker prüfen). EN: For IP unban and dynamic whitelist (CrowdSec restart). Use Extra Parameters --group-add &lt;GID&gt; (host &apos;docker&apos; group; often 281 on Unraid — verify with getent group docker)."
+    Description="Docker Socket — wird für IP-Unban und dynamische Whitelist (CrowdSec-Neustart) benötigt."
     Type="Path"
     Display="always"
     Required="false"
     Mask="false">/var/run/docker.sock</Config>
 
-  <!-- Required variables / Pflicht-Variablen -->
+  <!-- ═══════ PFLICHT-VARIABLEN ═══════ -->
   <Config
-    Name="Server latitude (LAT) / Breitengrad (LAT)"
+    Name="Server Breitengrad (LAT)"
     Target="SERVER_LAT"
     Default="0.0"
     Mode=""
-    Description="DE: Breitengrad des Servers (Zielpunkt auf der Karte). Tipp: Google Maps → Rechtsklick → „Was ist hier?“. EN: Server latitude (map target). Tip: Google Maps → right-click → What&apos;s here?"
+    Description="Breitengrad eures Servers — erscheint als Zielpunkt auf der Karte. Tipp: Rechtsklick auf Google Maps → Was ist hier?"
     Type="Variable"
     Display="always"
     Required="true"
     Mask="false">0.0</Config>
 
   <Config
-    Name="Server longitude (LON) / Längengrad (LON)"
+    Name="Server Längengrad (LON)"
     Target="SERVER_LON"
     Default="0.0"
     Mode=""
-    Description="DE: Längengrad des Servers (Zielpunkt auf der Karte). Tipp: Google Maps → Rechtsklick → „Was ist hier?“. EN: Server longitude (map target). Tip: Google Maps → right-click → What&apos;s here?"
+    Description="Längengrad eures Servers — erscheint als Zielpunkt auf der Karte. Tipp: Rechtsklick auf Google Maps → Was ist hier?"
     Type="Variable"
     Display="always"
     Required="true"
     Mask="false">0.0</Config>
 
   <Config
-    Name="Server name / Server-Name"
+    Name="Server Name"
     Target="SERVER_NAME"
     Default="MeinServer"
     Mode=""
-    Description="DE: Anzeigename im Dashboard (z. B. Hamburg, Homelab). EN: Display name in the dashboard (e.g. London, Homelab)."
+    Description="Anzeigename eures Servers im Dashboard (z.B. Hamburg, Berlin, Homelab)."
     Type="Variable"
     Display="always"
     Required="true"
     Mask="false">MeinServer</Config>
 
-  <!-- CrowdSec container / CrowdSec-Container -->
+  <!-- ═══════ CROWDSEC-CONTAINER ═══════ -->
   <Config
-    Name="CrowdSec container name / Container-Name"
+    Name="CrowdSec Container-Name"
     Target="CROWDSEC_CONTAINER"
     Default="crowdsec"
     Mode=""
-    Description="DE: Name des CrowdSec-Containers. Prüfen: docker ps | grep crowdsec. EN: CrowdSec container name. Check: docker ps | grep crowdsec."
+    Description="Name des CrowdSec Docker-Containers. Prüfen mit: docker ps | grep crowdsec"
     Type="Variable"
     Display="always"
     Required="true"
     Mask="false">crowdsec</Config>
 
-  <!-- Whitelist -->
+  <!-- ═══════ WHITELIST ═══════ -->
   <Config
-    Name="Dynamic whitelist / Dynamische Whitelist"
+    Name="Dynamische Whitelist aktivieren"
     Target="WHITELIST_ENABLED"
     Default="true"
     Mode=""
-    Description="DE: Verhindert Selbst-Ban bei wechselnder öffentlicher IP; eigene IP ca. alle 15 Minuten in CrowdSec whitelisten. EN: Avoids self-ban when your public IP changes; whitelists your IP in CrowdSec about every 15 minutes."
+    Description="Verhindert Selbst-Ban bei wechselnder IP (typisch bei deutschen Heimanschlüssen). Eigene IP wird automatisch alle 15 Minuten in CrowdSec gewhitelistet."
     Type="Variable"
     Display="always"
     Required="false"
     Mask="false">true</Config>
 
   <Config
-    Name="Whitelist file path / Whitelist-Dateipfad"
+    Name="Whitelist Datei-Pfad"
     Target="WHITELIST_FILE"
     Default="/crowdsec/postoverflows/s01-whitelist/my-whitelist.yaml"
     Mode=""
-    Description="DE: Pfad zur Whitelist-YAML im Container. Nur ändern, wenn ihr einen anderen postoverflows-Pfad nutzt. EN: Path to whitelist YAML inside the container. Change only if you use a different postoverflows layout."
+    Description="Pfad zur Whitelist-YAML innerhalb des Containers. Nur ändern wenn ihr einen anderen Postoverflows-Pfad nutzt."
     Type="Variable"
     Display="advanced"
     Required="false"
     Mask="false">/crowdsec/postoverflows/s01-whitelist/my-whitelist.yaml</Config>
 
   <Config
-    Name="Whitelist interval (seconds) / Prüfintervall (Sek.)"
+    Name="Whitelist Prüfintervall (Sekunden)"
     Target="WHITELIST_INTERVAL"
     Default="900"
     Mode=""
-    Description="DE: Wie oft die eigene IP geprüft wird. Standard: 900 s (15 Min). EN: How often your public IP is checked. Default: 900 s (15 min)."
+    Description="Wie oft die eigene IP geprüft und ggf. gewhitelistet wird. Standard: 900 Sekunden (15 Minuten)."
     Type="Variable"
     Display="advanced"
     Required="false"
     Mask="false">900</Config>
 
-  <!-- Advanced / Erweitert -->
+  <!-- ═══════ ERWEITERTE EINSTELLUNGEN ═══════ -->
   <Config
-    Name="Cache TTL (seconds) / Cache TTL (Sek.)"
+    Name="Cache TTL (Sekunden)"
     Target="CACHE_TTL"
     Default="60"
     Mode=""
-    Description="DE: Sekunden, die Metrik-Daten gecacht werden, bevor die DB erneut gelesen wird. Standard: 60. EN: Seconds to cache metrics before reloading from the DB. Default: 60."
+    Description="Wie lange die Metrik-Daten gecacht werden bevor sie neu aus der DB geladen werden. Standard: 60 Sekunden."
     Type="Variable"
     Display="advanced"
     Required="false"
     Mask="false">60</Config>
 
   <Config
-    Name="Days back (DAYS_BACK) / Tage zurück"
+    Name="Tage zurück (DAYS_BACK)"
     Target="DAYS_BACK"
     Default="365"
     Mode=""
-    Description="DE: Wie viele Tage Angriffs-Historie angezeigt werden. Standard: 365. EN: How many days of attack history to show. Default: 365."
+    Description="Wie viele Tage Angriffs-Historie angezeigt wird. Standard: 365 Tage."
     Type="Variable"
     Display="advanced"
     Required="false"
     Mask="false">365</Config>
 
   <Config
-    Name="CrowdSec restart wait (sec.) / Neustart-Wartezeit (Sek.)"
+    Name="CrowdSec Restart Wartezeit (Sekunden)"
     Target="CROWDSEC_RESTART_WAIT"
     Default="15"
     Mode=""
-    Description="DE: Wartezeit nach CrowdSec-Neustart (Whitelist-Update). Erhöhen bei Timeout im Log. Standard: 15 s. EN: Wait after CrowdSec restart (whitelist update). Increase if you see timeouts. Default: 15 s."
+    Description="Wartezeit nach CrowdSec-Neustart (bei Whitelist-Update). Erhöhen wenn Timeout-Fehler im Log erscheinen. Standard: 15 Sekunden."
     Type="Variable"
     Display="advanced"
     Required="false"
     Mask="false">15</Config>
+
+  <Config
+    Name="Unban API-Token"
+    Target="UNBAN_API_TOKEN"
+    Default=""
+    Mode=""
+    Description="Empfohlen: Zufälliges Token (z.B. openssl rand -hex 32). Schützt den Unban-Endpunkt vor unbefugten Aufrufen. Leer lassen nur im isolierten LAN."
+    Type="Variable"
+    Display="always"
+    Required="false"
+    Mask="true"></Config>
+
+  <Config
+    Name="CrowdSec Restart Cooldown (Sekunden)"
+    Target="CROWDSEC_RESTART_COOLDOWN"
+    Default="300"
+    Mode=""
+    Description="Mindestabstand zwischen automatischen CrowdSec-Neustarts bei Whitelist-Updates. Standard: 300 Sekunden."
+    Type="Variable"
+    Display="advanced"
+    Required="false"
+    Mask="false">300</Config>
 
 </Container>

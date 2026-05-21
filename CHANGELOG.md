@@ -2,30 +2,14 @@
 
 ---
 
-## v1.4.3 — 14.05.2026
+## v1.4.3 — 21.05.2026
 
-### Dashboard
-- **Ländernamen beim Zoomen:** `font-size` nutzte `Math.max(7.5*ik, 5)` — ab höherem Zoom gewann die Konstante (ohne `1/k`), die Schrift skalierte mit der Karte und wirkte viel zu groß. Jetzt durchgehend `(W<720 ? 6.8 : 7.5) * ik` (User-Einheiten kompensieren die `mapG`-Zoom-Transform).
-
----
-
-## v1.4.2 — 14.05.2026
-
-### Image / Metadaten
-- `Dockerfile`: `org.opencontainers.image.version` auf **1.4.2** (entspricht Dashboard, Entrypoint und ghcr-Image)
-- `org.opencontainers.image.source` auf Repo-URL **crowdsec-threat-map-docker** korrigiert
-
-### Unraid / Community Apps
-- Docker-Template: `Registry` auf `https://ghcr.io`, Standard `--group-add 281` statt 999, Hinweis zur GID-Prüfung in `Overview` und Docker-Socket-Beschreibung
-- Doppelte `unraid/ca_profile.xml` entfernt (Profil nur noch `ca_profile.xml` im Repo-Root)
-- `unraid/README.md`: Raw-URL auf Repo `crowdsec-threat-map-docker` korrigiert, Extra-Params-Doku angepasst
-- `README.md` und `docker/docker-compose.yml`: Docker-GID-Beispiele und Kommentare an Unraid-typische Werte angeglichen
-
-### Dashboard (responsive)
-- Schmaleres Desktop-Sidebar-Layout per `--sidebar-w` (Breakpoints unter 1200 px / 920 px), mehr Platz für die Karte
-- Stärkere Basis-Skalierung der Karte bei geringer `#map-wrap`-Breite; Auto-Fit mit weniger Rand + Min-Zoom auch bei schmalem Desktop-Fenster
-- `onResize`: Zoom/Canvas-Status nach Auto-Fit an `fitTransform` angeglichen (Linien/Canvas passen zur Karte)
-- Länder-Labels: etwas größere Mindest-Schrift bei schmaler Karte
+### 🔒 Security (Issue #3)
+- **IP-Validierung** für `/unban` und dynamische Whitelist (`ipaddress`)
+- **Optionaler `UNBAN_API_TOKEN`** — Header `X-API-Token` oder `Authorization: Bearer`
+- **Kein CORS** mehr auf `/unban` (CSRF-Risiko reduziert)
+- **`CROWDSEC_RESTART_COOLDOWN`** — mindestens 300s zwischen automatischen CrowdSec-Neustarts
+- README: Abschnitt „Sicherheit“ mit Homelab-Empfehlungen
 
 ---
 

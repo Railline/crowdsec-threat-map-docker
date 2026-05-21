@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <!-- 
   CrowdSec Threat Map
-  © kabelsalatundklartext | https://github.com/kabelsalatundklartext/crowdsec-threat-map-docker
+  © kabelsalatundklartext | https://github.com/kabelsalatundklartext/crowdsec-threat-map
   Lizenz: CC BY-NC 4.0 — Nutzung & Änderung erlaubt, kein kommerzieller Einsatz
   https://creativecommons.org/licenses/by-nc/4.0/
 -->
@@ -15,13 +15,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap');
-  :root{--bg:#020810;--accent:#00ffe0;--danger:#ff2244;--warn:#ff8800;--ok:#00ff88;--dim:rgba(0,255,200,0.15);--text:#a0ffd8;--server:#00aaff;--sidebar-w:clamp(180px,22vw,250px);}
-  @media(max-width:1200px) and (min-width:681px){
-    :root{--sidebar-w:clamp(168px,19vw,220px);}
-  }
-  @media(max-width:920px) and (min-width:681px){
-    :root{--sidebar-w:clamp(155px,16vw,200px);}
-  }
+  :root{--bg:#020810;--accent:#00ffe0;--danger:#ff2244;--warn:#ff8800;--ok:#00ff88;--dim:rgba(0,255,200,0.15);--text:#a0ffd8;--server:#00aaff;}
   *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
   html,body{background:var(--bg);font-family:'Share Tech Mono',monospace;color:var(--text);height:100%;width:100%;overflow:hidden;touch-action:none;}
   @media(min-width:681px){body::after{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,0.04) 3px,rgba(0,0,0,0.04) 6px);pointer-events:none;z-index:999;}}
@@ -32,7 +26,7 @@
 
   /* MAP TITLE OVERLAY - always centered on map */
   #map-title-overlay{
-    position:fixed;top:0;left:0;right:var(--sidebar-w);
+    position:fixed;top:0;left:0;right:clamp(180px,22vw,250px);
     height:36px;
     display:flex;align-items:center;justify-content:center;gap:10px;
     z-index:150;pointer-events:none;
@@ -135,7 +129,7 @@
 
   /* LAYOUT */
   #layout{position:fixed;top:0;left:0;right:0;bottom:0;display:flex;}
-  #map-col{flex:1;display:flex;flex-direction:column;overflow:hidden;position:relative;background:var(--bg);min-width:0;}
+  #map-col{flex:1;display:flex;flex-direction:column;overflow:hidden;position:relative;background:var(--bg);}
   #map-wrap{flex:1;position:relative;overflow:hidden;cursor:grab;touch-action:none;background:var(--bg);}
   #map-wrap.panning{cursor:grabbing;}
   #base-svg{position:absolute;inset:0;width:100%;height:100%;}
@@ -158,7 +152,7 @@
   #zoom-level{position:absolute;bottom:10px;left:48px;background:rgba(0,20,40,0.75);border:1px solid var(--dim);color:var(--accent);font-size:8px;padding:3px 6px;border-radius:3px;letter-spacing:1px;z-index:50;pointer-events:none;}
 
   /* SIDEBAR */
-  #sidebar{width:var(--sidebar-w);background:rgba(0,8,20,0.95);border-left:1px solid var(--dim);display:flex;flex-direction:column;overflow:hidden;flex-shrink:0;}
+  #sidebar{width:clamp(180px,22vw,250px);background:rgba(0,8,20,0.95);border-left:1px solid var(--dim);display:flex;flex-direction:column;overflow:hidden;flex-shrink:0;}
   #tabs{display:flex;border-bottom:1px solid var(--dim);}
   .tab{flex:1;padding:8px 2px;text-align:center;font-size:clamp(6px,0.85vw,8px);letter-spacing:1px;color:rgba(160,255,216,0.4);cursor:pointer;border-bottom:2px solid transparent;transition:color 0.2s;}
   .tab.active{color:var(--accent);border-bottom:2px solid var(--accent);}
@@ -375,7 +369,7 @@
 <!-- Map overlay title (always visible, centered on map) -->
 <div id="map-title-overlay">
   <span id="h-title">CROWD<span>SEC</span> // THREAT MAP</span>
-  <span id="map-version-badge">v1.4.3</span>
+  <span id="map-version-badge">v1.4.2</span>
 </div>
 <!-- hidden lang refs removed - sidebar has the real IDs -->
 
@@ -470,7 +464,7 @@
         <span id="wl-dot" style="width:6px;height:6px;border-radius:50%;background:rgba(160,255,216,0.2);flex-shrink:0;display:inline-block;"></span>
         <span id="wl-text" style="color:rgba(160,255,216,0.3);">Whitelist: —</span>
       </div>
-      <a href="https://github.com/kabelsalatundklartext/crowdsec-threat-map-docker" target="_blank" style="color:rgba(0,255,200,0.35);font-size:8px;text-decoration:none;letter-spacing:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;max-width:100%;" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='rgba(0,255,200,0.35)'">⭐ GitHub: crowdsec-threat-map</a></div>
+      <a href="https://github.com/kabelsalatundklartext/crowdsec-threat-map" target="_blank" style="color:rgba(0,255,200,0.35);font-size:8px;text-decoration:none;letter-spacing:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;max-width:100%;" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='rgba(0,255,200,0.35)'">⭐ GitHub: crowdsec-threat-map</a></div>
   </aside>
 </div>
 
@@ -562,6 +556,9 @@
 //    Oder im Terminal: ip addr | grep inet
 const EXPORTER_URL = 'http://EURE-UNRAID-IP:9456/metrics';
 //  Wird beim Docker-Start automatisch durch entrypoint.sh ersetzt
+
+// Optional: API-Token für Unban (UNBAN_API_TOKEN in docker-compose) — wird beim Start eingetragen
+const UNBAN_API_TOKEN = 'UNBAN_TOKEN_PLACEHOLDER';
 
 // 2. ⚠️ PFLICHT: Koordinaten eures Servers
 //    → Rechtsklick auf Google Maps → "Was ist hier?" → Zahlen kopieren
@@ -868,11 +865,7 @@ function setupProj(){
   W=mapWrap.clientWidth; H=mapWrap.clientHeight;
   canvas.width=W; canvas.height=H;
   canvas.style.width=W+'px'; canvas.style.height=H+'px';
-  let base=Math.min(W/6.2,H/3.4);
-  if(W<620) base*=1.22;
-  else if(W<760) base*=1.14;
-  else if(W<960) base*=1.07;
-  proj=d3.geoNaturalEarth1().scale(base).translate([W/2,H/2]);
+  proj=d3.geoNaturalEarth1().scale(Math.min(W/6.2,H/3.4)).translate([W/2,H/2]);
   pathGen=d3.geoPath().projection(proj);
 }
 
@@ -1016,19 +1009,12 @@ async function init(){
 }
 
 function onResize(){
-  mobileAdjustAndFit();
   setupProj();
   baseSvg.selectAll('*').remove();
   drawBaseMap();
   renderDots();
   fitMapToPoints();
-  if(attackData.length){
-    currentScale=fitTransform.k;
-    currentTx=fitTransform.x;
-    currentTy=fitTransform.y;
-  }else{
-    currentScale=1; currentTx=0; currentTy=0;
-  }
+  currentScale=1;currentTx=0;currentTy=0;
   if(animOn){}else drawStaticArcs();
 }
 
@@ -1172,15 +1158,15 @@ function fitMapToPoints(){
   const xs=pts.map(p=>p[0]),ys=pts.map(p=>p[1]);
   const x0=Math.min(...xs),x1=Math.max(...xs);
   const y0=Math.min(...ys),y1=Math.max(...ys);
-  const pad=window.innerWidth<=680?30:(W<620?32:(W<800?44:80));
+  const pad=window.innerWidth<=680?30:80; // less padding on mobile
   const rangeX=x1-x0||1,rangeY=y1-y0||1;
   const scaleX=(W-pad*2)/rangeX;
   const scaleY=(H-pad*2)/rangeY;
   let k=Math.max(0.1,Math.min(scaleX,scaleY,6));
-  const narrowDesktop=window.innerWidth>680&&W<760;
-  if(window.innerWidth<=680||narrowDesktop){
-    const minFill=Math.max(W/430,H/360,0.82);
-    k=Math.max(k,Math.min(minFill,5.2));
+  // On mobile: ensure map fills the available area (min scale so it looks filled)
+  if(window.innerWidth<=680){
+    const minFill=Math.max(W/650,H/350); // minimum scale to fill the map area
+    k=Math.max(k,minFill);
   }
   const cx=(x0+x1)/2,cy=(y0+y1)/2;
   const tx=W/2-cx*k,ty=H/2-cy*k;
@@ -1456,9 +1442,13 @@ async function unbanIPDirect(ip, btn){
 
   try{
     const base=EXPORTER_URL.replace(/\/metrics.*$/,'');
+    const headers={'Content-Type':'application/json'};
+    if(UNBAN_API_TOKEN&&UNBAN_API_TOKEN!=='UNBAN_TOKEN_PLACEHOLDER'){
+      headers['X-API-Token']=UNBAN_API_TOKEN;
+    }
     const res=await fetch(`${base}/unban`,{
       method:'POST',
-      headers:{'Content-Type':'application/json'},
+      headers,
       body:JSON.stringify({ip}),
     });
     const data=await res.json();
@@ -2025,8 +2015,7 @@ function drawCountryLabels(){
       .attr('text-anchor','middle')
       .attr('fill',accent)
       .attr('opacity','0.5')
-      /* mapG is scaled by zoom k — font must always include ik=1/k or text grows with zoom (Math.max(..., const) was wrong). */
-      .attr('font-size',`${(W<720?6.8:7.5)*ik}px`)
+      .attr('font-size',`${7.5*ik}px`)
       .attr('font-family','Share Tech Mono,monospace')
       .attr('pointer-events','none')
       .text(label);

@@ -2,17 +2,29 @@
 # CrowdSec → Prometheus Exporter
 # Liest direkt aus der CrowdSec SQLite-DB + MaxMind GeoLite2-City.mmdb
 # Keine externen pip-Pakete nötig – nur Python3 stdlib + mmdb pure-python reader
-# Version: 2.1 | 2026-04-22
+# Version: 2.2 | 2026-05-21
 # Port: 9456
 
 import subprocess
 import os
+import ipaddress
 
 CROWDSEC_CONTAINER = os.environ.get("CROWDSEC_CONTAINER_NAME", "crowdsec")
+UNBAN_API_TOKEN = os.environ.get("UNBAN_API_TOKEN", "").strip()
+
+def validate_ip(ip):
+    """IPv4/IPv6 prüfen — Schutz vor ungültigen cscli-Argumenten und YAML-Injection."""
+    try:
+        ipaddress.ip_address(ip)
+        return True
+    except ValueError:
+        return False
 
 def run_unban(ip):
     """IP aus CrowdSec-Bans entfernen via docker exec"""
     global _cache_time
+    if not validate_ip(ip):
+        return False, "Ungültige IP-Adresse"
     try:
         result = subprocess.run(
             ["docker", "exec", CROWDSEC_CONTAINER, "cscli", "decisions", "delete", "--ip", ip],
@@ -64,6 +76,7 @@ WHITELIST_ENABLED   = os.environ.get("WHITELIST_ENABLED",  "true").lower() == "t
 WHITELIST_FILE      = os.environ.get("WHITELIST_FILE",     "/crowdsec/postoverflows/s01-whitelist/my-whitelist.yaml")
 WHITELIST_INTERVAL  = int(os.environ.get("WHITELIST_INTERVAL", "900"))
 CROWDSEC_RESTART_WAIT = int(os.environ.get("CROWDSEC_RESTART_WAIT", "15"))  # Sekunden warten nach docker restart
+CROWDSEC_RESTART_COOLDOWN = int(os.environ.get("CROWDSEC_RESTART_COOLDOWN", "300"))  # Mindestabstand zwischen Neustarts
 
 SERVER_LAT   = float(os.environ.get("SERVER_LAT",  "0.0"))
 SERVER_LON   = float(os.environ.get("SERVER_LON",  "0.0"))
@@ -292,6 +305,7 @@ _whitelist_status = {
     "last_change": "",
     "status":    "unbekannt",  # "ok", "aktualisiert", "fehler", "unbekannt"
 }
+_whitelist_last_restart = 0.0
 
 
 # ---------------------------------------------------------------------------
@@ -305,8 +319,10 @@ def _get_public_ip():
         try:
             with urllib.request.urlopen(url, timeout=8) as r:
                 ip = r.read().decode().strip()
-                if ip:
+                if ip and validate_ip(ip):
                     return ip
+                if ip:
+                    log(f"⚠️  [Whitelist] Ungültige IP von {url}: {ip!r}")
         except Exception:
             continue
     return None
@@ -374,9 +390,24 @@ def _run_whitelist_update():
         _whitelist_status["status"] = "fehler"
         return
 
-    # CrowdSec neustarten
+    # CrowdSec neustarten (mit Cooldown gegen wiederholten DoS)
+    global _whitelist_last_restart
+    now = time.time()
+    if now - _whitelist_last_restart < CROWDSEC_RESTART_COOLDOWN:
+        log(f"⏳ [Whitelist] Neustart übersprungen (Cooldown {CROWDSEC_RESTART_COOLDOWN}s)")
+        try:
+            subprocess.run(
+                ["docker", "exec", CROWDSEC_CONTAINER, "cscli", "decisions", "delete", "--ip", ip],
+                capture_output=True, timeout=15
+            )
+        except subprocess.TimeoutExpired:
+            pass
+        _whitelist_status.update({"status": "aktualisiert", "last_change": datetime.now().strftime("%d.%m.%Y %H:%M:%S")})
+        return
+
     log("🔄 [Whitelist] Starte CrowdSec neu...")
     subprocess.run(["docker", "restart", CROWDSEC_CONTAINER], capture_output=True, timeout=90)
+    _whitelist_last_restart = time.time()
 
     # Warten bis CrowdSec wieder läuft
     # Erst 15s initial warten (CrowdSec braucht Zeit zum Hochfahren)
@@ -849,41 +880,62 @@ def get_metrics():
 # HTTP Server
 # ---------------------------------------------------------------------------
 class MetricsHandler(BaseHTTPRequestHandler):
+    def _unban_authorized(self):
+        if not UNBAN_API_TOKEN:
+            return True
+        token = self.headers.get("X-API-Token", "").strip()
+        if not token:
+            auth = self.headers.get("Authorization", "")
+            if auth.lower().startswith("bearer "):
+                token = auth[7:].strip()
+        return token == UNBAN_API_TOKEN
+
     def do_POST(self):
         import json as _json
         if self.path == "/unban":
+            if not self._unban_authorized():
+                self._json_response(401, {"success": False, "message": "Nicht autorisiert"}, cors=False)
+                return
             length = int(self.headers.get("Content-Length", 0))
             body = self.rfile.read(length)
             try:
                 data = _json.loads(body)
                 ip = data.get("ip", "").strip()
                 if not ip:
-                    self._json_response(400, {"success": False, "message": "IP fehlt"})
+                    self._json_response(400, {"success": False, "message": "IP fehlt"}, cors=False)
+                    return
+                if not validate_ip(ip):
+                    self._json_response(400, {"success": False, "message": "Ungültige IP-Adresse"}, cors=False)
                     return
                 ok, msg = run_unban(ip)
-                self._json_response(200, {"success": ok, "message": msg, "ip": ip})
+                self._json_response(200, {"success": ok, "message": msg, "ip": ip}, cors=False)
             except Exception as e:
-                self._json_response(400, {"success": False, "message": str(e)})
+                self._json_response(400, {"success": False, "message": str(e)}, cors=False)
         else:
-            self._json_response(404, {"error": "Not found"})
+            self._json_response(404, {"error": "Not found"}, cors=False)
 
-    def _json_response(self, code, data):
+    def _json_response(self, code, data, cors=True):
         import json as _json
         body = _json.dumps(data).encode()
         self.send_response(code)
         self.send_header("Content-Type", "application/json")
         self.send_header("Content-Length", str(len(body)))
-        self.send_header("Access-Control-Allow-Origin", "*")
-        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+        if cors:
+            self.send_header("Access-Control-Allow-Origin", "*")
+            self.send_header("Access-Control-Allow-Methods", "GET, OPTIONS")
         self.end_headers()
         self.wfile.write(body)
 
     def do_OPTIONS(self):
-        """CORS Preflight"""
+        """CORS Preflight — nur für lesende Endpunkte, nicht für /unban"""
+        if self.path == "/unban":
+            self.send_response(405)
+            self.end_headers()
+            return
         self.send_response(204)
         self.send_header("Access-Control-Allow-Origin", "*")
         self.send_header("Access-Control-Allow-Methods", "GET, OPTIONS")
-        self.send_header("Access-Control-Allow-Headers", "*")
+        self.send_header("Access-Control-Allow-Headers", "Content-Type")
         self.end_headers()
 
     def do_GET(self):
@@ -936,6 +988,10 @@ if __name__ == "__main__":
     log(f"   Port:   {LISTEN_PORT}")
     log(f"   TTL:    {CACHE_TTL}s")
     log(f"   Server: {SERVER_NAME} ({SERVER_LAT}, {SERVER_LON})")
+    if UNBAN_API_TOKEN:
+        log("   Unban:  API-Token aktiv")
+    else:
+        log("   Unban:  ⚠️  kein API-Token — nur im vertrauenswürdigen LAN nutzen")
     log("=" * 60)
 
     init_mmdb()

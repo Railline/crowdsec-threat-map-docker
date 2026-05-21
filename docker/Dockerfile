@@ -2,7 +2,7 @@ FROM python:3.12-alpine
 
 LABEL org.opencontainers.image.title="CrowdSec Threat Map"
 LABEL org.opencontainers.image.description="Echtzeit-Angriffskarte fuer CrowdSec"
-LABEL org.opencontainers.image.source="https://github.com/kabelsalatundklartext/crowdsec-threat-map-docker"
+LABEL org.opencontainers.image.source="https://github.com/kabelsalatundklartext/crowdsec-threat-map"
 LABEL org.opencontainers.image.licenses="GPL-3.0-or-later"
 LABEL org.opencontainers.image.authors="kabelsalatundklartext"
 LABEL org.opencontainers.image.version="1.4.3"

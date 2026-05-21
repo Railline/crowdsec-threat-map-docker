@@ -43,9 +43,13 @@ services:
       - WHITELIST_INTERVAL=900          # Prüfintervall in Sekunden (Standard: 15 min)
       # Wartezeit nach CrowdSec-Neustart — erhöhen wenn Timeout-Fehler im Log erscheinen
       - CROWDSEC_RESTART_WAIT=15
+      - CROWDSEC_RESTART_COOLDOWN=300     # Mindestabstand zwischen CrowdSec-Neustarts (Sekunden)
+
+      # Sicherheit: Zufälliges Token setzen (z.B. openssl rand -hex 32)
+      # Schützt /unban vor unbefugten Aufrufen und CSRF aus dem Browser
+      # - UNBAN_API_TOKEN=dein-geheimes-token-hier
 
     # Docker-Gruppe für Socket-Zugriff (Unban + Whitelist-Restart)
-    # GID immer auf dem Host prüfen: getent group docker | cut -d: -f3
-    # 281 ist häufig auf Unraid; auf anderen Systemen oft anders.
+    # GID anpassen falls nötig: getent group docker | cut -d: -f3
     group_add:
-      - "281"
+      - "999"
