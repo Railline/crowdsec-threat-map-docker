@@ -340,7 +340,12 @@
   #ctx-close:hover{background:rgba(255,34,68,0.07);color:var(--danger);}
 
   /* TOOLTIP */
-  #tip{display:none;position:fixed;background:rgba(0,12,30,0.97);border:1px solid rgba(0,255,200,0.25);color:var(--text);font-family:'Share Tech Mono',monospace;font-size:10px;padding:9px 12px;border-radius:4px;pointer-events:none;z-index:800;line-height:1.6;min-width:180px;max-width:240px;box-shadow:0 4px 20px rgba(0,0,0,0.7);}
+  #tip{display:none;position:fixed;background:rgba(0,12,30,0.97);border:1px solid rgba(0,255,200,0.25);color:var(--text);font-family:'Share Tech Mono',monospace;font-size:10px;padding:9px 28px 9px 12px;border-radius:4px;pointer-events:none;z-index:800;line-height:1.6;min-width:180px;max-width:240px;box-shadow:0 4px 20px rgba(0,0,0,0.7);}
+  #tip.tip-pinned{pointer-events:auto;border-color:var(--accent);}
+  #tip-close{display:none;position:absolute;top:5px;right:6px;width:18px;height:18px;padding:0;border:none;background:rgba(255,34,68,0.15);color:var(--danger);border-radius:3px;cursor:pointer;font-size:11px;line-height:18px;text-align:center;font-family:inherit;}
+  #tip-close:hover{background:rgba(255,34,68,0.35);}
+  #tip.tip-pinned #tip-close{display:block;}
+  .city-map-label{pointer-events:none;opacity:0.85;}
 
   /* MOBILE BOTTOM SHEET */
   #mob-sheet{display:none;position:fixed;bottom:0;left:0;right:0;background:var(--bg);border-top:1px solid var(--dim);z-index:300;flex-direction:column;}
@@ -415,7 +420,7 @@
   <a class="ctx-item" id="c-crim"   target="_blank"><span class="ctx-icon">⚠️</span>Criminal IP</a>
   <div id="ctx-close">✕ SCHLIESSEN</div>
 </div>
-<div id="tip"></div>
+<div id="tip"><button type="button" id="tip-close" title="Schließen" aria-label="Schließen">✕</button><div id="tip-content"></div></div>
 
 <!-- Map overlay title (always visible, centered on map) -->
 <div id="map-title-overlay">
@@ -1237,6 +1242,7 @@ function onZoom(event){
   const wasCluster=prevScale<=1.5;
   const isCluster=t.k<=1.5;
   if(wasCluster!==isCluster) renderDots();
+  else updateCityLabelScale();
   if(!animOn||!linesOn){updateCountryFills();return;}
   if(animOn&&linesOn){drawCrowdSecRockets();updateFlightLabels(activeRockets);}
 }
@@ -1364,6 +1370,14 @@ function drawServerDots(){
   updateServerScale();
 }
 
+function updateCityLabelScale(){
+  if(!dotG)return;
+  const screenFs=Math.min(9,Math.max(5,11/currentScale));
+  const fontVal=screenFs/currentScale;
+  dotG.selectAll('.city-map-label')
+    .attr('font-size',`${fontVal}px`)
+    .style('display',currentScale>12?'none':null);
+}
 function updateServerScale(){
   if(!dotG)return;
   const ik=1/currentScale;
@@ -1429,7 +1443,7 @@ function fitMapToPoints(){
 }
 
 function renderDots(){
-  dotG.selectAll('.adot,.cluster-dot,.country-label').remove();
+  dotG.selectAll('.adot,.cluster-dot,.city-map-label').remove();
   const ik=1/currentScale;
   const data=getDisplayAttackData();
 
@@ -1476,14 +1490,16 @@ function renderDots(){
         .on('click',function(ev){ev.stopPropagation();selectDot(ev,this,d);})
         .on('mouseover',(ev)=>showTip(ev,d)).on('mouseout',hideTip);
       // Stadtname bei genug Zoom — nur einmal pro Stadt
-      const cityZoom=animOn?3.0:1.25;
-      if(currentScale > cityZoom && d.city && !_renderedCityLabels.has(d.city)){
+      const cityZoom=animOn?4.5:2.5;
+      if(currentScale>cityZoom&&currentScale<12&&d.city&&!_renderedCityLabels.has(d.city)){
         _renderedCityLabels.add(d.city);
-        dotG.append('text').attr('class','adot')
-          .attr('x', px + (sr+2)*ik).attr('y', py + 3*ik)
+        const screenFs=Math.min(9,Math.max(5,11/currentScale));
+        const fontVal=screenFs/currentScale;
+        dotG.append('text').attr('class','city-map-label')
+          .attr('x',px+(sr+1.5)/currentScale).attr('y',py+2/currentScale)
           .attr('fill',col)
-          .attr('font-size', `${6*ik}px`)
-          .attr('font-family','Orbitron,monospace')
+          .attr('font-size',`${fontVal}px`)
+          .attr('font-family','Share Tech Mono,monospace')
           .attr('pointer-events','none')
           .text(translateCity(d.city));
       }
@@ -1752,53 +1768,72 @@ async function unbanIP(){
 }
 function closeCtxOnce(e){
   const m=document.getElementById('ctx-menu');
-  if(!m.contains(e.target)) m.style.display='none';
+  const t=document.getElementById('tip');
+  if(m.style.display==='block'&&!m.contains(e.target))m.style.display='none';
+  if(tipPinned&&t.style.display==='block'&&!t.contains(e.target))closeTip();
 }
 // ctx-menu close button
 
 document.getElementById('ctx-close').onclick=()=>{document.getElementById('ctx-menu').style.display='none';};
 document.addEventListener('click', closeCtxOnce, true);
-document.addEventListener('keydown', e=>{ if(e.key==='Escape') document.getElementById('ctx-menu').style.display='none'; });
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'){
+    document.getElementById('ctx-menu').style.display='none';
+    closeTip();
+  }
+});
 // Click on map background = clear selection
 document.getElementById('base-svg').addEventListener('click',()=>{
   clearSelection();
 });
 
 const tipEl=document.getElementById('tip');
-function showTip(ev,d){
+const tipCloseBtn=document.getElementById('tip-close');
+let tipPinned=false;
+function closeTip(){tipPinned=false;tipEl.classList.remove('tip-pinned');tipEl.style.display='none';}
+function tipBodyHTML(d,pinned){
   const f=FLAG[d.country]||'🌐';
-  const asnStr  = d.asnumber ? `AS${d.asnumber}` : '';
-  const subnetStr= d.iprange && d.iprange!=='-' ? d.iprange : '';
-  const timeStr = d.time_de || d.time_iso || '';
-  const cityStr = d.city && d.city!=='-' ? translateCity(d.city) : '';
-  tipEl.innerHTML=`
+  const asnStr=d.asnumber?`AS${d.asnumber}`:'';
+  const subnetStr=d.iprange&&d.iprange!=='-'?d.iprange:'';
+  const timeStr=d.time_de||d.time_iso||'';
+  const cityStr=d.city&&d.city!=='-'?translateCity(d.city):'';
+  const foot=pinned?'':'<div style="color:rgba(0,255,200,0.25);font-size:8px;margin-top:5px;border-top:1px solid rgba(0,255,200,0.1);padding-top:4px;letter-spacing:1px;">KLICK FÜR DETAILS</div>';
+  return `
     <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:4px;">
       <span style="color:#ff2244;font-size:12px;">${d.ip}</span>
-      <span style="color:rgba(255,34,68,0.5);font-size:10px;">${d.count}×</span>
+      <span style="color:rgba(255,34,68,0.5);font-size:10px;">${d.count||1}×</span>
     </div>
     ${subnetStr?`<div style="color:rgba(160,255,216,0.4);font-size:9px;margin-bottom:3px;">📡 ${subnetStr}</div>`:''}
     <div style="margin-bottom:3px;display:flex;align-items:center;gap:4px;flex-wrap:wrap;">
       <span style="color:#ff8800;font-size:10px;">${f} ${COUNTRY_NAME[d.country]||d.country}</span>
-      ${cityStr?`<span style="color:rgba(0,255,200,0.2);">·</span><span style="color:rgba(255,200,100,0.95);font-size:10px;font-weight:500;">${cityStr}</span>`:''}
+      ${cityStr?`<span style="color:rgba(0,255,200,0.2);">·</span><span style="color:rgba(255,200,100,0.95);font-size:10px;">${cityStr}</span>`:''}
       ${asnStr?`<span style="color:rgba(0,255,200,0.2);">·</span><span style="color:rgba(0,255,200,0.5);font-size:9px;">${asnStr}</span>`:''}
     </div>
     ${d.asname?`<div style="color:rgba(160,255,216,0.55);font-size:9px;margin-bottom:3px;max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${d.asname}</div>`:''}
     <div style="color:rgba(160,255,216,0.6);font-size:9px;margin-bottom:${timeStr?'3px':'0'};">⚡ ${d.scenario}</div>
     ${timeStr?`<div style="color:rgba(0,255,200,0.35);font-size:9px;">🕐 ${timeStr}</div>`:''}
-    <div style="color:rgba(0,255,200,0.25);font-size:8px;margin-top:5px;border-top:1px solid rgba(0,255,200,0.1);padding-top:4px;letter-spacing:1px;">KLICK FÜR DETAILS</div>
-  `;
-  tipEl.style.display='block';
-  // Smart positioning
+    ${foot}`;
+}
+function positionTip(ev){
   const tw=tipEl.offsetWidth||220;
   const th=tipEl.offsetHeight||120;
-  let x=ev.clientX+14, y=ev.clientY-10;
-  if(x+tw>window.innerWidth-10) x=ev.clientX-tw-10;
-  if(y+th>window.innerHeight-10) y=ev.clientY-th-10;
-  if(y<60) y=60;
+  let x=ev.clientX+14,y=ev.clientY-10;
+  if(x+tw>window.innerWidth-10)x=ev.clientX-tw-10;
+  if(y+th>window.innerHeight-10)y=ev.clientY-th-10;
+  if(y<60)y=60;
   tipEl.style.left=x+'px';
   tipEl.style.top=y+'px';
 }
-function hideTip(){tipEl.style.display='none';}
+function showTip(ev,d,pinned=false){
+  tipPinned=pinned;
+  tipEl.classList.toggle('tip-pinned',pinned);
+  const body=document.getElementById('tip-content');
+  if(body)body.innerHTML=tipBodyHTML(d,pinned);
+  tipEl.style.display='block';
+  positionTip(ev);
+}
+function hideTip(){if(tipPinned)return;tipEl.style.display='none';}
+if(tipCloseBtn)tipCloseBtn.onclick=e=>{e.stopPropagation();closeTip();};
 
 // ── FEED & LISTS ──
 function feedItemHTML(d){
@@ -1844,6 +1879,7 @@ function clearSelection(){
     selectedEl=null; selectedDot=null;
   }
   document.getElementById('ctx-menu').style.display='none';
+  closeTip();
 }
 
 function drawSelectionRing(px,py){
@@ -1866,27 +1902,26 @@ function drawSelectionRing(px,py){
 function selectDot(ev,el,d){
   const isSame = selectedEl===el;
 
-  // If same dot clicked again → just toggle menu
   if(isSame){
-    const m=document.getElementById('ctx-menu');
-    if(m.style.display==='block'){
-      m.style.display='none';
-    } else {
+    if(tipPinned||document.getElementById('ctx-menu').style.display==='block'){
+      clearSelection();
+    }else{
+      showTip(ev,d,true);
       showCtx(ev,d);
     }
     return;
   }
 
-  // New dot selected
-  clearSelection();
-  selectedEl=el; selectedDot=d;
+  selectedEl=el;
+  selectedDot=d;
+  document.getElementById('ctx-menu').style.display='none';
+  tipPinned=false;
 
-  // Get dot position
   const px=parseFloat(el.getAttribute('cx'));
   const py=parseFloat(el.getAttribute('cy'));
   drawSelectionRing(px,py);
 
-  // Open context menu
+  showTip(ev,d,true);
   showCtx(ev,d);
 }
 
@@ -2275,12 +2310,13 @@ function drawCountryLabels(){
     const center=CC_CENTER[d.country];
     const cpt=center ? proj([center[1],center[0]]) : pt;
     if(!cpt)return;
+    const cScreenFs=Math.min(8,Math.max(4,9/currentScale));
     mapG.append('text').attr('class','country-label')
       .attr('x',cpt[0]).attr('y',cpt[1])
       .attr('text-anchor','middle')
       .attr('fill',accent)
       .attr('opacity','0.5')
-      .attr('font-size',`${7.5*ik}px`)
+      .attr('font-size',`${cScreenFs/currentScale}px`)
       .attr('font-family','Share Tech Mono,monospace')
       .attr('pointer-events','none')
       .text(label);
