@@ -642,7 +642,8 @@ const APP_VERSION  = 'v1.5.0';
 const REFRESH_MS   = 30000;
 const localUnbanned = new Set();
 const ARC_FPS      = 30;
-const REPLAY_PLAY_MS = 90000;
+const REPLAY_PLAY_MS = 180000;      // Replay-Zeitraum bei 1× (~3 Min für 48h)
+const ROCKET_DURATION_MS = 3200;  // Dauer eines Raketenflugs bis Einschlag
 
 const THREAT_TYPES = {
   cve:  { color:'#ff4400', labelDe:'CVE Exploit', labelEn:'CVE Exploit' },
@@ -659,6 +660,7 @@ let allEvents=[],liveMode=false,replayPlaying=false,replayRangeH=48,replaySpeed=
 let replayCursor=0,replayWinStart=0,replayWinEnd=0,replayLastFrame=0,activeRockets=[],lastReplaySpawnTs=0;
 let lastMetricsText='',replayInitialized=false,replayAutoStarted=false;
 let countriesGeo=null;
+let lastRocketDrawTs=0;
 
 const ISO2_NUM={US:'840',CA:'124',MX:'484',BR:'76',AR:'32',GB:'826',DE:'276',FR:'250',NL:'528',BE:'56',ES:'724',IT:'380',PL:'616',RU:'643',UA:'804',CN:'156',IN:'356',JP:'392',KR:'410',AU:'36',ID:'360',SG:'702',HK:'344',TW:'158',TH:'764',VN:'704',MY:'458',PH:'608',PK:'586',IR:'364',IQ:'368',SA:'682',AE:'784',IL:'376',TR:'792',ZA:'710',NG:'566',EG:'818',RO:'642',CZ:'203',SE:'752',NO:'578',DK:'208',FI:'246',AT:'40',CH:'756',PT:'620',GR:'300',HU:'348',RS:'688',BG:'100',HR:'191',SK:'703',LT:'440',LV:'428',EE:'233',IE:'372',NZ:'554',CO:'170',CL:'152',VE:'862',EC:'218',PE:'604',KZ:'398',UZ:'860',BD:'50',NP:'524',MM:'104'};
 function countryHeatFill(n,maxN){const r=n/Math.max(maxN,1);if(r>=0.45)return `rgba(220,40,70,${0.4+0.35*r})`;if(r>=0.15)return `rgba(160,90,220,${0.25+0.3*r})`;return `rgba(70,100,180,${0.2+0.2*r})`;}
@@ -682,13 +684,17 @@ function spawnRocketForEvent(ev){
   activeRockets.push({ip:ev.ip,sx:px,sy:py,ex:sx,ey:sy,cpx:(px+sx)/2,cpy:(py+sy)/2-Math.min(dist*0.38,130),col:scenarioColor(ev.scenario),t:0});
 }
 function quadPoint(p,t){const u=1-t;return{x:u*u*p.sx+2*u*t*p.cpx+t*t*p.ex,y:u*u*p.sy+2*u*t*p.cpy+t*t*p.ey};}
-function drawReplayFrame(){
+function drawReplayFrame(ts){
   clearArcCanvas();
   if(!animOn||!linesOn||!activeRockets.length)return;
+  const now=typeof ts==='number'?ts:performance.now();
+  const dt=lastRocketDrawTs?Math.min(48,now-lastRocketDrawTs):16;
+  lastRocketDrawTs=now;
+  const rocketStep=(dt/ROCKET_DURATION_MS)*replaySpeed;
   ctx2d.save();ctx2d.translate(currentTx,currentTy);ctx2d.scale(currentScale,currentScale);
   const ik=1/currentScale;
   activeRockets=activeRockets.filter(r=>{
-    r.t=Math.min(1,r.t+0.055*replaySpeed);
+    r.t=Math.min(1,r.t+rocketStep);
     const pt=quadPoint(r,r.t);
     const trailT=Math.max(0,r.t-0.12);
     const trail=quadPoint(r,trailT);
@@ -718,7 +724,7 @@ function advanceReplay(ts){
   updateReplaySlider();
   attackData=aggregateFromEvents(getEventsInReplay());
   renderDots();renderMapPanels();updateCountryFills();
-  if(animOn)drawReplayFrame();else clearArcCanvas();
+  if(animOn)drawReplayFrame(ts);else clearArcCanvas();
   if(replayCursor>=replayWinEnd){replayPlaying=false;updateReplayBtn();}
 }
 function refreshMapFromData(){
@@ -733,7 +739,7 @@ function refreshMapFromData(){
   else if(animOn)drawReplayFrame();else clearArcCanvas();
 }
 function updateReplayBtn(){document.getElementById('replay-btn')?.classList.toggle('paused',!replayPlaying);}
-function startReplayLoop(){if(animRAF)cancelAnimationFrame(animRAF);replayLastFrame=0;function loop(ts){if(liveMode)return;if(replayPlaying)advanceReplay(ts);else if(activeRockets.length)drawReplayFrame();if(replayPlaying||activeRockets.length)animRAF=requestAnimationFrame(loop);}animRAF=requestAnimationFrame(loop);}
+function startReplayLoop(){if(animRAF)cancelAnimationFrame(animRAF);replayLastFrame=0;lastRocketDrawTs=0;function loop(ts){if(liveMode)return;if(replayPlaying)advanceReplay(ts);else if(activeRockets.length)drawReplayFrame(ts);if(replayPlaying||activeRockets.length)animRAF=requestAnimationFrame(loop);}animRAF=requestAnimationFrame(loop);}
 function setupReplayControls(){buildThreatLegend();document.getElementById('replay-btn')?.addEventListener('click',()=>{if(liveMode){liveMode=false;document.getElementById('mode-live-btn')?.classList.remove('active');initReplayWindow();}replayPlaying=!replayPlaying;updateReplayBtn();if(replayPlaying)startReplayLoop();else drawReplayFrame();});document.getElementById('mode-live-btn')?.addEventListener('click',()=>{liveMode=!liveMode;document.getElementById('mode-live-btn')?.classList.toggle('active',liveMode);replayPlaying=false;updateReplayBtn();if(animRAF){cancelAnimationFrame(animRAF);animRAF=null;}refreshMapFromData();if(liveMode&&animOn)startArcAnimation();});document.querySelectorAll('[data-speed]').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('[data-speed]').forEach(x=>x.classList.remove('active'));b.classList.add('active');replaySpeed=parseFloat(b.dataset.speed);}));document.querySelectorAll('[data-range]').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('[data-range]').forEach(x=>x.classList.remove('active'));b.classList.add('active');replayRangeH=parseInt(b.dataset.range,10);initReplayWindow();refreshMapFromData();}));document.getElementById('replay-slider')?.addEventListener('input',e=>{if(replayWinEnd<=replayWinStart)return;replayCursor=replayWinStart+(parseInt(e.target.value,10)/1000)*(replayWinEnd-replayWinStart);lastReplaySpawnTs=replayWinStart;activeRockets=[];document.getElementById('replay-clock').textContent=fmtReplayClock(replayCursor);refreshMapFromData();});}
 
 // ── MOBILE LAYOUT SYNC ──
@@ -1297,7 +1303,7 @@ function startArcAnimation(){
     const elapsed=ts-lastFrameTime;
     if(elapsed<interval)return;
     lastFrameTime=ts-(elapsed%interval);
-    arcOffset+=0.3;
+    arcOffset+=0.12;
     ctx2d.clearRect(0,0,canvas.width,canvas.height);
     ctx2d.save();
     ctx2d.translate(currentTx,currentTy);
