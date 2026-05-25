@@ -175,11 +175,19 @@
   #replay-slider{width:100%;height:4px;-webkit-appearance:none;background:rgba(0,255,200,0.12);border-radius:2px;cursor:pointer;}
   #replay-slider::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:12px;border-radius:50%;background:var(--accent);}
   #timeline-labels{display:flex;justify-content:space-between;font-size:7px;color:rgba(160,255,216,0.35);padding:0 12px 2px;}
-  #console-controls{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;padding:6px 12px 8px;}
-  .ctrl-group{display:flex;align-items:center;gap:4px;}
-  .ctrl-group-lbl{font-size:7px;color:rgba(160,255,216,0.35);letter-spacing:1px;margin-right:4px;}
+  #console-controls{display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:8px;padding:6px 12px 8px;}
+  .ctrl-group{display:flex;align-items:center;gap:4px;flex-wrap:wrap;}
+  .ctrl-group-lbl{font-size:7px;color:rgba(160,255,216,0.35);letter-spacing:1px;margin-right:4px;flex-shrink:0;}
+  .ctrl-speed .pill-btn,.ctrl-range .pill-btn{padding:2px 6px;font-size:7px;}
+  .range-btns{display:flex;flex-wrap:wrap;gap:3px;max-width:min(100%,520px);}
   .pill-btn{padding:3px 8px;font-size:8px;border:1px solid rgba(0,255,200,0.2);border-radius:3px;background:transparent;color:rgba(160,255,216,0.45);cursor:pointer;font-family:'Share Tech Mono',monospace;}
   .pill-btn.active{border-color:var(--accent);color:var(--accent);background:rgba(0,255,200,0.1);}
+  #flight-labels-layer{position:absolute;inset:0;pointer-events:none;z-index:45;overflow:visible;}
+  .flight-tag{position:absolute;transform:translate(-50%,-100%);display:flex;align-items:center;gap:6px;padding:5px 10px;background:rgba(8,14,28,0.94);border:1px solid rgba(255,255,255,0.14);border-radius:8px;box-shadow:0 4px 18px rgba(0,0,0,0.5);white-space:nowrap;}
+  .flight-tag-flag{font-size:15px;line-height:1;}
+  .flight-tag-body{display:flex;flex-direction:column;gap:1px;line-height:1.15;}
+  .flight-tag-country{font-size:11px;color:#fff;font-family:'Share Tech Mono',monospace;}
+  .flight-tag-city{font-size:9px;color:rgba(160,255,216,0.7);font-family:'Share Tech Mono',monospace;}
   .threat-leg{display:flex;align-items:center;gap:4px;font-size:7px;color:rgba(160,255,216,0.5);white-space:nowrap;}
   .threat-leg-dot{width:8px;height:8px;border-radius:2px;}
   #footer-stats{display:flex;align-items:center;justify-content:center;gap:clamp(12px,3vw,28px);padding:6px 12px;border-top:1px solid rgba(0,255,200,0.06);flex-wrap:wrap;}
@@ -423,6 +431,7 @@
     <div id="map-wrap">
       <svg id="base-svg" style="position:absolute;inset:0;width:100%;height:100%"></svg>
       <canvas id="arc-canvas"></canvas>
+      <div id="flight-labels-layer"></div>
       <div id="map-panels-left">
         <div id="panel-scenarios" class="map-panel"><h4 id="lbl-top-scenarios">TOP SCENARIOS</h4><div id="panel-scenarios-body"></div></div>
         <div id="panel-ips" class="map-panel"><h4 id="lbl-malevolent-ips">MALEVOLENT IPS</h4><div id="panel-ips-body"></div></div>
@@ -444,13 +453,28 @@
       <div id="timeline-wrap"><input type="range" id="replay-slider" min="0" max="1000" value="0"></div>
       <div id="timeline-labels"><span id="tl-start">—</span><span id="tl-end">—</span></div>
       <div id="console-controls">
-        <div class="ctrl-group"><span class="ctrl-group-lbl" id="lbl-speed">SPEED</span>
+        <div class="ctrl-group ctrl-speed"><span class="ctrl-group-lbl" id="lbl-speed">SPEED</span>
+          <button type="button" class="pill-btn" data-speed="0.25">0.25×</button>
           <button type="button" class="pill-btn" data-speed="0.5">0.5×</button>
           <button type="button" class="pill-btn active" data-speed="1">1×</button>
-          <button type="button" class="pill-btn" data-speed="2">2×</button></div>
-        <div class="ctrl-group"><span class="ctrl-group-lbl" id="lbl-range">RANGE</span>
-          <button type="button" class="pill-btn" data-range="24">24H</button>
-          <button type="button" class="pill-btn active" data-range="48">48H</button></div>
+          <button type="button" class="pill-btn" data-speed="1.5">1.5×</button>
+          <button type="button" class="pill-btn" data-speed="2">2×</button>
+          <button type="button" class="pill-btn" data-speed="3">3×</button>
+          <button type="button" class="pill-btn" data-speed="4">4×</button></div>
+        <div class="ctrl-group ctrl-range"><span class="ctrl-group-lbl" id="lbl-range">RANGE</span>
+          <div class="range-btns">
+            <button type="button" class="pill-btn" data-range="24">24H</button>
+            <button type="button" class="pill-btn active" data-range="48">48H</button>
+            <button type="button" class="pill-btn" data-range="168">7T</button>
+            <button type="button" class="pill-btn" data-range="720">1M</button>
+            <button type="button" class="pill-btn" data-range="4320">6M</button>
+            <button type="button" class="pill-btn" data-range="8760">12M</button>
+            <button type="button" class="pill-btn" data-range="17520">2J</button>
+            <button type="button" class="pill-btn" data-range="26280">3J</button>
+            <button type="button" class="pill-btn" data-range="35040">4J</button>
+            <button type="button" class="pill-btn" data-range="43800">5J</button>
+            <button type="button" class="pill-btn" data-range="52560">6J</button>
+          </div></div>
         <div class="ctrl-group" id="threat-legend" style="flex-wrap:wrap;gap:6px;"></div>
       </div>
       <div id="footer-stats">
@@ -678,16 +702,38 @@ function getDisplayAttackData(){return liveMode?getFilteredAttackData():aggregat
 function buildThreatLegend(){const el=document.getElementById('threat-legend');if(!el)return;el.innerHTML=Object.keys(THREAT_TYPES).map(k=>`<span class="threat-leg"><span class="threat-leg-dot" style="background:${THREAT_TYPES[k].color}"></span>${threatLabel(k)}</span>`).join('');}
 function renderMapPanels(){const events=liveMode?feedData:getEventsInReplay();const bySc={},byIp={},byCo={};events.forEach(e=>{bySc[e.scenario]=(bySc[e.scenario]||0)+1;byIp[e.ip]=(byIp[e.ip]||0)+1;byCo[e.country]=(byCo[e.country]||0)+1;});const row=(c,l,v)=>`<div class="map-panel-row"><span class="map-panel-dot" style="background:${c}"></span><span class="map-panel-label">${l}</span><span class="map-panel-val">${v}</span></div>`;document.getElementById('panel-scenarios-body').innerHTML=Object.entries(bySc).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([s,n])=>row(scenarioColor(s),s,n)).join('')||'—';document.getElementById('panel-ips-body').innerHTML=Object.entries(byIp).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([ip,n])=>{const c=events.find(e=>e.ip===ip)?.country||'??';return row(scenarioColor(events.find(e=>e.ip===ip)?.scenario),`${FLAG[c]||'🌐'} ${ip}`,n);}).join('')||'—';document.getElementById('panel-origins-body').innerHTML=Object.entries(byCo).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([cc,n],i)=>row('#888',`${i+1}. ${COUNTRY_NAME[cc]||cc}`,n)).join('')||'—';document.getElementById('fs-alerts').textContent=events.length;document.getElementById('fs-ips').textContent=new Set(events.map(e=>e.ip)).size;document.getElementById('fs-scenarios').textContent=new Set(events.map(e=>e.scenario)).size;document.getElementById('fs-countries').textContent=new Set(events.map(e=>e.country)).size;}
 function updateReplaySlider(){const sl=document.getElementById('replay-slider');if(!sl||replayWinEnd<=replayWinStart)return;sl.value=Math.round(1000*(replayCursor-replayWinStart)/(replayWinEnd-replayWinStart));document.getElementById('replay-clock').textContent=fmtReplayClock(replayCursor);document.getElementById('tl-start').textContent=fmtReplayClock(replayWinStart);document.getElementById('tl-end').textContent=fmtReplayClock(replayWinEnd);}
+function countryLabelForFlight(cc){
+  const deShort={US:'USA',CA:'Kanada',GB:'UK',DE:'Deutschland',NL:'Niederlande',CH:'Schweiz'};
+  return currentLang==='de'?(deShort[cc]||COUNTRY_NAME[cc]||cc):(typeof COUNTRY_NAMES!=='undefined'&&COUNTRY_NAMES[cc]?COUNTRY_NAMES[cc]:cc);
+}
+function clearFlightLabels(){const layer=document.getElementById('flight-labels-layer');if(layer)layer.innerHTML='';}
+function updateFlightLabels(rockets){
+  const layer=document.getElementById('flight-labels-layer');
+  if(!layer||!baseSvg)return;
+  layer.innerHTML='';
+  const z=d3.zoomTransform(baseSvg.node());
+  rockets.filter(r=>r.t>0.03&&r.t<0.98).forEach(r=>{
+    const sx=r.sx*z.k+z.x,sy=r.sy*z.k+z.y;
+    const cc=r.country||'??';
+    const city=r.city?translateCity(r.city):'';
+    const tag=document.createElement('div');
+    tag.className='flight-tag';
+    tag.style.left=sx+'px';
+    tag.style.top=(sy-6)+'px';
+    tag.innerHTML=`<span class="flight-tag-flag">${FLAG[cc]||'🌐'}</span><div class="flight-tag-body"><span class="flight-tag-country">${countryLabelForFlight(cc)}</span>${city?`<span class="flight-tag-city">${city}</span>`:''}</div>`;
+    layer.appendChild(tag);
+  });
+}
 function spawnRocketForEvent(ev){
   if(!animOn||!linesOn)return;
   if(activeRockets.some(r=>r.ip===ev.ip&&r.t<1))return;
   const [sx,sy]=proj([SERVER_LON,SERVER_LAT]);const pt=proj([ev.lon,ev.lat]);if(!pt)return;
   const[px,py]=pt;const dx=sx-px,dy=sy-py,dist=Math.sqrt(dx*dx+dy*dy);
   activeRockets.push({
-    ip:ev.ip,country:ev.country||'??',scenario:ev.scenario,
+    ip:ev.ip,country:ev.country||'??',city:ev.city||'',scenario:ev.scenario,
     sx:px,sy:py,ex:sx,ey:sy,
     cpx:(px+sx)/2,cpy:(py+sy)/2-Math.min(dist*0.38,130),
-    col:CROWDSEC_ARC_COLOR,t:0,
+    col:scenarioColor(ev.scenario),t:0,
   });
   if(!animRAF)startAnimLoop();
 }
@@ -708,7 +754,7 @@ function quadPoint(p,t){const u=1-t;return{x:u*u*p.sx+2*u*t*p.cpx+t*t*p.ex,y:u*u
 function drawCrowdSecRockets(ts){
   clearArcCanvas();
   if(!animOn||!linesOn||!activeRockets.length){
-    if(dotG)dotG.selectAll('.flight-label').remove();
+    clearFlightLabels();
     return;
   }
   const now=typeof ts==='number'?ts:performance.now();
@@ -717,44 +763,28 @@ function drawCrowdSecRockets(ts){
   const rocketStep=(dt/ROCKET_DURATION_MS)*(liveMode?1:replaySpeed);
   ctx2d.save();ctx2d.translate(currentTx,currentTy);ctx2d.scale(currentScale,currentScale);
   const ik=1/currentScale;
-  if(dotG)dotG.selectAll('.flight-label').remove();
   activeRockets=activeRockets.filter(r=>{
     r.t=Math.min(1,r.t+rocketStep);
     const pt=quadPoint(r,r.t);
-    const col=r.col||CROWDSEC_ARC_COLOR;
+    const col=r.col||scenarioColor(r.scenario);
     if(r.t<1){
-      ctx2d.beginPath();ctx2d.strokeStyle=col;ctx2d.lineWidth=0.9*ik;ctx2d.globalAlpha=0.14;
+      ctx2d.beginPath();ctx2d.strokeStyle=col;ctx2d.lineWidth=0.9*ik;ctx2d.globalAlpha=0.12;
       ctx2d.moveTo(r.sx,r.sy);ctx2d.quadraticCurveTo(r.cpx,r.cpy,r.ex,r.ey);ctx2d.stroke();
       const tTail=Math.max(0,r.t-0.06);
       const pTail=quadPoint(r,tTail);
-      ctx2d.beginPath();ctx2d.strokeStyle=col;ctx2d.lineWidth=1.15*ik;ctx2d.globalAlpha=0.88;
+      ctx2d.beginPath();ctx2d.strokeStyle=col;ctx2d.lineWidth=1.1*ik;ctx2d.globalAlpha=0.9;
       ctx2d.moveTo(pTail.x,pTail.y);ctx2d.lineTo(pt.x,pt.y);ctx2d.stroke();
-      ctx2d.shadowColor=col;ctx2d.shadowBlur=10*ik;
       ctx2d.beginPath();ctx2d.fillStyle='#fff8f0';ctx2d.globalAlpha=0.95;
-      ctx2d.arc(pt.x,pt.y,2.8*ik,0,Math.PI*2);ctx2d.fill();
-      ctx2d.shadowBlur=0;
-      ctx2d.beginPath();ctx2d.fillStyle=col;ctx2d.globalAlpha=0.75;
-      ctx2d.arc(r.sx,r.sy,2.2*ik,0,Math.PI*2);ctx2d.fill();
-      if(dotG&&r.country){
-        const cc=r.country;const name=currentLang==='de'?(COUNTRY_NAME[cc]||cc):cc;
-        dotG.append('text').attr('class','flight-label')
-          .attr('x',r.sx).attr('y',r.sy-8*ik)
-          .attr('fill','rgba(255,255,255,0.9)').attr('font-size',(8*ik)+'px')
-          .attr('font-family','Share Tech Mono,monospace')
-          .attr('text-anchor','middle').attr('pointer-events','none')
-          .text(name);
-      }
+      ctx2d.arc(pt.x,pt.y,2.2*ik,0,Math.PI*2);ctx2d.fill();
     }
-    if(r.t>=0.85){
-      const flash=Math.min(1,(r.t-0.85)/0.15);
-      ctx2d.beginPath();ctx2d.strokeStyle=col;ctx2d.lineWidth=1*ik;
-      ctx2d.globalAlpha=0.55*(1-flash);
-      ctx2d.arc(r.ex,r.ey,(6+18*flash)*ik,0,Math.PI*2);ctx2d.stroke();
-      ctx2d.beginPath();ctx2d.fillStyle=col;ctx2d.globalAlpha=0.7*(1-flash);
-      ctx2d.arc(r.ex,r.ey,3*ik,0,Math.PI*2);ctx2d.fill();
+    if(r.t>=0.92){
+      const flash=Math.min(1,(r.t-0.92)/0.08);
+      ctx2d.beginPath();ctx2d.fillStyle=col;ctx2d.globalAlpha=0.45*(1-flash);
+      ctx2d.arc(r.ex,r.ey,2.5*ik,0,Math.PI*2);ctx2d.fill();
     }
     return r.t<1.02;
   });
+  updateFlightLabels(activeRockets);
   ctx2d.globalAlpha=1;ctx2d.restore();
 }
 function drawReplayFrame(ts){drawCrowdSecRockets(ts);}
@@ -784,7 +814,7 @@ function refreshMapFromData(){
   renderDots();
   renderMapPanels();
   updateCountryFills();
-  if(!animOn||!linesOn){clearArcCanvas();if(dotG)dotG.selectAll('.flight-label').remove();return;}
+  if(!animOn||!linesOn){clearArcCanvas();clearFlightLabels();return;}
   if(liveMode)spawnLiveRocketsFromFeed();
   if(animOn)startAnimLoop();
   else clearArcCanvas();
@@ -794,7 +824,7 @@ function startAnimLoop(){
   if(animRAF)cancelAnimationFrame(animRAF);
   replayLastFrame=0;lastRocketDrawTs=0;
   function loop(ts){
-    if(!animOn||!linesOn){clearArcCanvas();return;}
+    if(!animOn||!linesOn){clearArcCanvas();clearFlightLabels();return;}
     if(liveMode){
       spawnLiveRocketsFromFeed();
       drawCrowdSecRockets(ts);
@@ -1070,14 +1100,14 @@ function toggleLines(){
     if(mobLbl)mobLbl.textContent='LINIEN';
     if(mobBtn){mobBtn.style.borderColor='rgba(0,255,200,0.2)';mobBtn.style.color='rgba(160,255,216,0.45)';mobBtn.style.background='transparent';}
     activeRockets=[];if(animRAF){cancelAnimationFrame(animRAF);animRAF=null;}
-    clearArcCanvas();updateCountryFills();
+    clearArcCanvas();clearFlightLabels();updateCountryFills();
   }
 }
 
 // ── ANIMATION TOGGLE ──
 function toggleAnim(){
   animOn=!animOn;
-  if(!animOn){activeRockets=[];clearArcCanvas();if(animRAF){cancelAnimationFrame(animRAF);animRAF=null;}}
+  if(!animOn){activeRockets=[];clearArcCanvas();clearFlightLabels();if(animRAF){cancelAnimationFrame(animRAF);animRAF=null;}}
   const btn=document.getElementById('anim-toggle');
   const lbl=document.getElementById('anim-label');
   const mobDot=document.getElementById('mob-anim-dot');
@@ -1166,7 +1196,7 @@ function onZoom(event){
   const isCluster=t.k<=1.5;
   if(wasCluster!==isCluster) renderDots();
   if(!animOn||!linesOn){updateCountryFills();return;}
-  if(animOn&&linesOn)drawCrowdSecRockets();
+  if(animOn&&linesOn){drawCrowdSecRockets();updateFlightLabels(activeRockets);}
 }
 
 function loadScript(src){
