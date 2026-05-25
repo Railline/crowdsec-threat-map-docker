@@ -643,7 +643,8 @@ const REFRESH_MS   = 30000;
 const localUnbanned = new Set();
 const ARC_FPS      = 30;
 const REPLAY_PLAY_MS = 180000;      // Replay-Zeitraum bei 1× (~3 Min für 48h)
-const ROCKET_DURATION_MS = 3200;  // Dauer eines Raketenflugs bis Einschlag
+const ROCKET_DURATION_MS = 4500;  // Dauer eines Raketenflugs bis Einschlag (langsamer, Console-nah)
+const CROWDSEC_ARC_COLOR = '#ff9a3c'; // Orange wie CrowdSec Console
 
 const THREAT_TYPES = {
   cve:  { color:'#ff4400', labelDe:'CVE Exploit', labelEn:'CVE Exploit' },
@@ -661,6 +662,7 @@ let replayCursor=0,replayWinStart=0,replayWinEnd=0,replayLastFrame=0,activeRocke
 let lastMetricsText='',replayInitialized=false,replayAutoStarted=false;
 let countriesGeo=null;
 let lastRocketDrawTs=0;
+let lastLiveSeenKeys=new Set();
 
 const ISO2_NUM={US:'840',CA:'124',MX:'484',BR:'76',AR:'32',GB:'826',DE:'276',FR:'250',NL:'528',BE:'56',ES:'724',IT:'380',PL:'616',RU:'643',UA:'804',CN:'156',IN:'356',JP:'392',KR:'410',AU:'36',ID:'360',SG:'702',HK:'344',TW:'158',TH:'764',VN:'704',MY:'458',PH:'608',PK:'586',IR:'364',IQ:'368',SA:'682',AE:'784',IL:'376',TR:'792',ZA:'710',NG:'566',EG:'818',RO:'642',CZ:'203',SE:'752',NO:'578',DK:'208',FI:'246',AT:'40',CH:'756',PT:'620',GR:'300',HU:'348',RS:'688',BG:'100',HR:'191',SK:'703',LT:'440',LV:'428',EE:'233',IE:'372',NZ:'554',CO:'170',CL:'152',VE:'862',EC:'218',PE:'604',KZ:'398',UZ:'860',BD:'50',NP:'524',MM:'104'};
 function countryHeatFill(n,maxN){const r=n/Math.max(maxN,1);if(r>=0.45)return `rgba(220,40,70,${0.4+0.35*r})`;if(r>=0.15)return `rgba(160,90,220,${0.25+0.3*r})`;return `rgba(70,100,180,${0.2+0.2*r})`;}
@@ -678,36 +680,84 @@ function renderMapPanels(){const events=liveMode?feedData:getEventsInReplay();co
 function updateReplaySlider(){const sl=document.getElementById('replay-slider');if(!sl||replayWinEnd<=replayWinStart)return;sl.value=Math.round(1000*(replayCursor-replayWinStart)/(replayWinEnd-replayWinStart));document.getElementById('replay-clock').textContent=fmtReplayClock(replayCursor);document.getElementById('tl-start').textContent=fmtReplayClock(replayWinStart);document.getElementById('tl-end').textContent=fmtReplayClock(replayWinEnd);}
 function spawnRocketForEvent(ev){
   if(!animOn||!linesOn)return;
-  if(activeRockets.some(r=>r.ip===ev.ip))return;
+  if(activeRockets.some(r=>r.ip===ev.ip&&r.t<1))return;
   const [sx,sy]=proj([SERVER_LON,SERVER_LAT]);const pt=proj([ev.lon,ev.lat]);if(!pt)return;
   const[px,py]=pt;const dx=sx-px,dy=sy-py,dist=Math.sqrt(dx*dx+dy*dy);
-  activeRockets.push({ip:ev.ip,sx:px,sy:py,ex:sx,ey:sy,cpx:(px+sx)/2,cpy:(py+sy)/2-Math.min(dist*0.38,130),col:scenarioColor(ev.scenario),t:0});
+  activeRockets.push({
+    ip:ev.ip,country:ev.country||'??',scenario:ev.scenario,
+    sx:px,sy:py,ex:sx,ey:sy,
+    cpx:(px+sx)/2,cpy:(py+sy)/2-Math.min(dist*0.38,130),
+    col:CROWDSEC_ARC_COLOR,t:0,
+  });
+  if(!animRAF)startAnimLoop();
+}
+function spawnLiveRocketsFromFeed(){
+  if(!liveMode||!animOn||!linesOn)return;
+  feedData.forEach(e=>{
+    const key=(e.ip||'')+'|'+(e.time_iso||'');
+    if(!key||lastLiveSeenKeys.has(key))return;
+    lastLiveSeenKeys.add(key);
+    spawnRocketForEvent(e);
+  });
+  if(lastLiveSeenKeys.size>8000){
+    const keep=new Set(feedData.slice(0,500).map(e=>(e.ip||'')+'|'+(e.time_iso||'')));
+    lastLiveSeenKeys=keep;
+  }
 }
 function quadPoint(p,t){const u=1-t;return{x:u*u*p.sx+2*u*t*p.cpx+t*t*p.ex,y:u*u*p.sy+2*u*t*p.cpy+t*t*p.ey};}
-function drawReplayFrame(ts){
+function drawCrowdSecRockets(ts){
   clearArcCanvas();
-  if(!animOn||!linesOn||!activeRockets.length)return;
+  if(!animOn||!linesOn||!activeRockets.length){
+    if(dotG)dotG.selectAll('.flight-label').remove();
+    return;
+  }
   const now=typeof ts==='number'?ts:performance.now();
   const dt=lastRocketDrawTs?Math.min(48,now-lastRocketDrawTs):16;
   lastRocketDrawTs=now;
-  const rocketStep=(dt/ROCKET_DURATION_MS)*replaySpeed;
+  const rocketStep=(dt/ROCKET_DURATION_MS)*(liveMode?1:replaySpeed);
   ctx2d.save();ctx2d.translate(currentTx,currentTy);ctx2d.scale(currentScale,currentScale);
   const ik=1/currentScale;
+  if(dotG)dotG.selectAll('.flight-label').remove();
   activeRockets=activeRockets.filter(r=>{
     r.t=Math.min(1,r.t+rocketStep);
     const pt=quadPoint(r,r.t);
-    const trailT=Math.max(0,r.t-0.12);
-    const trail=quadPoint(r,trailT);
-    ctx2d.beginPath();ctx2d.strokeStyle=r.col;ctx2d.lineWidth=2.5*ik;ctx2d.globalAlpha=0.75*(1-r.t*0.3);
-    ctx2d.moveTo(r.sx,r.sy);ctx2d.quadraticCurveTo(r.cpx,r.cpy,pt.x,pt.y);ctx2d.stroke();
-    ctx2d.beginPath();ctx2d.fillStyle=r.col;ctx2d.globalAlpha=0.95;
-    ctx2d.arc(pt.x,pt.y,5*ik,0,Math.PI*2);ctx2d.fill();
-    if(r.t>=0.92){ctx2d.beginPath();ctx2d.strokeStyle=r.col;ctx2d.lineWidth=1.2*ik;ctx2d.globalAlpha=0.5*(1-r.t);
-      ctx2d.arc(r.ex,r.ey,14*ik,0,Math.PI*2);ctx2d.stroke();}
-    return r.t<1;
+    const col=r.col||CROWDSEC_ARC_COLOR;
+    if(r.t<1){
+      ctx2d.beginPath();ctx2d.strokeStyle=col;ctx2d.lineWidth=0.9*ik;ctx2d.globalAlpha=0.14;
+      ctx2d.moveTo(r.sx,r.sy);ctx2d.quadraticCurveTo(r.cpx,r.cpy,r.ex,r.ey);ctx2d.stroke();
+      const tTail=Math.max(0,r.t-0.06);
+      const pTail=quadPoint(r,tTail);
+      ctx2d.beginPath();ctx2d.strokeStyle=col;ctx2d.lineWidth=1.15*ik;ctx2d.globalAlpha=0.88;
+      ctx2d.moveTo(pTail.x,pTail.y);ctx2d.lineTo(pt.x,pt.y);ctx2d.stroke();
+      ctx2d.shadowColor=col;ctx2d.shadowBlur=10*ik;
+      ctx2d.beginPath();ctx2d.fillStyle='#fff8f0';ctx2d.globalAlpha=0.95;
+      ctx2d.arc(pt.x,pt.y,2.8*ik,0,Math.PI*2);ctx2d.fill();
+      ctx2d.shadowBlur=0;
+      ctx2d.beginPath();ctx2d.fillStyle=col;ctx2d.globalAlpha=0.75;
+      ctx2d.arc(r.sx,r.sy,2.2*ik,0,Math.PI*2);ctx2d.fill();
+      if(dotG&&r.country){
+        const cc=r.country;const name=currentLang==='de'?(COUNTRY_NAME[cc]||cc):cc;
+        dotG.append('text').attr('class','flight-label')
+          .attr('x',r.sx).attr('y',r.sy-8*ik)
+          .attr('fill','rgba(255,255,255,0.9)').attr('font-size',(8*ik)+'px')
+          .attr('font-family','Share Tech Mono,monospace')
+          .attr('text-anchor','middle').attr('pointer-events','none')
+          .text(name);
+      }
+    }
+    if(r.t>=0.85){
+      const flash=Math.min(1,(r.t-0.85)/0.15);
+      ctx2d.beginPath();ctx2d.strokeStyle=col;ctx2d.lineWidth=1*ik;
+      ctx2d.globalAlpha=0.55*(1-flash);
+      ctx2d.arc(r.ex,r.ey,(6+18*flash)*ik,0,Math.PI*2);ctx2d.stroke();
+      ctx2d.beginPath();ctx2d.fillStyle=col;ctx2d.globalAlpha=0.7*(1-flash);
+      ctx2d.arc(r.ex,r.ey,3*ik,0,Math.PI*2);ctx2d.fill();
+    }
+    return r.t<1.02;
   });
   ctx2d.globalAlpha=1;ctx2d.restore();
 }
+function drawReplayFrame(ts){drawCrowdSecRockets(ts);}
 function spawnRocketsForNewEvents(){
   const filt=e=>{if(e.ts<=lastReplaySpawnTs||e.ts>replayCursor)return false;if(activeFilters.country&&e.country!==activeFilters.country)return false;if(activeFilters.scenario&&e.scenario!==activeFilters.scenario)return false;return true;};
   const newEvts=allEvents.filter(filt).sort((a,b)=>a.ts-b.ts);
@@ -734,13 +784,33 @@ function refreshMapFromData(){
   renderDots();
   renderMapPanels();
   updateCountryFills();
-  if(!animOn||!linesOn){clearArcCanvas();return;}
-  if(liveMode){if(animOn)startArcAnimation();else clearArcCanvas();}
-  else if(animOn)drawReplayFrame();else clearArcCanvas();
+  if(!animOn||!linesOn){clearArcCanvas();if(dotG)dotG.selectAll('.flight-label').remove();return;}
+  if(liveMode)spawnLiveRocketsFromFeed();
+  if(animOn)startAnimLoop();
+  else clearArcCanvas();
 }
 function updateReplayBtn(){document.getElementById('replay-btn')?.classList.toggle('paused',!replayPlaying);}
-function startReplayLoop(){if(animRAF)cancelAnimationFrame(animRAF);replayLastFrame=0;lastRocketDrawTs=0;function loop(ts){if(liveMode)return;if(replayPlaying)advanceReplay(ts);else if(activeRockets.length)drawReplayFrame(ts);if(replayPlaying||activeRockets.length)animRAF=requestAnimationFrame(loop);}animRAF=requestAnimationFrame(loop);}
-function setupReplayControls(){buildThreatLegend();document.getElementById('replay-btn')?.addEventListener('click',()=>{if(liveMode){liveMode=false;document.getElementById('mode-live-btn')?.classList.remove('active');initReplayWindow();}replayPlaying=!replayPlaying;updateReplayBtn();if(replayPlaying)startReplayLoop();else drawReplayFrame();});document.getElementById('mode-live-btn')?.addEventListener('click',()=>{liveMode=!liveMode;document.getElementById('mode-live-btn')?.classList.toggle('active',liveMode);replayPlaying=false;updateReplayBtn();if(animRAF){cancelAnimationFrame(animRAF);animRAF=null;}refreshMapFromData();if(liveMode&&animOn)startArcAnimation();});document.querySelectorAll('[data-speed]').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('[data-speed]').forEach(x=>x.classList.remove('active'));b.classList.add('active');replaySpeed=parseFloat(b.dataset.speed);}));document.querySelectorAll('[data-range]').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('[data-range]').forEach(x=>x.classList.remove('active'));b.classList.add('active');replayRangeH=parseInt(b.dataset.range,10);initReplayWindow();refreshMapFromData();}));document.getElementById('replay-slider')?.addEventListener('input',e=>{if(replayWinEnd<=replayWinStart)return;replayCursor=replayWinStart+(parseInt(e.target.value,10)/1000)*(replayWinEnd-replayWinStart);lastReplaySpawnTs=replayWinStart;activeRockets=[];document.getElementById('replay-clock').textContent=fmtReplayClock(replayCursor);refreshMapFromData();});}
+function startAnimLoop(){
+  if(animRAF)cancelAnimationFrame(animRAF);
+  replayLastFrame=0;lastRocketDrawTs=0;
+  function loop(ts){
+    if(!animOn||!linesOn){clearArcCanvas();return;}
+    if(liveMode){
+      spawnLiveRocketsFromFeed();
+      drawCrowdSecRockets(ts);
+    }else if(replayPlaying){
+      advanceReplay(ts);
+    }else{
+      drawCrowdSecRockets(ts);
+    }
+    const keepAnim=activeRockets.length>0||(!liveMode&&replayPlaying);
+    if(keepAnim)animRAF=requestAnimationFrame(loop);
+    else animRAF=null;
+  }
+  animRAF=requestAnimationFrame(loop);
+}
+function startReplayLoop(){replayPlaying=true;updateReplayBtn();startAnimLoop();}
+function setupReplayControls(){buildThreatLegend();document.getElementById('replay-btn')?.addEventListener('click',()=>{if(liveMode){liveMode=false;document.getElementById('mode-live-btn')?.classList.remove('active');initReplayWindow();}replayPlaying=!replayPlaying;updateReplayBtn();if(replayPlaying)startReplayLoop();else drawReplayFrame();});document.getElementById('mode-live-btn')?.addEventListener('click',()=>{liveMode=!liveMode;document.getElementById('mode-live-btn')?.classList.toggle('active',liveMode);replayPlaying=false;updateReplayBtn();if(animRAF){cancelAnimationFrame(animRAF);animRAF=null;}if(liveMode){feedData.forEach(e=>lastLiveSeenKeys.add((e.ip||'')+'|'+(e.time_iso||'')));}refreshMapFromData();});document.querySelectorAll('[data-speed]').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('[data-speed]').forEach(x=>x.classList.remove('active'));b.classList.add('active');replaySpeed=parseFloat(b.dataset.speed);}));document.querySelectorAll('[data-range]').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('[data-range]').forEach(x=>x.classList.remove('active'));b.classList.add('active');replayRangeH=parseInt(b.dataset.range,10);initReplayWindow();refreshMapFromData();}));document.getElementById('replay-slider')?.addEventListener('input',e=>{if(replayWinEnd<=replayWinStart)return;replayCursor=replayWinStart+(parseInt(e.target.value,10)/1000)*(replayWinEnd-replayWinStart);lastReplaySpawnTs=replayWinStart;activeRockets=[];document.getElementById('replay-clock').textContent=fmtReplayClock(replayCursor);refreshMapFromData();});}
 
 // ── MOBILE LAYOUT SYNC ──
 // Run immediately: set layout bottom = mob-sheet height in exact pixels, no gap
@@ -1021,7 +1091,8 @@ function toggleAnim(){
     if(mobDot){mobDot.style.background='var(--ok)';mobDot.style.boxShadow='0 0 5px var(--ok)';}
     if(mobLbl)mobLbl.textContent='ANIMATION';
     if(mobBtn){mobBtn.style.borderColor='var(--ok)';mobBtn.style.color='var(--ok)';}
-    if(liveMode)startArcAnimation();else{replayPlaying=true;updateReplayBtn();startReplayLoop();}
+    feedData.forEach(e=>lastLiveSeenKeys.add((e.ip||'')+'|'+(e.time_iso||'')));
+    if(liveMode)startAnimLoop();else{replayPlaying=true;updateReplayBtn();startReplayLoop();}
   } else {
     if(btn)btn.classList.remove('on');
     if(lbl)lbl.textContent=t('anim_off')||'ANIMATION AUS';
@@ -1097,8 +1168,7 @@ function onZoom(event){
   const isCluster=t.k<=1.5;
   if(wasCluster!==isCluster) renderDots();
   if(!animOn||!linesOn){updateCountryFills();return;}
-  if(liveMode){if(animOn)return;clearArcCanvas();}
-  else drawReplayFrame();
+  if(animOn&&linesOn)drawCrowdSecRockets();
 }
 
 function loadScript(src){
@@ -1123,7 +1193,7 @@ function mobileAdjustAndFit(){
       canvas.style.width=W+'px';canvas.style.height=H+'px';
       if(W>50&&H>50){
         fitMapToPoints();
-        if(!animOn)drawStaticArcs();
+        if(!animOn)clearArcCanvas();
       }
     });
   });
@@ -1143,7 +1213,7 @@ async function init(){
     await fetchAndRender();
     document.getElementById('loading').style.display='none';
     updateCountryFills();
-    if(animOn)drawStaticArcs();else clearArcCanvas();
+    if(animOn&&linesOn)startAnimLoop();else clearArcCanvas();
     // Auto-fit: poll until mapWrap has real dimensions
     let fitAttempts=0;
     let lastH=0;
@@ -1160,7 +1230,7 @@ async function init(){
         canvas.width=W;canvas.height=H;
         canvas.style.width=W+'px';canvas.style.height=H+'px';
         fitMapToPoints();
-        if(!animOn)drawStaticArcs();
+        if(!animOn)clearArcCanvas();
       } else if(fitAttempts<25){
         setTimeout(tryFit,120);
       }
@@ -1192,7 +1262,7 @@ function onResize(){
   fitMapToPoints();
   currentScale=1;currentTx=0;currentTy=0;
   updateCountryFills();
-  if(animOn&&linesOn)drawStaticArcs();else clearArcCanvas();
+  if(animOn&&linesOn)startAnimLoop();else clearArcCanvas();
 }
 
 function drawBaseMap(){
@@ -1267,66 +1337,7 @@ function buildArcPaths(){
   });
 }
 
-// Static arcs (nur Live + Animation an)
-function drawStaticArcs(){
-  clearArcCanvas();
-  if(!animOn||!linesOn)return;
-  if(!arcPaths.length)return;
-  ctx2d.save();
-  ctx2d.translate(currentTx,currentTy);
-  ctx2d.scale(currentScale,currentScale);
-  const ik=1/currentScale;
-  arcPaths.forEach(p=>{
-    ctx2d.beginPath();
-    ctx2d.strokeStyle=p.col;
-    ctx2d.lineWidth=1.0*ik;
-    ctx2d.setLineDash([5*ik,4*ik]);
-    ctx2d.lineDashOffset=0;
-    ctx2d.globalAlpha=0.45;
-    ctx2d.moveTo(p.sx,p.sy);
-    ctx2d.quadraticCurveTo(p.cpx,p.cpy,p.ex,p.ey);
-    ctx2d.stroke();
-  });
-  ctx2d.globalAlpha=1;
-  ctx2d.setLineDash([]);
-  ctx2d.restore();
-}
-
-// Animated arcs
-function startArcAnimation(){
-  if(!animOn||!linesOn){clearArcCanvas();updateCountryFills();return;}
-  if(animRAF)cancelAnimationFrame(animRAF);
-  const interval=1000/ARC_FPS;
-  function frame(ts){
-    animRAF=requestAnimationFrame(frame);
-    if(!animOn||!linesOn){clearArcCanvas();return;}
-    const elapsed=ts-lastFrameTime;
-    if(elapsed<interval)return;
-    lastFrameTime=ts-(elapsed%interval);
-    arcOffset+=0.12;
-    ctx2d.clearRect(0,0,canvas.width,canvas.height);
-    ctx2d.save();
-    ctx2d.translate(currentTx,currentTy);
-    ctx2d.scale(currentScale,currentScale);
-    const ik=1/currentScale;
-    const seg=5*ik,gap=4*ik,dash=seg+gap;
-    arcPaths.forEach(p=>{
-      ctx2d.beginPath();
-      ctx2d.strokeStyle=p.col;
-      ctx2d.lineWidth=1.1*ik;
-      ctx2d.setLineDash([seg,gap]);
-      ctx2d.lineDashOffset=-((arcOffset+p.phase)%dash);
-      ctx2d.globalAlpha=0.62;
-      ctx2d.moveTo(p.sx,p.sy);
-      ctx2d.quadraticCurveTo(p.cpx,p.cpy,p.ex,p.ey);
-      ctx2d.stroke();
-    });
-    ctx2d.globalAlpha=1;
-    ctx2d.setLineDash([]);
-    ctx2d.restore();
-  }
-  animRAF=requestAnimationFrame(frame);
-}
+// Bögen nur als temporäre Raketen (drawCrowdSecRockets) — keine dauerhaften arcPaths mehr
 
 // ── AUTO-FIT ZOOM TO ALL ATTACK POINTS ──
 function fitMapToPoints(){
@@ -1538,12 +1549,7 @@ async function fetchAndRender(){
     checkAlarms();
     hideErr();
     applyLang();
-    if(liveMode){if(!animOn)drawStaticArcs();else startArcAnimation();}
-    else{
-      if(!replayAutoStarted&&allEvents.length){replayAutoStarted=true;replayPlaying=true;updateReplayBtn();startReplayLoop();}
-      else if(replayPlaying)startReplayLoop();
-      else drawReplayFrame();
-    }
+    refreshMapFromData();
   }catch(e){showErr('VERBINDUNGSFEHLER: '+EXPORTER_URL);}
 }
 
@@ -2106,7 +2112,7 @@ function setTheme(name){
   });
   // Redraw map
   if(dotG){renderDots();drawServerDots();drawCountryLabels();}
-  if(!animOn)drawStaticArcs();
+  if(animOn&&linesOn)drawCrowdSecRockets();else clearArcCanvas();
   renderSparkline();
 }
 
@@ -2276,7 +2282,7 @@ function hideErr(){document.getElementById('err').style.display='none';}
 // Pause animation when tab hidden
 document.addEventListener('visibilitychange',()=>{
   if(document.hidden&&animRAF){cancelAnimationFrame(animRAF);animRAF=null;}
-  else if(!document.hidden&&animOn&&linesOn){if(liveMode)startArcAnimation();else if(replayPlaying)startReplayLoop();}
+  else if(!document.hidden&&animOn&&linesOn)startAnimLoop();
 });
 
 init();
