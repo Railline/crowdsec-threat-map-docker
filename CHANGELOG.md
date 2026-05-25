@@ -2,6 +2,16 @@
 
 ---
 
+## v1.5.0 — 25.05.2026
+
+### 🗺️ Console-style Attack Map
+- Replay mit Timeline, **24H / 48H**, **0.5× / 1× / 2×**
+- Raketen-Animation, Farben nach Bedrohungsart
+- Karten-Overlays + Footer-Stats, LIVE-Toggle
+- Fix: `active_ban` im Feed
+
+---
+
 ## v1.4.3 — 21.05.2026
 
 ### 🔒 Security (Issue #3)

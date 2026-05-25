@@ -144,6 +144,42 @@
   #leg-anim-hint{color:rgba(160,255,216,0.22);font-size:clamp(7px,0.85vw,9px);letter-spacing:1px;}
   #leg-hint{color:rgba(160,255,216,0.5);font-size:clamp(6px,0.75vw,8px);letter-spacing:0.5px;white-space:nowrap;}
 
+  #map-wrap{position:relative;}
+  .map-panel{position:absolute;z-index:60;pointer-events:auto;background:rgba(4,12,28,0.88);border:1px solid rgba(0,255,200,0.12);border-radius:6px;padding:8px 10px;min-width:140px;max-width:200px;backdrop-filter:blur(6px);font-size:9px;}
+  .map-panel h4{font-family:'Orbitron',monospace;font-size:8px;color:rgba(160,255,216,0.45);margin:0 0 6px 0;letter-spacing:1px;}
+  .map-panel-row{display:flex;align-items:center;gap:6px;padding:3px 0;border-bottom:1px solid rgba(0,255,200,0.04);}
+  .map-panel-row:last-child{border-bottom:none;}
+  .map-panel-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
+  .map-panel-label{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .map-panel-val{font-family:'Orbitron',monospace;color:var(--accent);flex-shrink:0;}
+  #panel-scenarios{top:42px;left:8px;}
+  #panel-ips{top:42px;left:50%;transform:translateX(-50%);max-width:220px;}
+  #panel-origins{top:42px;right:8px;}
+  @media(max-width:900px){#panel-ips{display:none;}}
+  @media(max-width:680px){.map-panel{display:none;}}
+  #replay-bar{position:absolute;top:6px;left:50%;transform:translateX(-50%);z-index:70;display:flex;align-items:center;gap:8px;padding:5px 12px;background:rgba(4,12,28,0.92);border:1px solid rgba(255,200,0,0.25);border-radius:20px;pointer-events:auto;}
+  #replay-btn{display:flex;align-items:center;gap:5px;cursor:pointer;font-family:'Orbitron',monospace;font-size:9px;color:#ffcc00;border:none;background:transparent;}
+  #replay-btn .replay-dot{width:7px;height:7px;border-radius:50%;background:#ffcc00;box-shadow:0 0 8px #ffcc00;}
+  #replay-btn.paused .replay-dot{background:rgba(255,200,0,0.35);box-shadow:none;}
+  #replay-clock{font-size:9px;color:rgba(160,255,216,0.7);white-space:nowrap;min-width:140px;text-align:center;}
+  #mode-live-btn{font-size:8px;padding:2px 8px;border:1px solid var(--dim);border-radius:3px;background:transparent;color:rgba(160,255,216,0.45);cursor:pointer;font-family:'Share Tech Mono',monospace;}
+  #mode-live-btn.active{border-color:var(--ok);color:var(--ok);}
+  #map-console-bar{display:flex;flex-direction:column;background:rgba(2,8,16,0.98);border-top:1px solid var(--dim);flex-shrink:0;}
+  #timeline-wrap{padding:6px 12px 4px;}
+  #replay-slider{width:100%;height:4px;-webkit-appearance:none;background:rgba(0,255,200,0.12);border-radius:2px;cursor:pointer;}
+  #replay-slider::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:12px;border-radius:50%;background:var(--accent);}
+  #timeline-labels{display:flex;justify-content:space-between;font-size:7px;color:rgba(160,255,216,0.35);padding:0 12px 2px;}
+  #console-controls{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;padding:6px 12px 8px;}
+  .ctrl-group{display:flex;align-items:center;gap:4px;}
+  .ctrl-group-lbl{font-size:7px;color:rgba(160,255,216,0.35);letter-spacing:1px;margin-right:4px;}
+  .pill-btn{padding:3px 8px;font-size:8px;border:1px solid rgba(0,255,200,0.2);border-radius:3px;background:transparent;color:rgba(160,255,216,0.45);cursor:pointer;font-family:'Share Tech Mono',monospace;}
+  .pill-btn.active{border-color:var(--accent);color:var(--accent);background:rgba(0,255,200,0.1);}
+  .threat-leg{display:flex;align-items:center;gap:4px;font-size:7px;color:rgba(160,255,216,0.5);white-space:nowrap;}
+  .threat-leg-dot{width:8px;height:8px;border-radius:2px;}
+  #footer-stats{display:flex;align-items:center;justify-content:center;gap:clamp(12px,3vw,28px);padding:6px 12px;border-top:1px solid rgba(0,255,200,0.06);flex-wrap:wrap;}
+  .fstat{display:flex;align-items:center;gap:5px;font-size:9px;}
+  .fstat-val{font-family:'Orbitron',monospace;font-weight:700;color:var(--accent);}
+
   /* Zoom controls */
   #zoom-ctrl{position:absolute;bottom:10px;left:8px;display:flex;flex-direction:column;gap:4px;z-index:50;}
   .zoom-btn{width:32px;height:32px;background:rgba(0,20,40,0.85);border:1px solid var(--dim);color:var(--accent);font-size:16px;display:flex;align-items:center;justify-content:center;cursor:pointer;border-radius:3px;user-select:none;font-family:'Orbitron',monospace;}
@@ -369,7 +405,7 @@
 <!-- Map overlay title (always visible, centered on map) -->
 <div id="map-title-overlay">
   <span id="h-title">CROWD<span>SEC</span> // THREAT MAP</span>
-  <span id="map-version-badge">v1.4.2</span>
+  <span id="map-version-badge">v1.5.0</span>
 </div>
 <!-- hidden lang refs removed - sidebar has the real IDs -->
 
@@ -381,6 +417,14 @@
     <div id="map-wrap">
       <svg id="base-svg" style="position:absolute;inset:0;width:100%;height:100%"></svg>
       <canvas id="arc-canvas"></canvas>
+      <div id="replay-bar">
+        <button type="button" id="replay-btn" title="Replay"><span class="replay-dot"></span><span id="replay-btn-lbl">REPLAY</span></button>
+        <span id="replay-clock">—</span>
+        <button type="button" id="mode-live-btn" title="Live">LIVE</button>
+      </div>
+      <div id="panel-scenarios" class="map-panel"><h4 id="lbl-top-scenarios">TOP SCENARIOS</h4><div id="panel-scenarios-body"></div></div>
+      <div id="panel-ips" class="map-panel"><h4 id="lbl-malevolent-ips">MALEVOLENT IPS</h4><div id="panel-ips-body"></div></div>
+      <div id="panel-origins" class="map-panel"><h4 id="lbl-top-origins">TOP ATTACK ORIGINS</h4><div id="panel-origins-body"></div></div>
       <div id="zoom-ctrl">
         <div class="zoom-btn" id="bzi">+</div>
         <div class="zoom-btn" id="bzo">−</div>
@@ -388,13 +432,25 @@
       </div>
       <div id="zoom-level">ZOOM 1×</div>
     </div>
-    <div id="legend">
-      <div class="leg-item"><div class="leg-dot" style="background:#00ff88"></div><span class="leg-label">1–4 ANGRIFFE</span></div>
-      <div class="leg-item"><div class="leg-dot" style="background:#ffff00"></div><span class="leg-label">5–9 ANGRIFFE</span></div>
-      <div class="leg-item"><div class="leg-dot" style="background:#ff8800"></div><span class="leg-label">10–19 ANGRIFFE</span></div>
-      <div class="leg-item"><div class="leg-dot" style="background:#ff2244"></div><span class="leg-label">20+ ANGRIFFE</span></div>
-      <div class="leg-item"><div class="leg-dot" style="background:#00aaff;border:2px solid #fff"></div><span class="leg-label">SERVER</span></div>
-      <span id="leg-hint">| KLICK AUF PUNKT = DETAILS</span>
+    <div id="map-console-bar">
+      <div id="timeline-wrap"><input type="range" id="replay-slider" min="0" max="1000" value="0"></div>
+      <div id="timeline-labels"><span id="tl-start">—</span><span id="tl-end">—</span></div>
+      <div id="console-controls">
+        <div class="ctrl-group"><span class="ctrl-group-lbl" id="lbl-speed">SPEED</span>
+          <button type="button" class="pill-btn" data-speed="0.5">0.5×</button>
+          <button type="button" class="pill-btn active" data-speed="1">1×</button>
+          <button type="button" class="pill-btn" data-speed="2">2×</button></div>
+        <div class="ctrl-group"><span class="ctrl-group-lbl" id="lbl-range">RANGE</span>
+          <button type="button" class="pill-btn" data-range="24">24H</button>
+          <button type="button" class="pill-btn active" data-range="48">48H</button></div>
+        <div class="ctrl-group" id="threat-legend" style="flex-wrap:wrap;gap:6px;"></div>
+      </div>
+      <div id="footer-stats">
+        <div class="fstat"><span>🔴</span><span class="fstat-val" id="fs-alerts">—</span><span class="fstat-lbl" id="fs-alerts-lbl">ALERTS</span></div>
+        <div class="fstat"><span>🟡</span><span class="fstat-val" id="fs-ips">—</span><span class="fstat-lbl" id="fs-ips-lbl">UNIQUE IPS</span></div>
+        <div class="fstat"><span>🔵</span><span class="fstat-val" id="fs-scenarios">—</span><span class="fstat-lbl" id="fs-scn-lbl">SCENARIOS</span></div>
+        <div class="fstat"><span>🟢</span><span class="fstat-val" id="fs-countries">—</span><span class="fstat-lbl" id="fs-ctry-lbl">COUNTRIES</span></div>
+      </div>
     </div>
   </div>
 
@@ -574,10 +630,44 @@ const SERVER_NAME_MAP = 'MEIN-SERVER';
 // Ab hier nichts mehr ändern
 // ============================================================
 
-const APP_VERSION  = 'v1.4.3';
-const REFRESH_MS   = 30000;  // Aktualisierung alle 30 Sekunden
-const localUnbanned = new Set(); // lokal entsperrte IPs
-const ARC_FPS      = 10;     // Frames/Sek für Animation
+const APP_VERSION  = 'v1.5.0';
+const REFRESH_MS   = 30000;
+const localUnbanned = new Set();
+const ARC_FPS      = 30;
+const REPLAY_PLAY_MS = 90000;
+
+const THREAT_TYPES = {
+  cve:  { color:'#ff4400', labelDe:'CVE Exploit', labelEn:'CVE Exploit' },
+  brute:{ color:'#ff6b9d', labelDe:'Brute Force', labelEn:'Brute Force' },
+  recon:{ color:'#00cc66', labelDe:'Reconnaissance', labelEn:'Reconnaissance' },
+  scan: { color:'#4488ff', labelDe:'Vulnerability Scan', labelEn:'Vulnerability Scan' },
+  other:{ color:'#888899', labelDe:'Other', labelEn:'Other' },
+};
+function scenarioCategory(s){const x=(s||'').toLowerCase();if(/cve|exploit|sqli|rce|lfi|rfi/.test(x))return 'cve';if(/ssh|bf|brute|force|login|rdp/.test(x))return 'brute';if(/scan|probing|probe|discovery/.test(x))return 'scan';if(/http|sensitive|recon|path/.test(x))return 'recon';return 'other';}
+function scenarioColor(s){return THREAT_TYPES[scenarioCategory(s)]?.color||THREAT_TYPES.other.color;}
+function threatLabel(cat){const tr=THREAT_TYPES[cat];return tr?(currentLang==='de'?tr.labelDe:tr.labelEn):cat;}
+
+let allEvents=[],liveMode=false,replayPlaying=false,replayRangeH=48,replaySpeed=1;
+let replayCursor=0,replayWinStart=0,replayWinEnd=0,replayLastFrame=0,activeRockets=[],lastReplayEventCount=0;
+let lastMetricsText='',replayInitialized=false,replayAutoStarted=false;
+
+function parseEventTime(iso){if(!iso)return 0;const s=iso.trim().replace(' ','T');const t=Date.parse(/[zZ]$/.test(s)?s:s+'Z');return isNaN(t)?0:t;}
+function fmtReplayClock(ts){return ts?new Date(ts).toLocaleString(currentLang==='de'?'de-DE':'en-GB',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit',second:'2-digit'}):'—';}
+function initReplayWindow(){const times=allEvents.map(e=>e.ts).filter(t=>t>0);if(!times.length)return;replayWinEnd=Math.max(...times);replayWinStart=Math.max(Math.min(...times),replayWinEnd-replayRangeH*3600000);replayCursor=replayWinStart;lastReplayEventCount=0;updateReplaySlider();}
+function getEventsInReplay(){let list=allEvents.filter(e=>e.ts>=replayWinStart&&e.ts<=replayCursor);if(activeFilters.country)list=list.filter(d=>d.country===activeFilters.country);if(activeFilters.scenario)list=list.filter(d=>d.scenario===activeFilters.scenario);if(activeFilters.search){const q=activeFilters.search;list=list.filter(d=>(d.ip||'').includes(q)||(d.country||'').toLowerCase().includes(q)||(d.scenario||'').toLowerCase().includes(q));}return list;}
+function aggregateFromEvents(events){const by={};events.forEach(e=>{if(!e.lat&&!e.lon)return;const k=`${e.lat.toFixed(2)},${e.lon.toFixed(2)},${e.scenario}`;if(!by[k])by[k]={...e,count:0};by[k].count++;});return Object.values(by);}
+function getDisplayAttackData(){return liveMode?getFilteredAttackData():aggregateFromEvents(getEventsInReplay());}
+function buildThreatLegend(){const el=document.getElementById('threat-legend');if(!el)return;el.innerHTML=Object.keys(THREAT_TYPES).map(k=>`<span class="threat-leg"><span class="threat-leg-dot" style="background:${THREAT_TYPES[k].color}"></span>${threatLabel(k)}</span>`).join('');}
+function renderMapPanels(){const events=liveMode?feedData:getEventsInReplay();const bySc={},byIp={},byCo={};events.forEach(e=>{bySc[e.scenario]=(bySc[e.scenario]||0)+1;byIp[e.ip]=(byIp[e.ip]||0)+1;byCo[e.country]=(byCo[e.country]||0)+1;});const row=(c,l,v)=>`<div class="map-panel-row"><span class="map-panel-dot" style="background:${c}"></span><span class="map-panel-label">${l}</span><span class="map-panel-val">${v}</span></div>`;document.getElementById('panel-scenarios-body').innerHTML=Object.entries(bySc).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([s,n])=>row(scenarioColor(s),s,n)).join('')||'—';document.getElementById('panel-ips-body').innerHTML=Object.entries(byIp).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([ip,n])=>{const c=events.find(e=>e.ip===ip)?.country||'??';return row(scenarioColor(events.find(e=>e.ip===ip)?.scenario),`${FLAG[c]||'🌐'} ${ip}`,n);}).join('')||'—';document.getElementById('panel-origins-body').innerHTML=Object.entries(byCo).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([cc,n],i)=>row('#888',`${i+1}. ${COUNTRY_NAME[cc]||cc}`,n)).join('')||'—';document.getElementById('fs-alerts').textContent=events.length;document.getElementById('fs-ips').textContent=new Set(events.map(e=>e.ip)).size;document.getElementById('fs-scenarios').textContent=new Set(events.map(e=>e.scenario)).size;document.getElementById('fs-countries').textContent=new Set(events.map(e=>e.country)).size;}
+function updateReplaySlider(){const sl=document.getElementById('replay-slider');if(!sl||replayWinEnd<=replayWinStart)return;sl.value=Math.round(1000*(replayCursor-replayWinStart)/(replayWinEnd-replayWinStart));document.getElementById('replay-clock').textContent=fmtReplayClock(replayCursor);document.getElementById('tl-start').textContent=fmtReplayClock(replayWinStart);document.getElementById('tl-end').textContent=fmtReplayClock(replayWinEnd);}
+function spawnRocketForEvent(ev){const [sx,sy]=proj([SERVER_LON,SERVER_LAT]);const pt=proj([ev.lon,ev.lat]);if(!pt)return;const[px,py]=pt;const dx=sx-px,dy=sy-py,dist=Math.sqrt(dx*dx+dy*dy);activeRockets.push({sx:px,sy:py,ex:sx,ey:sy,cpx:(px+sx)/2,cpy:(py+sy)/2-Math.min(dist*0.38,130),col:scenarioColor(ev.scenario),t:0});}
+function quadPoint(p,t){const u=1-t;return{x:u*u*p.sx+2*u*t*p.cpx+t*t*p.ex,y:u*u*p.sy+2*u*t*p.cpy+t*t*p.ey};}
+function drawReplayFrame(){ctx2d.clearRect(0,0,canvas.width,canvas.height);if(!linesOn)return;ctx2d.save();ctx2d.translate(currentTx,currentTy);ctx2d.scale(currentScale,currentScale);const ik=1/currentScale;arcPaths.forEach(p=>{ctx2d.beginPath();ctx2d.strokeStyle=p.col;ctx2d.lineWidth=0.8*ik;ctx2d.globalAlpha=0.22;ctx2d.moveTo(p.sx,p.sy);ctx2d.quadraticCurveTo(p.cpx,p.cpy,p.ex,p.ey);ctx2d.stroke();});activeRockets=activeRockets.filter(r=>{r.t=Math.min(1,r.t+0.04*replaySpeed);const pt=quadPoint(r,r.t);ctx2d.beginPath();ctx2d.strokeStyle=r.col;ctx2d.lineWidth=2.2*ik;ctx2d.globalAlpha=0.55;ctx2d.moveTo(r.sx,r.sy);ctx2d.quadraticCurveTo(r.cpx,r.cpy,pt.x,pt.y);ctx2d.stroke();ctx2d.beginPath();ctx2d.fillStyle=r.col;ctx2d.arc(pt.x,pt.y,4*ik,0,Math.PI*2);ctx2d.fill();if(r.t>=0.98){ctx2d.beginPath();ctx2d.strokeStyle=r.col;ctx2d.globalAlpha=0.7;ctx2d.arc(r.ex,r.ey,10*ik,0,Math.PI*2);ctx2d.stroke();}return r.t<1.05;});ctx2d.globalAlpha=1;ctx2d.restore();}
+function advanceReplay(ts){if(!replayLastFrame)replayLastFrame=ts;const dt=ts-replayLastFrame;replayLastFrame=ts;if(replayWinEnd<=replayWinStart)return;replayCursor=Math.min(replayWinEnd,replayCursor+dt*(replayWinEnd-replayWinStart)/(REPLAY_PLAY_MS/replaySpeed));const evts=getEventsInReplay();if(evts.length>lastReplayEventCount)spawnRocketForEvent(evts[evts.length-1]);lastReplayEventCount=evts.length;updateReplaySlider();attackData=aggregateFromEvents(evts);buildArcPaths();renderDots();renderMapPanels();drawReplayFrame();if(replayCursor>=replayWinEnd){replayPlaying=false;updateReplayBtn();}}
+function refreshMapFromData(){attackData=liveMode?parseMetrics(lastMetricsText):aggregateFromEvents(getEventsInReplay());enrichAttackData();buildArcPaths();renderDots();renderMapPanels();if(liveMode){if(!animOn)drawStaticArcs();else startArcAnimation();}else drawReplayFrame();}
+function updateReplayBtn(){document.getElementById('replay-btn')?.classList.toggle('paused',!replayPlaying);}
+function startReplayLoop(){if(animRAF)cancelAnimationFrame(animRAF);replayLastFrame=0;function loop(ts){if(liveMode)return;if(replayPlaying)advanceReplay(ts);else if(activeRockets.length)drawReplayFrame();if(replayPlaying||activeRockets.length)animRAF=requestAnimationFrame(loop);}animRAF=requestAnimationFrame(loop);}
+function setupReplayControls(){buildThreatLegend();document.getElementById('replay-btn')?.addEventListener('click',()=>{if(liveMode){liveMode=false;document.getElementById('mode-live-btn')?.classList.remove('active');initReplayWindow();}replayPlaying=!replayPlaying;updateReplayBtn();if(replayPlaying)startReplayLoop();else drawReplayFrame();});document.getElementById('mode-live-btn')?.addEventListener('click',()=>{liveMode=!liveMode;document.getElementById('mode-live-btn')?.classList.toggle('active',liveMode);replayPlaying=false;updateReplayBtn();if(animRAF){cancelAnimationFrame(animRAF);animRAF=null;}refreshMapFromData();if(liveMode&&animOn)startArcAnimation();});document.querySelectorAll('[data-speed]').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('[data-speed]').forEach(x=>x.classList.remove('active'));b.classList.add('active');replaySpeed=parseFloat(b.dataset.speed);}));document.querySelectorAll('[data-range]').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('[data-range]').forEach(x=>x.classList.remove('active'));b.classList.add('active');replayRangeH=parseInt(b.dataset.range,10);initReplayWindow();refreshMapFromData();}));document.getElementById('replay-slider')?.addEventListener('input',e=>{if(replayWinEnd<=replayWinStart)return;replayCursor=replayWinStart+(parseInt(e.target.value,10)/1000)*(replayWinEnd-replayWinStart);lastReplayEventCount=getEventsInReplay().length;document.getElementById('replay-clock').textContent=fmtReplayClock(replayCursor);refreshMapFromData();});}
 
 // ── MOBILE LAYOUT SYNC ──
 // Run immediately: set layout bottom = mob-sheet height in exact pixels, no gap
@@ -634,6 +724,9 @@ const LANG = {
     leg_20:      '20+ ANGRIFFE',
     leg_server:  'SERVER',
     leg_click:   '| KLICK AUF PUNKT = DETAILS',
+    top_scenarios:'TOP SCENARIOS', malevolent_ips:'MALEVOLENT IPS', top_origins:'TOP ATTACK ORIGINS',
+    fs_alerts:'ALERTS', fs_ips:'EINDEUTIGE IPS', fs_scenarios:'SZENARIEN', fs_countries:'LÄNDER',
+    lbl_speed:'TEMPO', lbl_range:'ZEITRAUM', replay_lbl:'REPLAY', live_lbl:'LIVE',
     entries:     (s,e,t) => `${s}–${e} von ${t} Einträgen`,
     prev:        '◀',
     next:        '▶',
@@ -670,6 +763,9 @@ const LANG = {
     leg_20:      '20+ ATTACKS',
     leg_server:  'SERVER',
     leg_click:   '| CLICK POINT = DETAILS',
+    top_scenarios:'TOP SCENARIOS', malevolent_ips:'MALEVOLENT IPS', top_origins:'TOP ATTACK ORIGINS',
+    fs_alerts:'ALERTS', fs_ips:'UNIQUE IPS', fs_scenarios:'SCENARIOS', fs_countries:'COUNTRIES',
+    lbl_speed:'SPEED', lbl_range:'RANGE', replay_lbl:'REPLAY', live_lbl:'LIVE',
     entries:     (s,e,t) => `${s}–${e} of ${t} entries`,
     prev:        '◀',
     next:        '▶',
@@ -740,6 +836,9 @@ function applyLang(){
   legs.forEach((el,i)=>{ if(legKeys[i]) el.textContent=l[legKeys[i]]; });
   const legHint=document.getElementById('leg-hint');
   if(legHint) legHint.textContent=l.leg_click;
+  [['lbl-top-scenarios','top_scenarios'],['lbl-malevolent-ips','malevolent_ips'],['lbl-top-origins','top_origins'],['fs-alerts-lbl','fs_alerts'],['fs-ips-lbl','fs_ips'],['fs-scn-lbl','fs_scenarios'],['fs-ctry-lbl','fs_countries'],['lbl-speed','lbl_speed'],['lbl-range','lbl_range'],['replay-btn-lbl','replay_lbl']].forEach(([id,k])=>{const el=document.getElementById(id);if(el&&l[k])el.textContent=l[k];});
+  const liveBtn=document.getElementById('mode-live-btn');if(liveBtn)liveBtn.textContent=l.live_lbl||'LIVE';
+  buildThreatLegend();
   // Ctx menu close
   const ctxClose=document.getElementById('ctx-close');
   if(ctxClose) ctxClose.textContent=l.close;
@@ -821,7 +920,7 @@ function toggleLines(){
     if(mobLbl)mobLbl.textContent='LINIEN';
     if(mobBtn){mobBtn.style.borderColor='rgba(0,255,200,0.35)';mobBtn.style.color='rgba(0,255,200,0.8)';mobBtn.style.background='rgba(0,255,200,0.08)';}
     if(dotG)dotG.selectAll('.srv-ring').style('display',null);
-    if(animOn) startArcAnimation(); else drawStaticArcs();
+    if(liveMode){if(animOn)startArcAnimation();else drawStaticArcs();}else drawReplayFrame();
   } else {
     if(btn)btn.classList.remove('on');
     if(lbl)lbl.textContent=t('lines_off')||'LINIEN AUS';
@@ -848,15 +947,15 @@ function toggleAnim(){
     if(mobDot){mobDot.style.background='var(--ok)';mobDot.style.boxShadow='0 0 5px var(--ok)';}
     if(mobLbl)mobLbl.textContent='ANIMATION';
     if(mobBtn){mobBtn.style.borderColor='var(--ok)';mobBtn.style.color='var(--ok)';}
-    startArcAnimation();
+    if(liveMode)startArcAnimation();else{replayPlaying=true;updateReplayBtn();startReplayLoop();}
   } else {
     if(btn)btn.classList.remove('on');
     if(lbl)lbl.textContent=t('anim_off')||'ANIMATION AUS';
     if(mobDot){mobDot.style.background='rgba(160,255,216,0.3)';mobDot.style.boxShadow='none';}
     if(mobLbl)mobLbl.textContent='ANIMATION';
     if(mobBtn){mobBtn.style.borderColor='rgba(0,255,200,0.2)';mobBtn.style.color='rgba(160,255,216,0.45)';}
-    if(animRAF){cancelAnimationFrame(animRAF);animRAF=null;}
-    drawStaticArcs();
+    if(liveMode){if(animRAF){cancelAnimationFrame(animRAF);animRAF=null;}drawStaticArcs();}
+    else{replayPlaying=false;updateReplayBtn();drawReplayFrame();}
   }
 }
 
@@ -923,8 +1022,8 @@ function onZoom(event){
   const wasCluster=prevScale<=1.5;
   const isCluster=t.k<=1.5;
   if(wasCluster!==isCluster) renderDots();
-  if(animOn)return;
-  drawStaticArcs();
+  if(liveMode){if(animOn)return;drawStaticArcs();}
+  else drawReplayFrame();
 }
 
 function loadScript(src){
@@ -991,9 +1090,10 @@ async function init(){
       }
     }
     setTimeout(tryFit,200);
+    setupReplayControls();
     setInterval(fetchAndRender,REFRESH_MS);
-    setInterval(fetchWhitelistStatus, 60000); // alle 60s Badge aktualisieren
-    fetchWhitelistStatus(); // sofort beim Start
+    setInterval(fetchWhitelistStatus, 60000);
+    fetchWhitelistStatus();
 
     // Theme-Label ausblenden wenn Sidebar zu schmal
     const sidebar = document.getElementById('sidebar') || document.querySelector('aside');
@@ -1073,7 +1173,7 @@ let arcPaths=[];
 function buildArcPaths(){
   arcPaths=[];
   const [sx,sy]=proj([SERVER_LON,SERVER_LAT]);
-  const data=getFilteredAttackData();
+  const data=getDisplayAttackData();
   data.forEach(d=>{
     const pt=proj([d.lon,d.lat]);
     if(!pt)return;
@@ -1082,8 +1182,9 @@ function buildArcPaths(){
     arcPaths.push({
       sx:px,sy:py,ex:sx,ey:sy,
       cpx:(px+sx)/2,cpy:(py+sy)/2-Math.min(dist*0.38,130),
-      col:countColor(d.count),
+      col:scenarioColor(d.scenario),
       phase:Math.random()*10,
+      scenario:d.scenario,
     });
   });
 }
@@ -1178,7 +1279,7 @@ function fitMapToPoints(){
 function renderDots(){
   dotG.selectAll('.adot,.cluster-dot,.country-label').remove();
   const ik=1/currentScale;
-  const data=getFilteredAttackData();
+  const data=getDisplayAttackData();
 
   // Cluster ONLY at base zoom level (≤1.5×) — any zoom-in shows real dots
   const useCluster=currentScale<=1.5;
@@ -1192,7 +1293,7 @@ function renderDots(){
   dots.forEach(d=>{
     const px=d._px, py=d._py;
     if(px==null||py==null)return;
-    const col=countColor(d.count);
+    const col=scenarioColor(d.scenario);
     const isCluster=useCluster&&(d._cluster||1)>1;
 
     if(isCluster){
@@ -1308,6 +1409,8 @@ function parseFeedData(text){
         lat:      parseFloat(lb.latitude||0),
         lon:      parseFloat(lb.longitude||0),
         count:    1,
+        active_ban: lb.active_ban==='1',
+        ts:       parseEventTime(lb.attack_time_iso),
       });
     }catch(e){}
   }
@@ -1318,7 +1421,16 @@ async function fetchAndRender(){
   try{
     const res=await fetch(EXPORTER_URL,{cache:'no-store'});
     const text=await res.text();
-    attackData=parseMetrics(text);
+    lastMetricsText=text;
+    allEvents=parseFeedData(text).filter(d=>!localUnbanned.has(d.ip)&&d.ts>0);
+    if(!liveMode){
+      const times=allEvents.map(e=>e.ts).filter(t=>t>0);
+      if(times.length){
+        if(!replayInitialized){initReplayWindow();replayInitialized=true;}
+        else{replayWinEnd=Math.max(...times);replayWinStart=Math.max(Math.min(...times),replayWinEnd-replayRangeH*3600000);if(replayCursor>replayWinEnd)replayCursor=replayWinEnd;}
+      }
+    }
+    attackData=liveMode?parseMetrics(text):aggregateFromEvents(getEventsInReplay());
     feedData=parseFeedData(text).filter(d=>!localUnbanned.has(d.ip));
     enrichAttackData();
     const total=(text.match(/cs_exporter_total_alerts (\d+)/)||[])[1]||'—';
@@ -1340,10 +1452,16 @@ async function fetchAndRender(){
     renderCountryLists();
     renderFilterBar();
     renderSparkline();
+    renderMapPanels();
     checkAlarms();
     hideErr();
-    applyLang(); // update all translated labels
-    if(!animOn)drawStaticArcs();
+    applyLang();
+    if(liveMode){if(!animOn)drawStaticArcs();else startArcAnimation();}
+    else{
+      if(!replayAutoStarted&&allEvents.length){replayAutoStarted=true;replayPlaying=true;updateReplayBtn();startReplayLoop();}
+      else if(replayPlaying)startReplayLoop();
+      else drawReplayFrame();
+    }
   }catch(e){showErr('VERBINDUNGSFEHLER: '+EXPORTER_URL);}
 }
 
@@ -1543,12 +1661,8 @@ function feedItemHTML(d){
       <div class="feed-ip" style="flex:1;">${d.ip}</div>
       <button class="feed-action-btn feed-unban-btn" data-ip="${d.ip}"
         onclick="event.stopPropagation();unbanIPDirect('${d.ip}',this);"
-        title="${d.active_ban ? 'Aktiver Ban — klicken zum Entsperren (Decision + Alert wird gelöscht)' : 'Kein aktiver Ban — nur Alert/Historie vorhanden'}"
-        style="font-size:16px;opacity:${d.active_ban ? '1' : '0.3'};">🚫</button>
-      <button class="feed-action-btn feed-unban-btn" data-ip="${d.ip}"
-        onclick="event.stopPropagation();unbanIPDirect('${d.ip}',this);"
-        title="${d.active_ban ? 'Alert vorhanden' : 'Nur Alert/Historie — klicken zum Löschen'}"
-        style="font-size:16px;opacity:${d.active_ban ? '0.3' : '1'};">📋</button>
+        title="${d.active_ban ? 'Aktiver Ban — entsperren' : 'Historie löschen'}"
+        style="font-size:16px;">${d.active_ban?'🚫':'📋'}</button>
       <button class="feed-action-btn feed-lookup-btn"
         onclick="event.stopPropagation();openCtxFeed('${d.ip}','${d.country}','${d.scenario}',1,event,'${d.iprange||''}');"
         title="IP nachschlagen">🔍</button>
@@ -1817,18 +1931,18 @@ function renderCountryLists(){
 // ── FILTER FUNCTIONS ──
 function filterByCountry(cc){
   if(activeFilters.country===cc){activeFilters.country=null;}else{activeFilters.country=cc;}
-  feedPage=0;renderFeed();renderFilterBar();renderDots();buildArcPaths();drawStaticArcs();
+  feedPage=0;renderFeed();renderFilterBar();refreshMapFromData();
   renderCountryLists();
 }
 
 function filterByScenario(sc){
   if(activeFilters.scenario===sc){activeFilters.scenario=null;}else{activeFilters.scenario=sc;}
-  feedPage=0;renderFeed();renderFilterBar();renderDots();buildArcPaths();drawStaticArcs();
+  feedPage=0;renderFeed();renderFilterBar();refreshMapFromData();
 }
 
 function clearFilter(key){
   activeFilters[key]=null;
-  feedPage=0;renderFeed();renderFilterBar();renderDots();buildArcPaths();drawStaticArcs();
+  feedPage=0;renderFeed();renderFilterBar();refreshMapFromData();
   if(key==='country')renderCountryLists();
 }
 

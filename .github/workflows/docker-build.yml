@@ -2,9 +2,11 @@ name: Docker Build & Publish
 
 on:
   push:
-    branches: [ "main" ]
+    branches:
+      - main
+      - "1.*"          # Release-Branches z. B. 1.5.0
     tags:
-      - "v*"
+      - "v*"           # z. B. v1.5.0 → ghcr.io/.../crowdsec-threat-map-docker:1.5.0
   workflow_dispatch:
 
 env:
