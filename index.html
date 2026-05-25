@@ -183,11 +183,12 @@
   .pill-btn{padding:3px 8px;font-size:8px;border:1px solid rgba(0,255,200,0.2);border-radius:3px;background:transparent;color:rgba(160,255,216,0.45);cursor:pointer;font-family:'Share Tech Mono',monospace;}
   .pill-btn.active{border-color:var(--accent);color:var(--accent);background:rgba(0,255,200,0.1);}
   #flight-labels-layer{position:absolute;inset:0;pointer-events:none;z-index:45;overflow:visible;}
-  .flight-tag{position:absolute;transform:translate(-50%,-100%);display:flex;align-items:center;gap:4px;padding:2px 6px;background:rgba(8,14,28,0.92);border:1px solid rgba(255,255,255,0.12);border-radius:5px;box-shadow:0 2px 8px rgba(0,0,0,0.4);white-space:nowrap;max-width:140px;}
-  .flight-tag-flag{font-size:11px;line-height:1;flex-shrink:0;}
-  .flight-tag-body{display:flex;flex-direction:column;gap:0;line-height:1.1;min-width:0;}
-  .flight-tag-country{font-size:8px;color:#fff;font-family:'Share Tech Mono',monospace;letter-spacing:0.2px;}
-  .flight-tag-city{font-size:7px;color:rgba(160,255,216,0.65);font-family:'Share Tech Mono',monospace;}
+  .flight-tag{position:absolute;transform:translate(-50%,-100%);display:flex;align-items:center;gap:3px;padding:1px 5px 1px 4px;background:rgba(6,12,24,0.9);border:1px solid rgba(255,255,255,0.1);border-radius:4px;box-shadow:0 1px 4px rgba(0,0,0,0.35);white-space:nowrap;max-width:110px;border-left:2px solid var(--tag-accent,#00ffe0);}
+  .flight-tag-flag{font-size:9px;line-height:1;flex-shrink:0;}
+  .flight-tag-line{font-size:6.5px;color:rgba(220,245,255,0.92);font-family:'Share Tech Mono',monospace;line-height:1.15;overflow:hidden;text-overflow:ellipsis;}
+  .flight-tag-line .flight-tag-cc{opacity:0.7;font-weight:600;}
+  .flight-tag-line .flight-tag-sep{opacity:0.35;margin:0 2px;}
+  .flight-tag-line .flight-tag-city{color:#fff;}
   .threat-leg{display:flex;align-items:center;gap:4px;font-size:7px;color:rgba(160,255,216,0.5);white-space:nowrap;}
   .threat-leg-dot{width:8px;height:8px;border-radius:2px;}
   #footer-stats{display:flex;align-items:center;justify-content:center;gap:clamp(12px,3vw,28px);padding:6px 12px;border-top:1px solid rgba(0,255,200,0.06);flex-wrap:wrap;}
@@ -702,25 +703,66 @@ function getDisplayAttackData(){return liveMode?getFilteredAttackData():aggregat
 function buildThreatLegend(){const el=document.getElementById('threat-legend');if(!el)return;el.innerHTML=Object.keys(THREAT_TYPES).map(k=>`<span class="threat-leg"><span class="threat-leg-dot" style="background:${THREAT_TYPES[k].color}"></span>${threatLabel(k)}</span>`).join('');}
 function renderMapPanels(){const events=liveMode?feedData:getEventsInReplay();const bySc={},byIp={},byCo={};events.forEach(e=>{bySc[e.scenario]=(bySc[e.scenario]||0)+1;byIp[e.ip]=(byIp[e.ip]||0)+1;byCo[e.country]=(byCo[e.country]||0)+1;});const row=(c,l,v)=>`<div class="map-panel-row"><span class="map-panel-dot" style="background:${c}"></span><span class="map-panel-label">${l}</span><span class="map-panel-val">${v}</span></div>`;document.getElementById('panel-scenarios-body').innerHTML=Object.entries(bySc).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([s,n])=>row(scenarioColor(s),s,n)).join('')||'—';document.getElementById('panel-ips-body').innerHTML=Object.entries(byIp).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([ip,n])=>{const c=events.find(e=>e.ip===ip)?.country||'??';return row(scenarioColor(events.find(e=>e.ip===ip)?.scenario),`${FLAG[c]||'🌐'} ${ip}`,n);}).join('')||'—';document.getElementById('panel-origins-body').innerHTML=Object.entries(byCo).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([cc,n],i)=>row('#888',`${i+1}. ${COUNTRY_NAME[cc]||cc}`,n)).join('')||'—';document.getElementById('fs-alerts').textContent=events.length;document.getElementById('fs-ips').textContent=new Set(events.map(e=>e.ip)).size;document.getElementById('fs-scenarios').textContent=new Set(events.map(e=>e.scenario)).size;document.getElementById('fs-countries').textContent=new Set(events.map(e=>e.country)).size;}
 function updateReplaySlider(){const sl=document.getElementById('replay-slider');if(!sl||replayWinEnd<=replayWinStart)return;sl.value=Math.round(1000*(replayCursor-replayWinStart)/(replayWinEnd-replayWinStart));document.getElementById('replay-clock').textContent=fmtReplayClock(replayCursor);document.getElementById('tl-start').textContent=fmtReplayClock(replayWinStart);document.getElementById('tl-end').textContent=fmtReplayClock(replayWinEnd);}
-function countryLabelForFlight(cc){
-  const deShort={US:'USA',CA:'Kanada',GB:'UK',DE:'Deutschland',NL:'Niederlande',CH:'Schweiz'};
-  return currentLang==='de'?(deShort[cc]||COUNTRY_NAME[cc]||cc):(typeof COUNTRY_NAMES!=='undefined'&&COUNTRY_NAMES[cc]?COUNTRY_NAMES[cc]:cc);
-}
 function clearFlightLabels(){const layer=document.getElementById('flight-labels-layer');if(layer)layer.innerHTML='';}
+function escTag(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');}
+function flightTagText(r){
+  const cc=(r.country||'??').toUpperCase();
+  const cityRaw=r.city?translateCity(r.city):'';
+  const city=cityRaw.length>20?cityRaw.slice(0,18)+'…':cityRaw;
+  if(city)return `<span class="flight-tag-cc">${escTag(cc)}</span><span class="flight-tag-sep">·</span><span class="flight-tag-city">${escTag(city)}</span>`;
+  const short=currentLang==='de'?(COUNTRY_NAME[cc]||cc):cc;
+  return `<span class="flight-tag-city">${escTag(short)}</span>`;
+}
+const FLIGHT_LABEL_OFFSETS=[[0,-10],[0,-22],[0,-34],[14,-14],[-14,-14],[22,-26],[-22,-26],[0,-44],[28,-18],[-28,-18],[36,-32],[-36,-32]];
+function layoutFlightLabels(rockets,z){
+  const minDist=currentScale<1.5?44:32;
+  const maxN=currentScale<1.2?3:currentScale<2?5:8;
+  const placed=[];
+  const out=[];
+  const seenIp=new Set();
+  const candidates=rockets.filter(r=>r.t>0.04&&r.t<0.97).sort((a,b)=>b.t-a.t);
+  for(const r of candidates){
+    if(out.length>=maxN)break;
+    if(seenIp.has(r.ip))continue;
+    const baseX=r.sx*z.k+z.x,baseY=r.sy*z.k+z.y;
+    const geoKey=`${Math.round(baseX/12)}_${Math.round(baseY/12)}`;
+    if(out.some(o=>o.geoKey===geoKey))continue;
+    let placedOne=false;
+    for(const[ox,oy]of FLIGHT_LABEL_OFFSETS){
+      const x=baseX+ox,y=baseY+oy;
+      if(placed.every(p=>Math.hypot(p.x-x,p.y-y)>=minDist)){
+        placed.push({x,y});
+        seenIp.add(r.ip);
+        out.push({r,x,y,geoKey});
+        placedOne=true;
+        break;
+      }
+    }
+    if(!placedOne&&out.length<maxN){
+      seenIp.add(r.ip);
+      out.push({r,x:baseX,y:baseY-10,geoKey});
+      placed.push({x:baseX,y:baseY-10});
+    }
+  }
+  return out;
+}
 function updateFlightLabels(rockets){
   const layer=document.getElementById('flight-labels-layer');
   if(!layer||!baseSvg)return;
   layer.innerHTML='';
   const z=d3.zoomTransform(baseSvg.node());
-  rockets.filter(r=>r.t>0.03&&r.t<0.98).forEach(r=>{
-    const sx=r.sx*z.k+z.x,sy=r.sy*z.k+z.y;
+  layoutFlightLabels(rockets,z).forEach(({r,x,y})=>{
     const cc=r.country||'??';
+    const col=r.col||scenarioColor(r.scenario);
     const city=r.city?translateCity(r.city):'';
+    const tip=city?`${cc} · ${city}`:(COUNTRY_NAME[cc]||cc);
     const tag=document.createElement('div');
     tag.className='flight-tag';
-    tag.style.left=sx+'px';
-    tag.style.top=(sy-4)+'px';
-    tag.innerHTML=`<span class="flight-tag-flag">${FLAG[cc]||'🌐'}</span><div class="flight-tag-body"><span class="flight-tag-country">${countryLabelForFlight(cc)}</span>${city?`<span class="flight-tag-city">${city}</span>`:''}</div>`;
+    tag.style.left=x+'px';
+    tag.style.top=y+'px';
+    tag.style.setProperty('--tag-accent',col);
+    tag.title=tip;
+    tag.innerHTML=`<span class="flight-tag-flag">${FLAG[cc]||'🌐'}</span><span class="flight-tag-line">${flightTagText(r)}</span>`;
     layer.appendChild(tag);
   });
 }
