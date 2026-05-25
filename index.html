@@ -1062,7 +1062,6 @@ function toggleLines(){
     if(mobDot){mobDot.style.background='var(--ok)';mobDot.style.boxShadow='0 0 5px var(--ok)';}
     if(mobLbl)mobLbl.textContent='LINIEN';
     if(mobBtn){mobBtn.style.borderColor='rgba(0,255,200,0.35)';mobBtn.style.color='rgba(0,255,200,0.8)';mobBtn.style.background='rgba(0,255,200,0.08)';}
-    if(dotG)dotG.selectAll('.srv-ring').style('display',null);
     refreshMapFromData();
   } else {
     if(btn)btn.classList.remove('on');
@@ -1070,7 +1069,6 @@ function toggleLines(){
     if(mobDot){mobDot.style.background='rgba(160,255,216,0.3)';mobDot.style.boxShadow='none';}
     if(mobLbl)mobLbl.textContent='LINIEN';
     if(mobBtn){mobBtn.style.borderColor='rgba(0,255,200,0.2)';mobBtn.style.color='rgba(160,255,216,0.45)';mobBtn.style.background='transparent';}
-    if(dotG)dotG.selectAll('.srv-ring').style('display','none');
     activeRockets=[];if(animRAF){cancelAnimationFrame(animRAF);animRAF=null;}
     clearArcCanvas();updateCountryFills();
   }
@@ -1279,40 +1277,32 @@ function drawBaseMap(){
   drawServerDots();
 }
 
+const SERVER_DOT_R=4;
+const SERVER_LABEL_GAP=7;
+
 function drawServerDots(){
   const [sx,sy]=proj([SERVER_LON,SERVER_LAT]);
-  dotG.selectAll('.srv-ring,.srv-dot,.srv-label').remove();
-  // Always use r=1 in SVG coords - scaling happens via onZoom/updateServerScale
-  [20,34,50].forEach(r=>{
-    dotG.append('circle').attr('class','srv-ring').attr('cx',sx).attr('cy',sy)
-      .attr('r',r).attr('data-r',r)
-      .attr('fill','none').attr('stroke','rgba(0,170,255,0.12)').attr('stroke-width',1)
-      .style('display', linesOn ? null : 'none');
-  });
+  dotG.selectAll('.srv-dot,.srv-label').remove();
+  const srvCol=getComputedStyle(document.documentElement).getPropertyValue('--server').trim()||'#00aaff';
   dotG.append('circle').attr('class','srv-dot').attr('cx',sx).attr('cy',sy)
-    .attr('r',7).attr('fill','#00aaff').attr('stroke','#fff').attr('stroke-width',1.5);
-  dotG.append('text').attr('class','srv-label').attr('x',sx+14).attr('y',sy+4)
-    .attr('data-sx',sx).attr('fill','#00aaff').attr('font-size','9px')
-    .attr('font-family','Share Tech Mono,monospace').attr('letter-spacing','0px').attr('font-size','7px').text(SERVER_NAME_MAP||'SERVER') //  ← Server-Name auf der Karte;
-  // Apply current scale immediately after drawing
+    .attr('r',SERVER_DOT_R).attr('fill',srvCol).attr('stroke','rgba(255,255,255,0.85)').attr('stroke-width',1);
+  dotG.append('text').attr('class','srv-label').attr('x',sx+SERVER_LABEL_GAP).attr('y',sy+3)
+    .attr('data-sx',sx).attr('fill',srvCol)
+    .attr('font-family','Share Tech Mono,monospace').attr('font-size','7px').text(SERVER_NAME_MAP||'SERVER');
   updateServerScale();
 }
 
 function updateServerScale(){
   if(!dotG)return;
   const ik=1/currentScale;
-  dotG.selectAll('.srv-ring').each(function(){
-    const r=parseFloat(this.dataset.r||30);
-    d3.select(this).attr('r',r*ik).attr('stroke-width',ik);
-  });
-  dotG.selectAll('.srv-dot').attr('r',7*ik).attr('stroke-width',1.5*ik);
+  dotG.selectAll('.srv-dot').attr('r',SERVER_DOT_R*ik).attr('stroke-width',ik);
   const [sx]=proj([SERVER_LON,SERVER_LAT]);
   dotG.selectAll('.srv-label')
-    .attr('font-size', (9*ik)+'px')
-    .attr('x',sx+14*ik)
+    .attr('font-size',(7*ik)+'px')
+    .attr('x',sx+SERVER_LABEL_GAP*ik)
     .attr('y',function(){
       const [,sy]=proj([SERVER_LON,SERVER_LAT]);
-      return sy+4*ik;
+      return sy+3*ik;
     });
 }
 
@@ -1387,13 +1377,12 @@ function renderDots(){
     const isCluster=useCluster&&(d._cluster||1)>1;
 
     if(isCluster){
-      // Cluster badge: normal dot size + small number, NO scaling with zoom
-      const sr=Math.min(4+Math.log(d.count+1)*0.6,8); // same formula as normal dots
+      const sr=Math.min(4+Math.log(d.count+1)*0.6,8);
       dotG.append('circle').attr('class','cluster-dot')
         .attr('cx',px).attr('cy',py)
-        .attr('r',sr*ik)  // same size as a normal dot
+        .attr('r',sr*ik)
         .attr('fill',col)
-        .attr('stroke','rgba(0,0,0,0.4)').attr('stroke-width',0.5*ik)
+        .attr('stroke',col).attr('stroke-width',1.1*ik).attr('opacity',0.95)
         .on('click',function(ev){ev.stopPropagation();selectDot(ev,this,d);})
         .on('mouseover',(ev)=>showTip(ev,d)).on('mouseout',hideTip);
       // Tiny count number inside
@@ -1411,7 +1400,7 @@ function renderDots(){
       const sr=Math.min(3+Math.log(d.count+1)*0.7,7);
       dotG.append('circle').attr('class','adot')
         .attr('cx',px).attr('cy',py).attr('r',sr*ik).attr('data-sr',sr)
-        .attr('fill',col).attr('stroke','rgba(0,0,0,0.3)').attr('stroke-width',0.4*ik)
+        .attr('fill',col).attr('stroke',col).attr('stroke-width',1.2*ik).attr('opacity',0.95)
         .on('click',function(ev){ev.stopPropagation();selectDot(ev,this,d);})
         .on('mouseover',(ev)=>showTip(ev,d)).on('mouseout',hideTip);
       // Stadtname bei genug Zoom — nur einmal pro Stadt
@@ -1420,7 +1409,7 @@ function renderDots(){
         _renderedCityLabels.add(d.city);
         dotG.append('text').attr('class','adot')
           .attr('x', px + (sr+2)*ik).attr('y', py + 3*ik)
-          .attr('fill','rgba(0,255,180,0.85)')
+          .attr('fill',col)
           .attr('font-size', `${6*ik}px`)
           .attr('font-family','Orbitron,monospace')
           .attr('pointer-events','none')
@@ -1461,6 +1450,7 @@ function enrichAttackData(){
       time_de: f.time_de,
       time_iso:f.time_iso,
       city:    f.city,
+      scenario:f.scenario,
     };
   });
   attackData.forEach(d=>{
@@ -1472,6 +1462,7 @@ function enrichAttackData(){
       d.time_de = extra.time_de;
       d.time_iso= extra.time_iso;
       d.city    = extra.city || d.city;
+      if(extra.scenario&&(!d.scenario||d.scenario==='unknown'))d.scenario=extra.scenario;
     }
   });
 }
@@ -2183,7 +2174,7 @@ const COUNTRY_NAMES={
 };
 
 function drawCountryLabels(){
-  if(!mapG||!worldData)return;
+  if(!mapG||!worldData||animOn)return;
   mapG.selectAll('.country-label').remove();
   const accent=getComputedStyle(document.documentElement).getPropertyValue('--accent').trim()||'#00ffe0';
   const shown=new Set();
@@ -2250,8 +2241,11 @@ function getClusteredDots(data){
     const totalCount=cluster.reduce((s,d)=>s+d.count,0);
     const cx=cluster.reduce((s,d)=>s+d._px*d.count,0)/totalCount;
     const cy=cluster.reduce((s,d)=>s+d._py*d.count,0)/totalCount;
+    const scenCounts={};
+    cluster.forEach(c=>{scenCounts[c.scenario]=(scenCounts[c.scenario]||0)+(c.count||1);});
+    const topScenario=Object.entries(scenCounts).sort((a,b)=>b[1]-a[1])[0]?.[0]||cluster[0].scenario;
     clusters.push({
-      ...cluster[0],_px:cx,_py:cy,
+      ...cluster[0],scenario:topScenario,_px:cx,_py:cy,
       count:totalCount,_cluster:cluster.length,_clusterPts:cluster,
     });
   }
