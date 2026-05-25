@@ -183,11 +183,11 @@
   .pill-btn{padding:3px 8px;font-size:8px;border:1px solid rgba(0,255,200,0.2);border-radius:3px;background:transparent;color:rgba(160,255,216,0.45);cursor:pointer;font-family:'Share Tech Mono',monospace;}
   .pill-btn.active{border-color:var(--accent);color:var(--accent);background:rgba(0,255,200,0.1);}
   #flight-labels-layer{position:absolute;inset:0;pointer-events:none;z-index:45;overflow:visible;}
-  .flight-tag{position:absolute;transform:translate(-50%,-100%);display:flex;align-items:center;gap:6px;padding:5px 10px;background:rgba(8,14,28,0.94);border:1px solid rgba(255,255,255,0.14);border-radius:8px;box-shadow:0 4px 18px rgba(0,0,0,0.5);white-space:nowrap;}
-  .flight-tag-flag{font-size:15px;line-height:1;}
-  .flight-tag-body{display:flex;flex-direction:column;gap:1px;line-height:1.15;}
-  .flight-tag-country{font-size:11px;color:#fff;font-family:'Share Tech Mono',monospace;}
-  .flight-tag-city{font-size:9px;color:rgba(160,255,216,0.7);font-family:'Share Tech Mono',monospace;}
+  .flight-tag{position:absolute;transform:translate(-50%,-100%);display:flex;align-items:center;gap:4px;padding:2px 6px;background:rgba(8,14,28,0.92);border:1px solid rgba(255,255,255,0.12);border-radius:5px;box-shadow:0 2px 8px rgba(0,0,0,0.4);white-space:nowrap;max-width:140px;}
+  .flight-tag-flag{font-size:11px;line-height:1;flex-shrink:0;}
+  .flight-tag-body{display:flex;flex-direction:column;gap:0;line-height:1.1;min-width:0;}
+  .flight-tag-country{font-size:8px;color:#fff;font-family:'Share Tech Mono',monospace;letter-spacing:0.2px;}
+  .flight-tag-city{font-size:7px;color:rgba(160,255,216,0.65);font-family:'Share Tech Mono',monospace;}
   .threat-leg{display:flex;align-items:center;gap:4px;font-size:7px;color:rgba(160,255,216,0.5);white-space:nowrap;}
   .threat-leg-dot{width:8px;height:8px;border-radius:2px;}
   #footer-stats{display:flex;align-items:center;justify-content:center;gap:clamp(12px,3vw,28px);padding:6px 12px;border-top:1px solid rgba(0,255,200,0.06);flex-wrap:wrap;}
@@ -719,7 +719,7 @@ function updateFlightLabels(rockets){
     const tag=document.createElement('div');
     tag.className='flight-tag';
     tag.style.left=sx+'px';
-    tag.style.top=(sy-6)+'px';
+    tag.style.top=(sy-4)+'px';
     tag.innerHTML=`<span class="flight-tag-flag">${FLAG[cc]||'🌐'}</span><div class="flight-tag-body"><span class="flight-tag-country">${countryLabelForFlight(cc)}</span>${city?`<span class="flight-tag-city">${city}</span>`:''}</div>`;
     layer.appendChild(tag);
   });
