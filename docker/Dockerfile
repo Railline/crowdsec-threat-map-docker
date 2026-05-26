@@ -5,7 +5,7 @@ LABEL org.opencontainers.image.description="Echtzeit-Angriffskarte fuer CrowdSec
 LABEL org.opencontainers.image.source="https://github.com/kabelsalatundklartext/crowdsec-threat-map-docker"
 LABEL org.opencontainers.image.licenses="GPL-3.0-or-later"
 LABEL org.opencontainers.image.authors="kabelsalatundklartext"
-LABEL org.opencontainers.image.version="1.5.0"
+LABEL org.opencontainers.image.version="1.5.1"
 
 # nginx fuer Dashboard + docker-cli fuer Unban via docker exec
 RUN apk add --no-cache nginx docker-cli curl

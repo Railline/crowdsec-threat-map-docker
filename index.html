@@ -136,8 +136,19 @@
   }
   #autozoom-toggle:hover{border-color:var(--accent);color:var(--accent);}
   #autozoom-toggle.on{border-color:var(--ok);color:var(--ok);background:rgba(0,255,136,0.08);}
+  #autozoom-toggle.off,
+  #autozoom-toggle:not(.on){
+    border-color:rgba(80,120,110,0.3)!important;
+    color:rgba(120,160,150,0.55)!important;
+    background:rgba(0,8,16,0.55)!important;
+  }
   #autozoom-dot{width:7px;height:7px;border-radius:50%;background:rgba(160,255,216,0.3);transition:background 0.2s;flex-shrink:0;}
   #autozoom-toggle.on #autozoom-dot{background:var(--ok);box-shadow:0 0 6px var(--ok);}
+  #autozoom-toggle.off #autozoom-dot,
+  #autozoom-toggle:not(.on) #autozoom-dot{
+    background:rgba(90,110,105,0.45)!important;
+    box-shadow:none!important;
+  }
 
   /* LAYOUT */
   #layout{position:fixed;top:0;left:0;right:0;bottom:0;display:flex;}
@@ -442,7 +453,7 @@
     <div id="map-wrap">
       <div id="map-title-overlay">
         <span id="h-title">CROWD<span>SEC</span> // THREAT MAP</span>
-        <span id="map-version-badge">v1.5.0</span>
+        <span id="map-version-badge">v1.5.1</span>
       </div>
       <svg id="base-svg" style="position:absolute;inset:0;width:100%;height:100%"></svg>
       <canvas id="arc-canvas"></canvas>
@@ -519,9 +530,9 @@
           <div id="lines-dot"></div>
           <span id="lines-label">ANGRIFFE</span>
         </div>
-        <div id="autozoom-toggle" onclick="toggleAutoZoom()" title="Bei Angriff automatisch in die Region zoomen" class="on">
+        <div id="autozoom-toggle" class="off" onclick="toggleAutoZoom()" title="Bei Angriff automatisch in die Region zoomen" aria-pressed="false">
           <div id="autozoom-dot"></div>
-          <span id="autozoom-label">AUTO-ZOOM</span>
+          <span id="autozoom-label">AUTO-ZOOM AUS</span>
         </div>
       </div>
       <!-- Theme row: separate line below controls -->
@@ -681,7 +692,7 @@ const SERVER_NAME_MAP = 'MEIN-SERVER';
 // Ab hier nichts mehr ändern
 // ============================================================
 
-const APP_VERSION  = 'v1.5.0';
+const APP_VERSION  = 'v1.5.1';
 const REFRESH_MS   = 30000;
 const localUnbanned = new Set();
 const ARC_FPS      = 30;
@@ -717,7 +728,7 @@ let lastMetricsText='',replayInitialized=false,replayAutoStarted=false;
 let countriesGeo=null;
 let lastRocketDrawTs=0;
 let lastLiveSeenKeys=new Set();
-let autoZoomOn=true;
+let autoZoomOn=false;
 let lastAutoZoomTs=0;
 
 const ISO2_NUM={US:'840',CA:'124',MX:'484',BR:'76',AR:'32',GB:'826',DE:'276',FR:'250',NL:'528',BE:'56',ES:'724',IT:'380',PL:'616',RU:'643',UA:'804',CN:'156',IN:'356',JP:'392',KR:'410',AU:'36',ID:'360',SG:'702',HK:'344',TW:'158',TH:'764',VN:'704',MY:'458',PH:'608',PK:'586',IR:'364',IQ:'368',SA:'682',AE:'784',IL:'376',TR:'792',ZA:'710',NG:'566',EG:'818',RO:'642',CZ:'203',SE:'752',NO:'578',DK:'208',FI:'246',AT:'40',CH:'756',PT:'620',GR:'300',HU:'348',RS:'688',BG:'100',HR:'191',SK:'703',LT:'440',LV:'428',EE:'233',IE:'372',NZ:'554',CO:'170',CL:'152',VE:'862',EC:'218',PE:'604',KZ:'398',UZ:'860',BD:'50',NP:'524',MM:'104'};
@@ -864,8 +875,6 @@ function spawnRocketForEvent(ev){
     const tsBefore=lastAutoZoomTs;
     maybeAutoZoomToAttack(ev);
     if(lastAutoZoomTs===tsBefore)nudgeAttackIntoView(ev.lon,ev.lat);
-  }else{
-    nudgeAttackIntoView(ev.lon,ev.lat);
   }
 }
 function mapPointScreen(lon,lat,z){
@@ -1077,8 +1086,8 @@ const LANG = {
     anim_on:     'ANIMATION',
     lines_off:   'ANGRIFFE',
     lines_on:    'ANGRIFFE',
-    autozoom_on: 'AUTO-ZOOM',
-    autozoom_off:'AUTO-ZOOM',
+    autozoom_on: 'AUTO-ZOOM AN',
+    autozoom_off:'AUTO-ZOOM AUS',
     server_lbl:  SERVER_NAME_MAP,
     zoom_lbl:    'ZOOM',
     lookup:      'IP NACHSCHLAGEN',
@@ -1164,8 +1173,6 @@ const LANG = {
     anim_on:     'ANIMATION',
     lines_off:   'FLIGHTS',
     lines_on:    'FLIGHTS',
-    autozoom_on: 'AUTO-ZOOM',
-    autozoom_off:'AUTO-ZOOM',
     server_lbl:  SERVER_NAME_MAP,
     zoom_lbl:    'ZOOM',
     lookup:      'LOOKUP IP',
@@ -1189,6 +1196,8 @@ const LANG = {
     lbl_range:'RANGE',
     replay_lbl:'REPLAY',
     live_lbl:'LIVE',
+    autozoom_on: 'AUTO-ZOOM ON',
+    autozoom_off:'AUTO-ZOOM OFF',
     entries:     (s,e,t) => `${s}–${e} of ${t} entries`,
     prev:        '◀',
     next:        '▶',
@@ -1290,16 +1299,7 @@ function applyLang(){
   document.getElementById('s-countries-lbl').textContent=l.countries;
   document.getElementById('s-scenarios-lbl').textContent=l.scenarios;
   document.getElementById('s-live-lbl').textContent=l.live;
-  const animLbl=document.getElementById('anim-label');
-  if(animLbl)animLbl.textContent=animOn?l.anim_on:l.anim_off;
-  const linesLbl=document.getElementById('lines-label');
-  if(linesLbl)linesLbl.textContent=linesOn?l.lines_on:l.lines_off;
-  const mobLinesLbl=document.getElementById('mob-lines-label');
-  if(mobLinesLbl)mobLinesLbl.textContent=linesOn?l.lines_on:l.lines_off;
-  const mobAnimLbl=document.getElementById('mob-anim-label');
-  if(mobAnimLbl)mobAnimLbl.textContent=animOn?l.anim_on:l.anim_off;
-  const azLbl=document.getElementById('autozoom-label');
-  if(azLbl)azLbl.textContent=autoZoomOn?l.autozoom_on:l.autozoom_off;
+  syncMapToggleStates();
   document.querySelectorAll('[data-tab="feed"]').forEach(e=>e.textContent=l.feed);
   document.querySelectorAll('[data-tab="top10"]').forEach(e=>e.textContent=l.top10);
   document.querySelectorAll('[data-tab="topall"]').forEach(e=>e.textContent=l.all);
@@ -1421,17 +1421,46 @@ const activeFilters={country:null,scenario:null,search:''};
 function setToggleBtn(id,on,dotId){
   const btn=document.getElementById(id);
   const dot=dotId?document.getElementById(dotId):null;
-  if(btn)btn.classList.toggle('on',on);
+  if(btn){
+    btn.classList.toggle('on',on);
+    btn.classList.toggle('off',!on);
+    if(id==='autozoom-toggle')btn.setAttribute('aria-pressed',on?'true':'false');
+  }
   if(dot){
-    dot.style.background=on?'var(--ok)':'rgba(160,255,216,0.3)';
+    dot.style.background=on?'var(--ok)':'rgba(90,110,105,0.45)';
     dot.style.boxShadow=on?'0 0 5px var(--ok)':'none';
   }
+}
+function ensureAutoZoomOff(){
+  autoZoomOn=false;
+  const btn=document.getElementById('autozoom-toggle');
+  const dot=document.getElementById('autozoom-dot');
+  const lbl=document.getElementById('autozoom-label');
+  if(btn){btn.classList.remove('on');btn.classList.add('off');btn.setAttribute('aria-pressed','false');}
+  if(dot){dot.style.background='rgba(90,110,105,0.45)';dot.style.boxShadow='none';}
+  if(lbl){const l=LANG[currentLang]||LANG.de;lbl.textContent=l.autozoom_off;}
+}
+function syncMapToggleStates(){
+  setToggleBtn('anim-toggle',animOn,'anim-dot');
+  setToggleBtn('lines-toggle',linesOn,'lines-dot');
+  setToggleBtn('autozoom-toggle',autoZoomOn,'autozoom-dot');
+  const l=LANG[currentLang]||LANG.de;
+  const animLbl=document.getElementById('anim-label');
+  if(animLbl)animLbl.textContent=animOn?l.anim_on:l.anim_off;
+  const linesLbl=document.getElementById('lines-label');
+  if(linesLbl)linesLbl.textContent=linesOn?l.lines_on:l.lines_off;
+  const mobLinesLbl=document.getElementById('mob-lines-label');
+  if(mobLinesLbl)mobLinesLbl.textContent=linesOn?l.lines_on:l.lines_off;
+  const mobAnimLbl=document.getElementById('mob-anim-label');
+  if(mobAnimLbl)mobAnimLbl.textContent=animOn?l.anim_on:l.anim_off;
+  const azLbl=document.getElementById('autozoom-label');
+  if(azLbl)azLbl.textContent=autoZoomOn?l.autozoom_on:l.autozoom_off;
 }
 function toggleAutoZoom(){
   autoZoomOn=!autoZoomOn;
   const lbl=document.getElementById('autozoom-label');
   setToggleBtn('autozoom-toggle',autoZoomOn,'autozoom-dot');
-  if(lbl)lbl.textContent=autoZoomOn?(t('autozoom_on')||'ZOOM'):(t('autozoom_off')||'ZOOM');
+  if(lbl)lbl.textContent=autoZoomOn?t('autozoom_on'):t('autozoom_off');
 }
 function toggleLines(){
   linesOn=!linesOn;
@@ -1476,9 +1505,7 @@ function toggleAnim(){
   }
 }
 function startMapOnLoad(){
-  setToggleBtn('anim-toggle',animOn,'anim-dot');
-  setToggleBtn('lines-toggle',linesOn,'lines-dot');
-  setToggleBtn('autozoom-toggle',autoZoomOn,'autozoom-dot');
+  syncMapToggleStates();
   feedData.forEach(e=>lastLiveSeenKeys.add((e.ip||'')+'|'+(e.time_iso||'')));
   scheduleHomeFit();
   if(animOn){
@@ -2049,6 +2076,7 @@ async function fetchAndRender(){
     checkAlarms();
     hideErr();
     applyLang();
+    ensureAutoZoomOff();
     refreshMapFromData();
   }catch(e){showErr(t('error_conn')+EXPORTER_URL);}
 }
@@ -2809,7 +2837,11 @@ document.addEventListener('visibilitychange',()=>{
 });
 
 normalizeLang();
+autoZoomOn=false;
+ensureAutoZoomOff();
+syncMapToggleStates();
 applyLang();
+ensureAutoZoomOff();
 init();
 </script>
 </body>
