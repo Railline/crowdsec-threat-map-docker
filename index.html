@@ -224,6 +224,24 @@
   .zoom-btn:hover{background:rgba(0,255,200,0.1);}
   .zoom-btn:active{background:rgba(0,255,200,0.2);}
   #zoom-level{position:absolute;bottom:52px;left:48px;background:rgba(0,20,40,0.75);border:1px solid var(--dim);color:var(--accent);font-size:8px;padding:3px 6px;border-radius:3px;letter-spacing:1px;z-index:50;pointer-events:none;}
+  #zoom-prefs-panel{
+    position:absolute;bottom:52px;left:8px;width:min(220px,calc(100vw - 24px));
+    background:rgba(0,20,40,0.94);border:1px solid var(--dim);border-radius:4px;
+    padding:8px 10px;z-index:55;display:none;flex-direction:column;gap:6px;
+    font-family:'Share Tech Mono',monospace;font-size:8px;color:rgba(160,255,216,0.75);
+    box-shadow:0 4px 20px rgba(0,0,0,0.45);
+  }
+  #zoom-prefs-panel.open{display:flex;}
+  #zoom-prefs-panel label{display:flex;align-items:center;gap:6px;cursor:pointer;user-select:none;}
+  #zoom-prefs-panel input[type=range]{width:100%;accent-color:var(--accent);}
+  .zoom-prefs-row{display:flex;flex-wrap:wrap;gap:4px;align-items:center;}
+  .zoom-prefs-btn{
+    background:rgba(0,255,200,0.08);border:1px solid var(--dim);color:var(--accent);
+    border-radius:3px;padding:3px 6px;cursor:pointer;font-size:7px;letter-spacing:0.5px;
+    font-family:'Share Tech Mono',monospace;
+  }
+  .zoom-prefs-btn:hover{background:rgba(0,255,200,0.14);}
+  #zoom-prefs-status{color:rgba(160,255,216,0.45);font-size:7px;line-height:1.35;}
 
   /* SIDEBAR */
   #sidebar{width:clamp(180px,22vw,250px);background:rgba(0,8,20,0.95);border-left:1px solid var(--dim);display:flex;flex-direction:column;overflow:hidden;flex-shrink:0;}
@@ -453,7 +471,7 @@
     <div id="map-wrap">
       <div id="map-title-overlay">
         <span id="h-title">CROWD<span>SEC</span> // THREAT MAP</span>
-        <span id="map-version-badge">v1.5.1</span>
+        <span id="map-version-badge">v1.5.2</span>
       </div>
       <svg id="base-svg" style="position:absolute;inset:0;width:100%;height:100%"></svg>
       <canvas id="arc-canvas"></canvas>
@@ -472,6 +490,20 @@
         <div class="zoom-btn" id="bzi">+</div>
         <div class="zoom-btn" id="bzo">−</div>
         <div class="zoom-btn" id="bzr" style="font-size:12px">⌂</div>
+        <div class="zoom-btn" id="bzp" style="font-size:11px" title="Karten-Zoom speichern">💾</div>
+      </div>
+      <div id="zoom-prefs-panel" aria-hidden="true">
+        <label><input type="checkbox" id="zoom-prefs-use-saved"> <span id="zoom-prefs-use-lbl">Beim Laden gespeicherte Ansicht</span></label>
+        <div class="zoom-prefs-row">
+          <button type="button" class="zoom-prefs-btn" id="zoom-prefs-save">Ansicht speichern</button>
+          <button type="button" class="zoom-prefs-btn" id="zoom-prefs-reset">Zurücksetzen</button>
+        </div>
+        <div>
+          <span id="zoom-prefs-home-lbl">Standard-Zoom (⌂):</span>
+          <input type="range" id="zoom-prefs-home-k" min="0.5" max="8" step="0.1" value="1.1">
+          <span id="zoom-prefs-home-val">1.1×</span>
+        </div>
+        <div id="zoom-prefs-status">—</div>
       </div>
       <div id="zoom-level">ZOOM 1×</div>
     </div>
@@ -692,7 +724,7 @@ const SERVER_NAME_MAP = 'MEIN-SERVER';
 // Ab hier nichts mehr ändern
 // ============================================================
 
-const APP_VERSION  = 'v1.5.1';
+const APP_VERSION  = 'v1.5.2';
 const REFRESH_MS   = 30000;
 const localUnbanned = new Set();
 const ARC_FPS      = 30;
@@ -707,7 +739,9 @@ const HOME_SCREEN_X_FRAC = 0.48;  // Server horizontal im sichtbaren Kartenberei
 const HOME_SCREEN_Y_FRAC = 0.28;  // Server höher → Weltkarte füllt Bereich bis zum Logo
 const HOME_PROJ_Y_SHIFT = 0.11;   // Projektion nach oben
 const HOME_TY_NUDGE_PX = 42;      // zusätzlich Karte nach oben schieben
+const MAP_VIEW_STORAGE_KEY = 'csThreatMapViewPrefs';
 const ZOOM_STEP = 0.1;          // +/- Buttons
+let mapViewPrefs={useSavedOnLoad:false,homeK:null,savedView:null};
 const AUTO_ZOOM_MIN_MS = 2800;    // Abstand zwischen Auto-Zooms
 const AUTO_ZOOM_MAX_K = 5.5;      // Max. Zoom bei Einzelangriff
 
@@ -764,15 +798,15 @@ function updateCountryFills(){
 }
 function labelPxToSvg(px){return px/Math.max(currentScale,0.15);}
 function countryLabelScreenPx(){
-  if(animOn)return 0;
+  if(currentScale<1.15)return 0;
   if(currentScale>=4)return 0;
   if(currentScale<=1.3)return 13;
   if(currentScale<=2.2)return 11;
   return 10;
 }
 function cityLabelScreenPx(){
-  if(animOn)return 0;
   if(currentScale<2)return 0;
+  if(currentScale>=5)return 0;
   return Math.min(12,Math.max(8,6+currentScale*0.55));
 }
 function clearArcCanvas(){ctx2d.clearRect(0,0,canvas.width,canvas.height);}
@@ -1136,6 +1170,14 @@ const LANG = {
     replay_title:'Wiedergabe',
     live_title:  'Live-Modus',
     home_zoom:   'Zum Server-Standort',
+    zoom_prefs_title:'Karten-Zoom speichern',
+    zoom_prefs_use:'Beim Laden gespeicherte Ansicht',
+    zoom_prefs_save:'Ansicht speichern',
+    zoom_prefs_reset:'Zurücksetzen',
+    zoom_prefs_home:'Standard-Zoom (⌂):',
+    zoom_prefs_saved:(k)=>`Gespeichert: ${k.toFixed(1)}×`,
+    zoom_prefs_none:'Keine gespeicherte Ansicht',
+    zoom_prefs_ok:'Ansicht gespeichert',
     anim_title:  'Animierte Karte (Replay/Live) vs. statische Heatmap',
     lines_title: 'Angriffe auf der Karte ein/aus',
     autozoom_title:'Bei Angriff automatisch in die Region zoomen',
@@ -1223,6 +1265,14 @@ const LANG = {
     replay_title:'Replay',
     live_title:  'Live mode',
     home_zoom:   'Go to server',
+    zoom_prefs_title:'Save map zoom',
+    zoom_prefs_use:'Use saved view on load',
+    zoom_prefs_save:'Save current view',
+    zoom_prefs_reset:'Reset defaults',
+    zoom_prefs_home:'Default zoom (⌂):',
+    zoom_prefs_saved:(k)=>`Saved: ${k.toFixed(1)}×`,
+    zoom_prefs_none:'No saved view',
+    zoom_prefs_ok:'View saved',
     anim_title:  'Animated map (replay/live) vs. static heatmap',
     lines_title: 'Attack flights (rockets) on/off',
     autozoom_title:'Auto-zoom to attack region',
@@ -1321,6 +1371,17 @@ function applyLang(){
   if(replayBtn)replayBtn.title=l.replay_title;
   const bzr=document.getElementById('bzr');
   if(bzr)bzr.title=l.home_zoom;
+  const bzp=document.getElementById('bzp');
+  if(bzp)bzp.title=l.zoom_prefs_title;
+  const zpu=document.getElementById('zoom-prefs-use-lbl');
+  if(zpu)zpu.textContent=l.zoom_prefs_use;
+  const zps=document.getElementById('zoom-prefs-save');
+  if(zps)zps.textContent=l.zoom_prefs_save;
+  const zpr=document.getElementById('zoom-prefs-reset');
+  if(zpr)zpr.textContent=l.zoom_prefs_reset;
+  const zph=document.getElementById('zoom-prefs-home-lbl');
+  if(zph)zph.textContent=l.zoom_prefs_home;
+  syncZoomPrefsUI();
   const animT=document.getElementById('anim-toggle');
   if(animT)animT.title=l.anim_title;
   const linesT=document.getElementById('lines-toggle');
@@ -1503,11 +1564,12 @@ function toggleAnim(){
     replayPlaying=false;updateReplayBtn();
     refreshMapFromData();
   }
+  drawCountryLabels();
 }
 function startMapOnLoad(){
   syncMapToggleStates();
   feedData.forEach(e=>lastLiveSeenKeys.add((e.ip||'')+'|'+(e.time_iso||'')));
-  scheduleHomeFit();
+  if(!userHasZoomed)applyInitialMapView();
   if(animOn){
     if(liveMode)startAnimLoop();
     else if(allEvents.length){replayPlaying=true;updateReplayBtn();startReplayLoop();}
@@ -1559,6 +1621,24 @@ function setupZoom(){
   document.getElementById('bzi').onclick=()=>zoomByStep(ZOOM_STEP);
   document.getElementById('bzo').onclick=()=>zoomByStep(-ZOOM_STEP);
   document.getElementById('bzr').onclick=()=>fitMapToServerHome({duration:500});
+  document.getElementById('bzp')?.addEventListener('click',e=>{e.stopPropagation();toggleZoomPrefsPanel();});
+  document.getElementById('zoom-prefs-save')?.addEventListener('click',saveCurrentMapViewAsStart);
+  document.getElementById('zoom-prefs-reset')?.addEventListener('click',()=>{resetMapViewPrefs();if(!userHasZoomed)fitMapToServerHome({duration:400});});
+  document.getElementById('zoom-prefs-use-saved')?.addEventListener('change',e=>{
+    mapViewPrefs.useSavedOnLoad=!!e.target.checked;
+    persistMapViewPrefs();
+  });
+  const homeSlider=document.getElementById('zoom-prefs-home-k');
+  if(homeSlider){
+    homeSlider.addEventListener('input',e=>{
+      mapViewPrefs.homeK=parseFloat(e.target.value);
+      syncZoomPrefsUI();
+    });
+    homeSlider.addEventListener('change',()=>{
+      persistMapViewPrefs();
+      if(!userHasZoomed)fitMapToServerHome({duration:350});
+    });
+  }
 }
 
 function onZoom(event){
@@ -1579,7 +1659,8 @@ function onZoom(event){
   const isCluster=tr.k<=1.5;
   if(wasCluster!==isCluster) renderDots();
   else{updateCityLabelScale();updateCountryLabelScale();}
-  if(!animOn){updateCountryFills();drawCountryLabels();}
+  drawCountryLabels();
+  if(!animOn){updateCountryFills();}
   if(!animOn||!linesOn){if(!animOn)return;updateCountryFills();return;}
   if(animOn&&linesOn){drawCrowdSecRockets();updateFlightLabels(activeRockets);}
 }
@@ -1605,7 +1686,7 @@ function mobileAdjustAndFit(){
       canvas.width=W;canvas.height=H;
       canvas.style.width=W+'px';canvas.style.height=H+'px';
       if(W>50&&H>50){
-        fitMapToServerHome({duration:0});
+        if(!userHasZoomed)applyInitialMapView();
         if(!animOn)clearArcCanvas();
       }
     });
@@ -1677,7 +1758,7 @@ function onResize(){
   baseSvg.selectAll('*').remove();
   drawBaseMap();
   renderDots();
-  if(!userHasZoomed)fitMapToServerHome({duration:0});
+  if(!userHasZoomed)applyInitialMapView();
   updateCountryFills();
   if(animOn&&linesOn)startAnimLoop();else clearArcCanvas();
 }
@@ -1828,6 +1909,84 @@ function zoomByStep(delta){
   baseSvg.transition().duration(180).call(zoomBeh.transform,d3.zoomIdentity.translate(zt.x,zt.y).scale(k))
     .on('end',()=>updateZoomLevel(d3.zoomTransform(baseSvg.node()).k));
 }
+function loadMapViewPrefs(){
+  try{
+    const raw=localStorage.getItem(MAP_VIEW_STORAGE_KEY);
+    if(raw){
+      const p=JSON.parse(raw);
+      if(typeof p.useSavedOnLoad==='boolean')mapViewPrefs.useSavedOnLoad=p.useSavedOnLoad;
+      if(typeof p.homeK==='number'&&p.homeK>=0.5&&p.homeK<=25)mapViewPrefs.homeK=p.homeK;
+      if(p.savedView&&typeof p.savedView.k==='number')mapViewPrefs.savedView={k:p.savedView.k,x:p.savedView.x,y:p.savedView.y};
+    }
+  }catch(e){}
+  syncZoomPrefsUI();
+}
+function persistMapViewPrefs(){
+  try{localStorage.setItem(MAP_VIEW_STORAGE_KEY,JSON.stringify(mapViewPrefs));}catch(e){}
+  syncZoomPrefsUI();
+}
+function syncZoomPrefsUI(){
+  const useEl=document.getElementById('zoom-prefs-use-saved');
+  const homeEl=document.getElementById('zoom-prefs-home-k');
+  const homeVal=document.getElementById('zoom-prefs-home-val');
+  const status=document.getElementById('zoom-prefs-status');
+  const isMobile=window.innerWidth<=680;
+  const defaultK=isMobile?HOME_ZOOM_K_MOBILE:HOME_ZOOM_K_DESKTOP;
+  const hk=mapViewPrefs.homeK??defaultK;
+  if(useEl)useEl.checked=!!mapViewPrefs.useSavedOnLoad;
+  if(homeEl){homeEl.value=String(hk);homeEl.title=t('zoom_prefs_home');}
+  if(homeVal)homeVal.textContent=hk.toFixed(1)+'×';
+  if(status){
+    if(mapViewPrefs.savedView)status.textContent=t('zoom_prefs_saved',mapViewPrefs.savedView.k);
+    else status.textContent=t('zoom_prefs_none');
+  }
+}
+function toggleZoomPrefsPanel(){
+  const panel=document.getElementById('zoom-prefs-panel');
+  if(!panel)return;
+  const open=!panel.classList.contains('open');
+  panel.classList.toggle('open',open);
+  panel.setAttribute('aria-hidden',open?'false':'true');
+}
+function saveCurrentMapViewAsStart(){
+  if(!baseSvg||!zoomBeh)return;
+  const tr=d3.zoomTransform(baseSvg.node());
+  mapViewPrefs.savedView={k:tr.k,x:tr.x,y:tr.y};
+  mapViewPrefs.useSavedOnLoad=true;
+  persistMapViewPrefs();
+  const status=document.getElementById('zoom-prefs-status');
+  if(status)status.textContent=t('zoom_prefs_ok');
+}
+function resetMapViewPrefs(){
+  mapViewPrefs={useSavedOnLoad:false,homeK:null,savedView:null};
+  try{localStorage.removeItem(MAP_VIEW_STORAGE_KEY);}catch(e){}
+  syncZoomPrefsUI();
+}
+function applySavedMapView(opts={}){
+  if(!mapViewPrefs.useSavedOnLoad||!mapViewPrefs.savedView||!zoomBeh||!baseSvg||!mapG||!dotG)return false;
+  const {k,x,y}=mapViewPrefs.savedView;
+  const t=d3.zoomIdentity.translate(x,y).scale(Math.max(0.1,Math.min(25,k)));
+  fitTransform=t;
+  currentScale=t.k;currentTx=t.x;currentTy=t.y;
+  userHasZoomed=true;
+  const dur=opts.duration!==undefined?opts.duration:0;
+  if(dur>0)baseSvg.transition().duration(dur).call(zoomBeh.transform,t);
+  else{
+    baseSvg.call(zoomBeh.transform,t);
+    mapG.attr('transform',t);
+    dotG.attr('transform',t);
+  }
+  updateZoomLevel(t.k);
+  drawCountryLabels();
+  renderDots();
+  if(animOn&&linesOn)drawCrowdSecRockets();
+  return true;
+}
+function applyInitialMapView(){
+  if(applySavedMapView({duration:0}))return true;
+  fitMapToServerHome({duration:0,resetUser:false});
+  return false;
+}
 // Home: Weltübersicht mit Server im sichtbaren Bereich (wie CrowdSec Console / Bild 2)
 function fitMapToServerHome(opts={}){
   if(!zoomBeh||!proj)return;
@@ -1836,7 +1995,8 @@ function fitMapToServerHome(opts={}){
   if(!srv)return;
   const[sx,sy]=srv;
   const isMobile=window.innerWidth<=680;
-  const k=opts.k??(isMobile?HOME_ZOOM_K_MOBILE:HOME_ZOOM_K_DESKTOP);
+  const defaultK=isMobile?HOME_ZOOM_K_MOBILE:HOME_ZOOM_K_DESKTOP;
+  const k=opts.k??mapViewPrefs.homeK??defaultK;
   const ins=getHomeViewInsets();
   const panelL=getMapPanelInsetLeft();
   const visW=Math.max(80,W-panelL-ins.r);
@@ -1860,7 +2020,7 @@ function fitMapToServerHome(opts={}){
   if(opts.resetUser!==false)userHasZoomed=false;
 }
 function scheduleHomeFit(){
-  const run=()=>{if(!userHasZoomed)fitMapToServerHome({duration:0});};
+  const run=()=>{if(!userHasZoomed)applyInitialMapView();};
   requestAnimationFrame(()=>requestAnimationFrame(run));
 }
 
@@ -1938,7 +2098,7 @@ function renderDots(){
         .attr('fill',col).attr('stroke',col).attr('stroke-width',1.2*ik).attr('opacity',0.95)
         .on('click',function(ev){ev.stopPropagation();selectDot(ev,this,d);})
         .on('mouseover',(ev)=>showTip(ev,d)).on('mouseout',hideTip);
-      if(!animOn){
+      {
         const cityPx=cityLabelScreenPx();
         if(cityPx&&d.city&&!_renderedCityLabels.has(d.city)){
           _renderedCityLabels.add(d.city);
@@ -2747,7 +2907,7 @@ const CC_CENTER={
 const COUNTRY_NAMES_DE_MAP={'US':'USA','CA':'Kanada','GB':'UK','FR':'Frankreich','DE':'Deutschland','IT':'Italien','ES':'Spanien','NL':'Niederlande','CH':'Schweiz','AT':'Österreich','PL':'Polen','SE':'Schweden','NO':'Norwegen','DK':'Dänemark','FI':'Finnland','RU':'Russland','CN':'China','JP':'Japan','KR':'Südkorea','IN':'Indien','AU':'Australien','BR':'Brasilien','MX':'Mexiko','UA':'Ukraine','RO':'Rumänien','BG':'Bulgarien','IE':'Irland','PT':'Portugal','GR':'Griechenland','TR':'Türkei','ZA':'Südafrika','SG':'Singapur','TH':'Thailand','MY':'Malaysia','ID':'Indonesien','BE':'Belgien','CZ':'Tschechien','HU':'Ungarn','RS':'Serbien','HR':'Kroatien','SK':'Slowakei','MD':'Moldau','BA':'Bosnien','MK':'N.Mazedonien'};
 function countryDisplayName(cc){return currentLang==='de'?(COUNTRY_NAMES_DE_MAP[cc]||COUNTRY_NAME[cc]||cc):(COUNTRY_NAMES[cc]||cc);}
 function drawCountryLabels(){
-  if(!mapG||!worldData||animOn)return;
+  if(!mapG||!worldData)return;
   mapG.selectAll('.country-label').remove();
   const px=countryLabelScreenPx();
   if(!px)return;
@@ -2837,6 +2997,7 @@ document.addEventListener('visibilitychange',()=>{
 });
 
 normalizeLang();
+loadMapViewPrefs();
 autoZoomOn=false;
 ensureAutoZoomOff();
 syncMapToggleStates();
