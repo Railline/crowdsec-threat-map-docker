@@ -788,6 +788,12 @@ const FLIGHT_LABEL_OFFSETS=[[0,-10],[0,-22],[0,-34],[14,-14],[-14,-14],[22,-26],
 function layoutFlightLabels(rockets,z){
   const minDist=currentScale<1.5?44:32;
   const maxN=currentScale<1.2?3:currentScale<2?5:8;
+  const ins=getMapChromeInsets();
+  const minX=ins.l+12;
+  const maxX=W-ins.r-72;
+  const minY=ins.t+8;
+  const maxY=H-ins.b-28;
+  const inChrome=(x,y)=>x<minX||x>maxX||y<minY||y>maxY;
   const placed=[];
   const out=[];
   const seenIp=new Set();
@@ -801,6 +807,7 @@ function layoutFlightLabels(rockets,z){
     let placedOne=false;
     for(const[ox,oy]of FLIGHT_LABEL_OFFSETS){
       const x=baseX+ox,y=baseY+oy;
+      if(inChrome(x,y))continue;
       if(placed.every(p=>Math.hypot(p.x-x,p.y-y)>=minDist)){
         placed.push({x,y});
         seenIp.add(r.ip);
@@ -810,9 +817,12 @@ function layoutFlightLabels(rockets,z){
       }
     }
     if(!placedOne&&out.length<maxN){
+      let x=Math.max(minX,Math.min(maxX,baseX));
+      let y=Math.max(minY,Math.min(maxY,baseY-10));
+      if(inChrome(x,y)){x=Math.max(minX,baseX+ins.l*0.15);y=Math.max(minY,baseY-10);}
       seenIp.add(r.ip);
-      out.push({r,x:baseX,y:baseY-10,geoKey});
-      placed.push({x:baseX,y:baseY-10});
+      out.push({r,x,y,geoKey});
+      placed.push({x,y});
     }
   }
   return out;
@@ -849,7 +859,37 @@ function spawnRocketForEvent(ev){
     col:scenarioColor(ev.scenario),t:0,
   });
   if(!animRAF)startAnimLoop();
-  maybeAutoZoomToAttack(ev);
+  if(autoZoomOn&&animOn&&!userHasZoomed){
+    const tsBefore=lastAutoZoomTs;
+    maybeAutoZoomToAttack(ev);
+    if(lastAutoZoomTs===tsBefore)nudgeAttackIntoView(ev.lon,ev.lat);
+  }else{
+    nudgeAttackIntoView(ev.lon,ev.lat);
+  }
+}
+function mapPointScreen(lon,lat,z){
+  const pt=proj([lon,lat]);
+  if(!pt||!z)return null;
+  return{x:pt[0]*z.k+z.x,y:pt[1]*z.k+z.y};
+}
+function isScreenPointObscured(x,y){
+  const ins=getMapChromeInsets();
+  return x<ins.l+24||y<ins.t+16||x>W-ins.r-24||y>H-ins.b-28;
+}
+function nudgeAttackIntoView(lon,lat,opts={}){
+  if(!zoomBeh||!proj||lon==null||lat==null)return;
+  const z=d3.zoomTransform(baseSvg.node());
+  const scr=mapPointScreen(lon,lat,z);
+  if(!scr||!isScreenPointObscured(scr.x,scr.y))return;
+  const ins=getMapChromeInsets();
+  const visCx=ins.l+(W-ins.l-ins.r)/2;
+  const visCy=ins.t+(H-ins.t-ins.b)*0.45;
+  const tx=z.x+(visCx-scr.x);
+  const ty=z.y+(visCy-scr.y);
+  const t=d3.zoomIdentity.translate(tx,ty).scale(z.k);
+  fitTransform=t;
+  baseSvg.transition().duration(opts.duration||550).ease(d3.easeCubicInOut)
+    .call(zoomBeh.transform,t);
 }
 function maybeAutoZoomToAttack(ev){
   if(!autoZoomOn||userHasZoomed||!ev||ev.lon==null||ev.lat==null)return;
@@ -870,12 +910,18 @@ function zoomToAttackPoint(lon,lat,opts={}){
   const minSpan=45;
   if(x1-x0<minSpan){const c=(x0+x1)/2;x0=c-minSpan/2;x1=c+minSpan/2;}
   if(y1-y0<minSpan){const c=(y0+y1)/2;y0=c-minSpan/2;y1=c+minSpan/2;}
-  const pad=opts.pad||(window.innerWidth<=680?36:65);
+  const ins=getMapChromeInsets();
+  const visW=W-ins.l-ins.r;
+  const visH=H-ins.t-ins.b;
+  const pad=opts.pad||(window.innerWidth<=680?32:48);
   const rangeX=x1-x0||1,rangeY=y1-y0||1;
-  let k=Math.min((W-pad*2)/rangeX,(H-pad*2)/rangeY,AUTO_ZOOM_MAX_K);
+  let k=Math.min((visW-pad*2)/rangeX,(visH-pad*2)/rangeY,AUTO_ZOOM_MAX_K);
   k=Math.max(k,opts.minK||2.4);
   const cx=(x0+x1)/2,cy=(y0+y1)/2;
-  const tx=W/2-cx*k,ty=H/2-cy*k;
+  const visCx=ins.l+visW/2;
+  const visCy=ins.t+visH*0.45;
+  const tx=visCx-cx*k;
+  const ty=visCy-cy*k;
   const t=d3.zoomIdentity.translate(tx,ty).scale(k);
   fitTransform=t;
   baseSvg.transition().duration(opts.duration||750).ease(d3.easeCubicInOut)
