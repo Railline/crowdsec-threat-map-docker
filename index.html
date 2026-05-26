@@ -1071,7 +1071,7 @@ function setupReplayControls(){buildThreatLegend();document.getElementById('repl
 // ── TRANSLATIONS ──
 const LANG = {
   de: {
-    title:       'CROWD<span>SEC</span> // BEDROHUNGSKARTE',
+    title:       'CROWD<span>SEC</span> // THREAT MAP',
     attacks:     'ANGRIFFE',
     countries:   'LÄNDER',
     scenarios:   'SZENARIEN',
@@ -1290,7 +1290,7 @@ function applyLang(){
   const vbadge=document.getElementById('map-version-badge');
   if(vbadge)vbadge.textContent=APP_VERSION;
   const hTitle=document.getElementById('h-title');
-  if(hTitle)hTitle.innerHTML=l.title;
+  if(hTitle)hTitle.innerHTML=LANG.en.title;
   const loadTitle=document.getElementById('load-title');
   if(loadTitle)loadTitle.textContent=l.load_init;
   const ls=document.getElementById('ls');
