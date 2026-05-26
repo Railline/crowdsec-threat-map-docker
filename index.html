@@ -70,8 +70,6 @@
     flex:1;justify-content:center;
     flex-shrink:0;min-width:0;overflow:hidden;
   }
-  #anim-toggle,#lines-toggle,#autozoom-toggle{padding:4px 6px;font-size:clamp(6px,0.9vw,8px);letter-spacing:0.4px;gap:4px;}
-  #anim-dot,#lines-dot,#autozoom-dot{width:6px;height:6px;flex-shrink:0;}
 
   /* CSV neben Seitenzahlen */
   #feed-pages-wrap{
@@ -125,6 +123,21 @@
   #lines-toggle.on{border-color:var(--ok);color:var(--ok);background:rgba(0,255,136,0.08);}
   #lines-dot{width:7px;height:7px;border-radius:50%;background:var(--ok);box-shadow:0 0 6px var(--ok);transition:background 0.2s;flex-shrink:0;}
   #lines-toggle:not(.on) #lines-dot{background:rgba(160,255,216,0.3);box-shadow:none;}
+
+  /* AUTO-ZOOM TOGGLE (gleiches Design wie Animation / Flüge) */
+  #autozoom-toggle{
+    display:flex;align-items:center;gap:6px;
+    background:rgba(0,20,40,0.85);border:1px solid var(--dim);
+    border-radius:4px;padding:4px 10px;cursor:pointer;
+    font-family:'Share Tech Mono',monospace;font-size:clamp(8px,1vw,9px);
+    letter-spacing:1px;color:rgba(160,255,216,0.45);
+    transition:all 0.2s;white-space:nowrap;
+    user-select:none;
+  }
+  #autozoom-toggle:hover{border-color:var(--accent);color:var(--accent);}
+  #autozoom-toggle.on{border-color:var(--ok);color:var(--ok);background:rgba(0,255,136,0.08);}
+  #autozoom-dot{width:7px;height:7px;border-radius:50%;background:rgba(160,255,216,0.3);transition:background 0.2s;flex-shrink:0;}
+  #autozoom-toggle.on #autozoom-dot{background:var(--ok);box-shadow:0 0 6px var(--ok);}
 
   /* LAYOUT */
   #layout{position:fixed;top:0;left:0;right:0;bottom:0;display:flex;}
@@ -406,7 +419,7 @@
 </head>
 <body>
 <div id="grid-bg"></div>
-<div id="loading"><div class="loader"></div><h2>INITIALIZING</h2><p id="ls">CONNECTING...</p></div>
+<div id="loading"><div class="loader"></div><h2 id="load-title">INITIALIZING</h2><p id="ls">CONNECTING...</p></div>
 <div id="err"></div>
 
 <div id="ctx-menu">
@@ -419,7 +432,7 @@
   <a class="ctx-item" id="c-crim"   target="_blank"><span class="ctx-icon">⚠️</span>Criminal IP</a>
   <div id="ctx-close">✕ SCHLIESSEN</div>
 </div>
-<div id="tip"><button type="button" id="tip-close" title="Schließen" aria-label="Schließen">✕</button><div id="tip-content"></div></div>
+<div id="tip"><button type="button" id="tip-close" title="Close" aria-label="Close">✕</button><div id="tip-content"></div></div>
 
 <!-- Map overlay title (always visible, centered on map) -->
 <div id="map-title-overlay">
@@ -505,9 +518,9 @@
           <div id="anim-dot"></div>
           <span id="anim-label">ANIMATION</span>
         </div>
-        <div id="lines-toggle" onclick="toggleLines()" title="Angriffslinien (Raketen) ein/aus" class="on">
+        <div id="lines-toggle" onclick="toggleLines()" title="Angriffe auf der Karte ein/aus" class="on">
           <div id="lines-dot"></div>
-          <span id="lines-label">LINIEN</span>
+          <span id="lines-label">ANGRIFFE</span>
         </div>
         <div id="autozoom-toggle" onclick="toggleAutoZoom()" title="Bei Angriff automatisch in die Region zoomen" class="on">
           <div id="autozoom-dot"></div>
@@ -556,7 +569,7 @@
     </div>
     <div class="tab-content" id="tc-top10"><div id="top10"></div></div>
     <div class="tab-content" id="tc-topall"><div id="topall"></div></div>
-    <div id="sidebar-bottom">MEIN-SERVER &nbsp;|&nbsp; <span id="lu">—</span><br>
+    <div id="sidebar-bottom"><span id="sidebar-server-lbl">MEIN-SERVER</span> &nbsp;|&nbsp; <span id="lu">—</span><br>
       <div id="wl-badge" style="margin:4px 0 3px;display:flex;align-items:center;gap:5px;font-size:8px;letter-spacing:0.5px;">
         <span id="wl-dot" style="width:6px;height:6px;border-radius:50%;background:rgba(160,255,216,0.2);flex-shrink:0;display:inline-block;"></span>
         <span id="wl-text" style="color:rgba(160,255,216,0.3);">Whitelist: —</span>
@@ -576,7 +589,7 @@
 
       <div id="mob-lines-toggle" onclick="toggleLines()" style="display:flex;align-items:center;gap:3px;background:rgba(0,255,200,0.08);border:1px solid rgba(0,255,200,0.35);border-radius:3px;padding:2px 4px;cursor:pointer;font-family:'Share Tech Mono',monospace;font-size:7px;color:rgba(0,255,200,0.8);white-space:nowrap;">
         <div id="mob-lines-dot" style="width:5px;height:5px;border-radius:50%;background:var(--ok);box-shadow:0 0 5px var(--ok);flex-shrink:0;"></div>
-        <span id="mob-lines-label">LINIEN</span>
+        <span id="mob-lines-label">ANGRIFFE</span>
       </div>
       <div id="mob-anim-toggle" onclick="toggleAnim()" style="display:flex;align-items:center;gap:3px;background:transparent;border:1px solid rgba(0,255,200,0.2);border-radius:3px;padding:2px 4px;cursor:pointer;font-family:'Share Tech Mono',monospace;font-size:7px;color:rgba(160,255,216,0.45);white-space:nowrap;">
         <div id="mob-anim-dot" style="width:5px;height:5px;border-radius:50%;background:rgba(160,255,216,0.3);flex-shrink:0;"></div>
@@ -610,7 +623,7 @@
       <div style="width:9px;height:9px;border-radius:50%;background:#ff2244;cursor:pointer;border:1px solid transparent;" class="mob-theme-dot" onclick="setTheme('red')" id="mob-t-red"></div>
       <div style="width:9px;height:9px;border-radius:50%;background:#00ff88;cursor:pointer;border:1px solid transparent;" class="mob-theme-dot" onclick="setTheme('matrix')" id="mob-t-matrix"></div>
       <div style="width:9px;height:9px;border-radius:50%;background:#ffaa00;cursor:pointer;border:1px solid transparent;" class="mob-theme-dot" onclick="setTheme('amber')" id="mob-t-amber"></div>
-      <button class="ctrl-btn" onclick="exportCSV()" style="padding:2px 5px;font-size:8px;">↓CSV</button>
+      <button class="ctrl-btn csv-feed-btn" onclick="exportCSV()" style="padding:2px 5px;font-size:8px;">↓ CSV</button>
       <a href="https://github.com/kabelsalatundklartext/crowdsec-threat-map" target="_blank" style="color:rgba(0,255,200,0.4);font-size:8px;text-decoration:none;">⭐</a>
     </div>
   </div>
@@ -680,18 +693,18 @@ const ROCKET_DURATION_MS = 4500;  // Dauer eines Raketenflugs bis Einschlag (lan
 const CROWDSEC_ARC_COLOR = '#ff9a3c'; // Orange wie CrowdSec Console
 const FIT_ZOOM_BOOST = 1.55;      // für fitMapToPoints (alle Angriffe)
 const FIT_MIN_SCALE = 1.35;
-const HOME_ZOOM_K_DESKTOP = 1.4;  // Standard-Zoom (Browser-Fenster)
-const HOME_ZOOM_K_MOBILE = 1.25;
+const HOME_ZOOM_K_DESKTOP = 1.3;  // Standard-Zoom (Browser-Fenster)
+const HOME_ZOOM_K_MOBILE = 1.2;
 const ZOOM_STEP = 0.1;          // +/- Buttons
 const AUTO_ZOOM_MIN_MS = 2800;    // Abstand zwischen Auto-Zooms
 const AUTO_ZOOM_MAX_K = 5.5;      // Max. Zoom bei Einzelangriff
 
 const THREAT_TYPES = {
-  cve:  { color:'#ff4400', labelDe:'CVE Exploit', labelEn:'CVE Exploit' },
-  brute:{ color:'#ff6b9d', labelDe:'Brute Force', labelEn:'Brute Force' },
-  recon:{ color:'#00cc66', labelDe:'Reconnaissance', labelEn:'Reconnaissance' },
-  scan: { color:'#4488ff', labelDe:'Vulnerability Scan', labelEn:'Vulnerability Scan' },
-  other:{ color:'#888899', labelDe:'Other', labelEn:'Other' },
+  cve:  { color:'#ff4400', labelDe:'CVE-Exploit', labelEn:'CVE Exploit' },
+  brute:{ color:'#ff6b9d', labelDe:'Brute-Force', labelEn:'Brute Force' },
+  recon:{ color:'#00cc66', labelDe:'Aufklärung', labelEn:'Reconnaissance' },
+  scan: { color:'#4488ff', labelDe:'Schwachstellen-Scan', labelEn:'Vulnerability Scan' },
+  other:{ color:'#888899', labelDe:'Sonstige', labelEn:'Other' },
 };
 function scenarioCategory(s){const x=(s||'').toLowerCase();if(/cve|exploit|sqli|rce|lfi|rfi/.test(x))return 'cve';if(/ssh|bf|brute|force|login|rdp/.test(x))return 'brute';if(/scan|probing|probe|discovery/.test(x))return 'scan';if(/http|sensitive|recon|path/.test(x))return 'recon';return 'other';}
 function scenarioColor(s){return THREAT_TYPES[scenarioCategory(s)]?.color||THREAT_TYPES.other.color;}
@@ -759,7 +772,7 @@ function getEventsInReplay(){let list=allEvents.filter(e=>e.ts>=replayWinStart&&
 function aggregateFromEvents(events){const by={};events.forEach(e=>{if(!e.lat&&!e.lon)return;const k=`${e.lat.toFixed(2)},${e.lon.toFixed(2)},${e.scenario}`;if(!by[k])by[k]={...e,count:0};by[k].count++;});return Object.values(by);}
 function getDisplayAttackData(){return liveMode?getFilteredAttackData():aggregateFromEvents(getEventsInReplay());}
 function buildThreatLegend(){const el=document.getElementById('threat-legend');if(!el)return;el.innerHTML=Object.keys(THREAT_TYPES).map(k=>`<span class="threat-leg"><span class="threat-leg-dot" style="background:${THREAT_TYPES[k].color}"></span>${threatLabel(k)}</span>`).join('');}
-function renderMapPanels(){const events=liveMode?feedData:getEventsInReplay();const bySc={},byIp={},byCo={};events.forEach(e=>{bySc[e.scenario]=(bySc[e.scenario]||0)+1;byIp[e.ip]=(byIp[e.ip]||0)+1;byCo[e.country]=(byCo[e.country]||0)+1;});const row=(c,l,v)=>`<div class="map-panel-row"><span class="map-panel-dot" style="background:${c}"></span><span class="map-panel-label">${l}</span><span class="map-panel-val">${v}</span></div>`;document.getElementById('panel-scenarios-body').innerHTML=Object.entries(bySc).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([s,n])=>row(scenarioColor(s),s,n)).join('')||'—';document.getElementById('panel-ips-body').innerHTML=Object.entries(byIp).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([ip,n])=>{const c=events.find(e=>e.ip===ip)?.country||'??';return row(scenarioColor(events.find(e=>e.ip===ip)?.scenario),`${FLAG[c]||'🌐'} ${ip}`,n);}).join('')||'—';document.getElementById('panel-origins-body').innerHTML=Object.entries(byCo).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([cc,n],i)=>row('#888',`${i+1}. ${COUNTRY_NAME[cc]||cc}`,n)).join('')||'—';document.getElementById('fs-alerts').textContent=events.length;document.getElementById('fs-ips').textContent=new Set(events.map(e=>e.ip)).size;document.getElementById('fs-scenarios').textContent=new Set(events.map(e=>e.scenario)).size;document.getElementById('fs-countries').textContent=new Set(events.map(e=>e.country)).size;}
+function renderMapPanels(){const events=liveMode?feedData:getEventsInReplay();const bySc={},byIp={},byCo={};events.forEach(e=>{bySc[e.scenario]=(bySc[e.scenario]||0)+1;byIp[e.ip]=(byIp[e.ip]||0)+1;byCo[e.country]=(byCo[e.country]||0)+1;});const row=(c,l,v)=>`<div class="map-panel-row"><span class="map-panel-dot" style="background:${c}"></span><span class="map-panel-label">${l}</span><span class="map-panel-val">${v}</span></div>`;document.getElementById('panel-scenarios-body').innerHTML=Object.entries(bySc).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([s,n])=>row(scenarioColor(s),s,n)).join('')||'—';document.getElementById('panel-ips-body').innerHTML=Object.entries(byIp).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([ip,n])=>{const c=events.find(e=>e.ip===ip)?.country||'??';return row(scenarioColor(events.find(e=>e.ip===ip)?.scenario),`${FLAG[c]||'🌐'} ${ip}`,n);}).join('')||'—';document.getElementById('panel-origins-body').innerHTML=Object.entries(byCo).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([cc,n],i)=>row('#888',`${i+1}. ${countryDisplayName(cc)}`,n)).join('')||'—';document.getElementById('fs-alerts').textContent=events.length;document.getElementById('fs-ips').textContent=new Set(events.map(e=>e.ip)).size;document.getElementById('fs-scenarios').textContent=new Set(events.map(e=>e.scenario)).size;document.getElementById('fs-countries').textContent=new Set(events.map(e=>e.country)).size;}
 function updateReplaySlider(){const sl=document.getElementById('replay-slider');if(!sl||replayWinEnd<=replayWinStart)return;sl.value=Math.round(1000*(replayCursor-replayWinStart)/(replayWinEnd-replayWinStart));document.getElementById('replay-clock').textContent=fmtReplayClock(replayCursor);document.getElementById('tl-start').textContent=fmtReplayClock(replayWinStart);document.getElementById('tl-end').textContent=fmtReplayClock(replayWinEnd);}
 function clearFlightLabels(){const layer=document.getElementById('flight-labels-layer');if(layer)layer.innerHTML='';}
 function escTag(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');}
@@ -768,7 +781,7 @@ function flightTagText(r){
   const cityRaw=r.city?translateCity(r.city):'';
   const city=cityRaw.length>20?cityRaw.slice(0,18)+'…':cityRaw;
   if(city)return `<span class="flight-tag-cc">${escTag(cc)}</span><span class="flight-tag-sep">·</span><span class="flight-tag-city">${escTag(city)}</span>`;
-  const short=currentLang==='de'?(COUNTRY_NAME[cc]||cc):cc;
+  const short=countryDisplayName(cc);
   return `<span class="flight-tag-city">${escTag(short)}</span>`;
 }
 const FLIGHT_LABEL_OFFSETS=[[0,-10],[0,-22],[0,-34],[14,-14],[-14,-14],[22,-26],[-22,-26],[0,-44],[28,-18],[-28,-18],[36,-32],[-36,-32]];
@@ -1001,7 +1014,7 @@ function setupReplayControls(){buildThreatLegend();document.getElementById('repl
 // ── TRANSLATIONS ──
 const LANG = {
   de: {
-    title:       'CROWD<span>SEC</span> // THREAT MAP',
+    title:       'CROWD<span>SEC</span> // BEDROHUNGSKARTE',
     attacks:     'ANGRIFFE',
     countries:   'LÄNDER',
     scenarios:   'SZENARIEN',
@@ -1014,8 +1027,8 @@ const LANG = {
     oldest:      '▲ ÄLTESTE',
     anim_off:    'ANIMATION',
     anim_on:     'ANIMATION',
-    lines_off:   'LINIEN',
-    lines_on:    'LINIEN',
+    lines_off:   'ANGRIFFE',
+    lines_on:    'ANGRIFFE',
     autozoom_on: 'AUTO-ZOOM',
     autozoom_off:'AUTO-ZOOM',
     server_lbl:  SERVER_NAME_MAP,
@@ -1030,16 +1043,62 @@ const LANG = {
     leg_20:      '20+ ANGRIFFE',
     leg_server:  'SERVER',
     leg_click:   '| KLICK AUF PUNKT = DETAILS',
-    top_scenarios:'TOP SCENARIOS', malevolent_ips:'MALEVOLENT IPS', top_origins:'TOP ATTACK ORIGINS',
-    fs_alerts:'ALERTS', fs_ips:'EINDEUTIGE IPS', fs_scenarios:'SZENARIEN', fs_countries:'LÄNDER',
-    lbl_speed:'TEMPO', lbl_range:'ZEITRAUM', replay_lbl:'REPLAY', live_lbl:'LIVE',
+    top_scenarios:'TOP-SZENARIEN',
+    malevolent_ips:'BÖSWILLIGE IPS',
+    top_origins:'TOP-HERKUNFTEN',
+    fs_alerts:'MELDUNGEN',
+    fs_ips:'EINDEUTIGE IPS',
+    fs_scenarios:'SZENARIEN',
+    fs_countries:'LÄNDER',
+    lbl_speed:'TEMPO',
+    lbl_range:'ZEITRAUM',
+    replay_lbl:'WIEDERGABE',
+    live_lbl:'LIVE',
     entries:     (s,e,t) => `${s}–${e} von ${t} Einträgen`,
     prev:        '◀',
     next:        '▶',
     error_conn:  'VERBINDUNGSFEHLER: ',
+    error_prefix:'FEHLER: ',
+    load_init:   'INITIALISIERUNG',
+    load_map:    'KARTENDATEN WERDEN GELADEN…',
+    load_feed:   'VERBINDUNG ZUM BEDROHUNGS-FEED…',
     time_icon:   '🕐',
     scenario_icon:'⚡',
     subnet_icon: '📡',
+    sparkline:   'ANGRIFFE / STUNDE',
+    search_ph:   '🔍  IP, LAND, SZENARIO…',
+    theme_lbl:   'THEMA:',
+    theme_cyan:  'CYAN',
+    theme_alarm: 'ALARM',
+    theme_matrix:'MATRIX',
+    theme_amber: 'AMBER',
+    csv_btn:     '↓ CSV',
+    csv_title:   'Feed als CSV exportieren',
+    tip_close:   'Schließen',
+    tip_click:   'KLICK FÜR DETAILS',
+    replay_title:'Wiedergabe',
+    live_title:  'Live-Modus',
+    home_zoom:   'Zum Server-Standort',
+    anim_title:  'Animierte Karte (Replay/Live) vs. statische Heatmap',
+    lines_title: 'Angriffe auf der Karte ein/aus',
+    autozoom_title:'Bei Angriff automatisch in die Region zoomen',
+    wl_title:    'Whitelist-Status',
+    wl_na:       'Whitelist: n/a',
+    wl_err:      '⚠️ Whitelist-Fehler',
+    wl_updated:  (ip) => `🔄 ${ip} aktualisiert`,
+    wl_check:    (c,ch) => `Letzter Check: ${c}${ch ? ' | Geändert: '+ch : ''}`,
+    filter_country: (cc) => `Klick: nur ${cc} anzeigen`,
+    filter_scenario:'Klick: nach Szenario filtern',
+    unban_active:  'Aktiver Ban — entsperren',
+    unban_history: 'Historie löschen',
+    lookup_title:  'IP nachschlagen',
+    map_title:     'Auf Karte zeigen',
+    unban_confirm1:(ip) => `🔓 IP ${ip} wirklich entsperren?\n\nDiese IP wird aus allen aktiven CrowdSec-Bans entfernt.`,
+    unban_confirm2:(ip) => `⚠️ Letzte Warnung!\n\nIP: ${ip}\n\nSicher entsperren? Diese Aktion kann nicht rückgängig gemacht werden.`,
+    unban_fail:    'Unban fehlgeschlagen',
+    unban_conn:    'Verbindungsfehler zum Exporter',
+    csv_headers:   ['IP','Land','Stadt','ASN','AS-Name','Szenario','Anzahl','Zeit'],
+    range_labels:  {'168':'7T','720':'1M','4320':'6M','8760':'12M','17520':'2J','26280':'3J','35040':'4J','43800':'5J','52560':'6J'},
   },
   en: {
     title:       'CROWD<span>SEC</span> // THREAT MAP',
@@ -1055,8 +1114,8 @@ const LANG = {
     oldest:      '▲ OLDEST',
     anim_off:    'ANIMATION',
     anim_on:     'ANIMATION',
-    lines_off:   'LINES',
-    lines_on:    'LINES',
+    lines_off:   'FLIGHTS',
+    lines_on:    'FLIGHTS',
     autozoom_on: 'AUTO-ZOOM',
     autozoom_off:'AUTO-ZOOM',
     server_lbl:  SERVER_NAME_MAP,
@@ -1071,19 +1130,72 @@ const LANG = {
     leg_20:      '20+ ATTACKS',
     leg_server:  'SERVER',
     leg_click:   '| CLICK POINT = DETAILS',
-    top_scenarios:'TOP SCENARIOS', malevolent_ips:'MALEVOLENT IPS', top_origins:'TOP ATTACK ORIGINS',
-    fs_alerts:'ALERTS', fs_ips:'UNIQUE IPS', fs_scenarios:'SCENARIOS', fs_countries:'COUNTRIES',
-    lbl_speed:'SPEED', lbl_range:'RANGE', replay_lbl:'REPLAY', live_lbl:'LIVE',
+    top_scenarios:'TOP SCENARIOS',
+    malevolent_ips:'MALEVOLENT IPS',
+    top_origins:'TOP ATTACK ORIGINS',
+    fs_alerts:'ALERTS',
+    fs_ips:'UNIQUE IPS',
+    fs_scenarios:'SCENARIOS',
+    fs_countries:'COUNTRIES',
+    lbl_speed:'SPEED',
+    lbl_range:'RANGE',
+    replay_lbl:'REPLAY',
+    live_lbl:'LIVE',
     entries:     (s,e,t) => `${s}–${e} of ${t} entries`,
     prev:        '◀',
     next:        '▶',
     error_conn:  'CONNECTION ERROR: ',
+    error_prefix:'ERROR: ',
+    load_init:   'INITIALIZING',
+    load_map:    'LOADING MAP DATA…',
+    load_feed:   'CONNECTING TO THREAT FEED…',
     time_icon:   '🕐',
     scenario_icon:'⚡',
     subnet_icon: '📡',
+    sparkline:   'ATTACKS / HOUR',
+    search_ph:   '🔍  IP, COUNTRY, SCENARIO…',
+    theme_lbl:   'THEME:',
+    theme_cyan:  'CYAN',
+    theme_alarm: 'ALERT',
+    theme_matrix:'MATRIX',
+    theme_amber: 'AMBER',
+    csv_btn:     '↓ CSV',
+    csv_title:   'Export feed as CSV',
+    tip_close:   'Close',
+    tip_click:   'CLICK FOR DETAILS',
+    replay_title:'Replay',
+    live_title:  'Live mode',
+    home_zoom:   'Go to server',
+    anim_title:  'Animated map (replay/live) vs. static heatmap',
+    lines_title: 'Attack flights (rockets) on/off',
+    autozoom_title:'Auto-zoom to attack region',
+    wl_title:    'Whitelist status',
+    wl_na:       'Whitelist: n/a',
+    wl_err:      '⚠️ Whitelist error',
+    wl_updated:  (ip) => `🔄 ${ip} updated`,
+    wl_check:    (c,ch) => `Last check: ${c}${ch ? ' | Changed: '+ch : ''}`,
+    filter_country: (cc) => `Click: show only ${cc}`,
+    filter_scenario:'Click: filter by scenario',
+    unban_active:  'Active ban — unban',
+    unban_history: 'Clear history',
+    lookup_title:  'Look up IP',
+    map_title:     'Show on map',
+    unban_confirm1:(ip) => `🔓 Really unban IP ${ip}?\n\nThis IP will be removed from all active CrowdSec bans.`,
+    unban_confirm2:(ip) => `⚠️ Final warning!\n\nIP: ${ip}\n\nAre you sure? This cannot be undone.`,
+    unban_fail:    'Unban failed',
+    unban_conn:    'Connection error to exporter',
+    csv_headers:   ['IP','Country','City','ASN','AS Name','Scenario','Count','Time'],
+    range_labels:  {'168':'7D','720':'1M','4320':'6M','8760':'12M','17520':'2Y','26280':'3Y','35040':'4Y','43800':'5Y','52560':'6Y'},
   }
 };
 let currentLang = 'LANGUAGE_PLACEHOLDER'; // wird durch entrypoint.sh ersetzt
+
+function normalizeLang(){
+  let lang=String(currentLang||'de').toLowerCase().trim();
+  if(lang==='LANGUAGE_PLACEHOLDER'||!LANG[lang]) lang='de';
+  currentLang=lang;
+  document.documentElement.lang=lang;
+}
 const CITY_NAMES_DE = {
   "Antwerp": "Antwerpen", "Athens": "Athen", "Beijing": "Peking",
   "Belgrade": "Belgrad", "Brasov": "Kronstadt", "Brno": "Brünn",
@@ -1108,58 +1220,101 @@ function translateCity(city) {
   return city;
 }
 
-function t(key, ...args){ const tr=LANG[currentLang]; if(typeof tr[key]==='function') return tr[key](...args); return tr[key]||key; }
+function t(key, ...args){
+  const tr=LANG[currentLang]||LANG.de;
+  const v=tr[key];
+  if(typeof v==='function') return v(...args);
+  return v!=null?v:key;
+}
 
 function applyLang(){
+  normalizeLang();
   const l=LANG[currentLang];
-  // Version badge
   const vbadge=document.getElementById('map-version-badge');
   if(vbadge)vbadge.textContent=APP_VERSION;
-  // Header / map title
-  document.getElementById('h-title').innerHTML = l.title;
-  document.getElementById('s-attacks-lbl').textContent  = l.attacks;
-  document.getElementById('s-countries-lbl').textContent= l.countries;
-  document.getElementById('s-scenarios-lbl').textContent= l.scenarios;
-  document.getElementById('s-live-lbl').textContent     = l.live;
-  // Anim button
+  const hTitle=document.getElementById('h-title');
+  if(hTitle)hTitle.innerHTML=l.title;
+  const loadTitle=document.getElementById('load-title');
+  if(loadTitle)loadTitle.textContent=l.load_init;
+  const ls=document.getElementById('ls');
+  if(ls&&!ls.dataset.busy)ls.textContent=l.load_feed;
+  document.getElementById('s-attacks-lbl').textContent=l.attacks;
+  document.getElementById('s-countries-lbl').textContent=l.countries;
+  document.getElementById('s-scenarios-lbl').textContent=l.scenarios;
+  document.getElementById('s-live-lbl').textContent=l.live;
   const animLbl=document.getElementById('anim-label');
-  if(animLbl) animLbl.textContent = animOn ? l.anim_on : l.anim_off;
+  if(animLbl)animLbl.textContent=animOn?l.anim_on:l.anim_off;
   const linesLbl=document.getElementById('lines-label');
-  if(linesLbl) linesLbl.textContent = linesOn ? l.lines_on : l.lines_off;
+  if(linesLbl)linesLbl.textContent=linesOn?l.lines_on:l.lines_off;
+  const mobLinesLbl=document.getElementById('mob-lines-label');
+  if(mobLinesLbl)mobLinesLbl.textContent=linesOn?l.lines_on:l.lines_off;
+  const mobAnimLbl=document.getElementById('mob-anim-label');
+  if(mobAnimLbl)mobAnimLbl.textContent=animOn?l.anim_on:l.anim_off;
   const azLbl=document.getElementById('autozoom-label');
-  if(azLbl) azLbl.textContent = autoZoomOn ? l.autozoom_on : l.autozoom_off;
-  // Tabs desktop
+  if(azLbl)azLbl.textContent=autoZoomOn?l.autozoom_on:l.autozoom_off;
   document.querySelectorAll('[data-tab="feed"]').forEach(e=>e.textContent=l.feed);
   document.querySelectorAll('[data-tab="top10"]').forEach(e=>e.textContent=l.top10);
   document.querySelectorAll('[data-tab="topall"]').forEach(e=>e.textContent=l.all);
-  // Tabs mobile
   document.querySelectorAll('[data-mob="feed"]').forEach(e=>e.textContent=l.feed);
   document.querySelectorAll('[data-mob="top10"]').forEach(e=>e.textContent=l.top10);
   document.querySelectorAll('[data-mob="topall"]').forEach(e=>e.textContent=l.all);
-  // Sort bar
   document.querySelectorAll('.sort-lbl').forEach(e=>e.textContent=l.sort);
   document.querySelectorAll('#fsort-new,#mob-fsort-new').forEach(e=>e.textContent=l.newest);
   document.querySelectorAll('#fsort-old,#mob-fsort-old').forEach(e=>e.textContent=l.oldest);
-  // Legend
   const legs=document.querySelectorAll('.leg-label');
   const legKeys=['leg_1_4','leg_5_9','leg_10_19','leg_20','leg_server'];
-  legs.forEach((el,i)=>{ if(legKeys[i]) el.textContent=l[legKeys[i]]; });
+  legs.forEach((el,i)=>{if(legKeys[i])el.textContent=l[legKeys[i]];});
   const legHint=document.getElementById('leg-hint');
-  if(legHint) legHint.textContent=l.leg_click;
+  if(legHint)legHint.textContent=l.leg_click;
   [['lbl-top-scenarios','top_scenarios'],['lbl-malevolent-ips','malevolent_ips'],['lbl-top-origins','top_origins'],['fs-alerts-lbl','fs_alerts'],['fs-ips-lbl','fs_ips'],['fs-scn-lbl','fs_scenarios'],['fs-ctry-lbl','fs_countries'],['lbl-speed','lbl_speed'],['lbl-range','lbl_range'],['replay-btn-lbl','replay_lbl']].forEach(([id,k])=>{const el=document.getElementById(id);if(el&&l[k])el.textContent=l[k];});
-  const liveBtn=document.getElementById('mode-live-btn');if(liveBtn)liveBtn.textContent=l.live_lbl||'LIVE';
-  buildThreatLegend();
-  // Ctx menu close
+  const liveBtn=document.getElementById('mode-live-btn');
+  if(liveBtn){liveBtn.textContent=l.live_lbl;liveBtn.title=l.live_title;}
+  const replayBtn=document.getElementById('replay-btn');
+  if(replayBtn)replayBtn.title=l.replay_title;
+  const bzr=document.getElementById('bzr');
+  if(bzr)bzr.title=l.home_zoom;
+  const animT=document.getElementById('anim-toggle');
+  if(animT)animT.title=l.anim_title;
+  const linesT=document.getElementById('lines-toggle');
+  if(linesT)linesT.title=l.lines_title;
+  const azT=document.getElementById('autozoom-toggle');
+  if(azT)azT.title=l.autozoom_title;
+  const themeLbl=document.getElementById('theme-lbl');
+  if(themeLbl)themeLbl.textContent=l.theme_lbl;
+  const themeSpans={theme_cyan:'theme-cyan',theme_alarm:'theme-red',theme_matrix:'theme-matrix',theme_amber:'theme-amber'};
+  Object.entries(themeSpans).forEach(([k,id])=>{const btn=document.getElementById(id);const span=btn&&btn.querySelector('span:last-child');if(span&&l[k])span.textContent=l[k];});
+  const sparkTitle=document.getElementById('sparkline-title');
+  if(sparkTitle)sparkTitle.textContent=l.sparkline;
+  const feedSearch=document.getElementById('feed-search');
+  if(feedSearch)feedSearch.placeholder=l.search_ph;
+  const mobFeedSearch=document.getElementById('mob-feed-search');
+  if(mobFeedSearch)mobFeedSearch.placeholder=l.search_ph;
+  document.querySelectorAll('.csv-feed-btn').forEach(btn=>{btn.textContent=l.csv_btn;btn.title=l.csv_title;});
+  const tipClose=document.getElementById('tip-close');
+  if(tipClose){tipClose.title=l.tip_close;tipClose.setAttribute('aria-label',l.tip_close);}
   const ctxClose=document.getElementById('ctx-close');
-  if(ctxClose) ctxClose.textContent=l.close;
-  // Re-render feed (updates time icons, labels etc)
+  if(ctxClose)ctxClose.textContent=l.close;
+  const srvLbl=document.getElementById('sidebar-server-lbl');
+  if(srvLbl)srvLbl.textContent=SERVER_NAME_MAP;
+  const mobWlBadge=document.getElementById('mob-wl-badge');
+  if(mobWlBadge)mobWlBadge.title=l.wl_title;
+  const zl=document.getElementById('zoom-level');
+  if(zl)zl.textContent=`${l.zoom_lbl} ${currentScale.toFixed(1)}×`;
+  if(l.range_labels){
+    document.querySelectorAll('.pill-btn[data-range]').forEach(btn=>{
+      const lbl=l.range_labels[btn.dataset.range];
+      if(lbl)btn.textContent=lbl;
+    });
+  }
+  buildThreatLegend();
   renderFeed();
   renderCountryLists();
-  // Mobile header labels
+  renderFilterBar();
+  renderMapPanels();
   const mobAtLbl=document.getElementById('mob-attacks-lbl');
-  if(mobAtLbl) mobAtLbl.textContent=LANG[currentLang].attacks;
+  if(mobAtLbl)mobAtLbl.textContent=l.attacks;
   const mobCoLbl=document.getElementById('mob-countries-lbl');
-  if(mobCoLbl) mobCoLbl.textContent=LANG[currentLang].countries;
+  if(mobCoLbl)mobCoLbl.textContent=l.countries;
 }
 
 // toggleLang entfernt — Sprache wird über LANGUAGE Docker-Variable gesetzt
@@ -1239,9 +1394,9 @@ function toggleLines(){
   const mobLbl=document.getElementById('mob-lines-label');
   const mobBtn=document.getElementById('mob-lines-toggle');
   setToggleBtn('lines-toggle',linesOn,'lines-dot');
-  if(lbl)lbl.textContent=linesOn?(t('lines_on')||'LINIEN'):(t('lines_off')||'LINIEN');
+  if(lbl)lbl.textContent=linesOn?(t('lines_on')||'ANGRIFFE'):(t('lines_off')||'ANGRIFFE');
   if(mobDot){mobDot.style.background=linesOn?'var(--ok)':'rgba(160,255,216,0.3)';mobDot.style.boxShadow=linesOn?'0 0 5px var(--ok)':'none';}
-  if(mobLbl)mobLbl.textContent='LINIEN';
+  if(mobLbl)mobLbl.textContent=t('lines_on')||'ANGRIFFE';
   if(mobBtn){
     mobBtn.style.borderColor=linesOn?'rgba(0,255,200,0.35)':'rgba(0,255,200,0.2)';
     mobBtn.style.color=linesOn?'rgba(0,255,200,0.8)':'rgba(160,255,216,0.45)';
@@ -1329,7 +1484,6 @@ function setupZoom(){
   document.getElementById('bzi').onclick=()=>zoomByStep(ZOOM_STEP);
   document.getElementById('bzo').onclick=()=>zoomByStep(-ZOOM_STEP);
   document.getElementById('bzr').onclick=()=>fitMapToServerHome({duration:500});
-  document.getElementById('bzr').title=currentLang==='de'?'Zum Server-Standort':'Go to server';
 }
 
 function onZoom(event){
@@ -1341,7 +1495,7 @@ function onZoom(event){
   const ik=1/t.k;
   dotG.selectAll('.adot').attr('r',function(){return parseFloat(this.dataset.sr||4)*ik;});
   updateServerScale();
-  document.getElementById('zoom-level').textContent=`ZOOM ${t.k.toFixed(1)}×`;
+  document.getElementById('zoom-level').textContent=`${t('zoom_lbl')} ${t.k.toFixed(1)}×`;
   updateSelectionRing();
   drawCountryLabels();
   // Mark manual user zoom (sourceEvent = null means programmatic)
@@ -1388,13 +1542,16 @@ async function init(){
   try{
     setupProj();
     await loadScript('https://cdnjs.cloudflare.com/ajax/libs/topojson/3.0.2/topojson.min.js');
-    document.getElementById('ls').textContent='LOADING MAP DATA...';
+    const lsEl=document.getElementById('ls');
+    if(lsEl){lsEl.dataset.busy='1';lsEl.textContent=t('load_map');}
     const r=await fetch('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json');
     worldData=await r.json();
     drawBaseMap();
     setupZoom();
-    document.getElementById('ls').textContent='CONNECTING TO THREAT FEED...';
+    if(lsEl)lsEl.textContent=t('load_feed');
     await fetchAndRender();
+    const lsDone=document.getElementById('ls');
+    if(lsDone)delete lsDone.dataset.busy;
     document.getElementById('loading').style.display='none';
     updateCountryFills();
     startMapOnLoad();
@@ -1435,7 +1592,7 @@ async function init(){
       }).observe(sidebar);
     }
     window.addEventListener('resize',onResize);
-  }catch(e){showErr('FEHLER: '+e.message);document.getElementById('loading').style.display='none';}
+  }catch(e){showErr(t('error_prefix')+e.message);document.getElementById('loading').style.display='none';}
 }
 
 function onResize(){
@@ -1533,7 +1690,7 @@ function getMapChromeInsets(){
   const wrap=mapWrap;
   if(!wrap)return{l:0,t:40,r:0,b:72};
   const wr=wrap.getBoundingClientRect();
-  const ins={l:14,t:42,r:14,b:68};
+  const ins={l:14,t:28,r:14,b:68};
   const left=document.getElementById('map-panels-left');
   if(left&&left.offsetParent!==null&&getComputedStyle(left).display!=='none'){
     const r=left.getBoundingClientRect();
@@ -1577,7 +1734,8 @@ function fitMapToServerHome(opts={}){
   const k=opts.k??(isMobile?HOME_ZOOM_K_MOBILE:HOME_ZOOM_K_DESKTOP);
   const ins=getMapChromeInsets();
   const cx=ins.l+(W-ins.l-ins.r)/2;
-  const cy=ins.t+(H-ins.t-ins.b)/2;
+  const visH=H-ins.t-ins.b;
+  const cy=ins.t+visH*0.47;
   const tx=cx-sx*k;
   const ty=cy-sy*k;
   homeTransform=d3.zoomIdentity.translate(tx,ty).scale(k);
@@ -1789,7 +1947,7 @@ async function fetchAndRender(){
     const mobCC=document.getElementById('mob-s-countries');
     if(mobCC)mobCC.textContent=ccSize;
     document.getElementById('s-scenarios').textContent=new Set(attackData.map(d=>d.scenario)).size;
-    const timeStr=new Date().toLocaleTimeString('de-DE');
+    const timeStr=new Date().toLocaleTimeString(currentLang==='de'?'de-DE':'en-GB');
     document.getElementById('lu').textContent=timeStr;
     const mobLu=document.getElementById('mob-lu');
     if(mobLu)mobLu.textContent=timeStr;
@@ -1804,7 +1962,7 @@ async function fetchAndRender(){
     hideErr();
     applyLang();
     refreshMapFromData();
-  }catch(e){showErr('VERBINDUNGSFEHLER: '+EXPORTER_URL);}
+  }catch(e){showErr(t('error_conn')+EXPORTER_URL);}
 }
 
 function countColor(n){if(n>=20)return'#ff2244';if(n>=10)return'#ff8800';if(n>=5)return'#ffff00';return'#00ff88';}
@@ -1828,9 +1986,9 @@ async function fetchWhitelistStatus(){
     if(status==='ok'){
       color='var(--ok)';label=`🛡️ ${ip} ✓`;
     } else if(status==='aktualisiert'){
-      color='var(--accent)';label=`🔄 ${ip} aktualisiert`;
+      color='var(--accent)';label=t('wl_updated',ip);
     } else if(status==='fehler'){
-      color='var(--danger)';label='⚠️ Whitelist Fehler';
+      color='var(--danger)';label=t('wl_err');
     } else {
       color='rgba(160,255,216,0.3)';label=`🛡️ ${ip||'—'}`;
     }
@@ -1839,7 +1997,7 @@ async function fetchWhitelistStatus(){
     dot.style.boxShadow=status==='fehler'?`0 0 5px ${color}`:'none';
     txt.style.color=color;
     txt.textContent=label;
-    txt.title=`Letzter Check: ${check}${changed?' | Geändert: '+changed:''}`;
+    txt.title=t('wl_check',check,changed);
     // Mobile Badge
     const mobDot=document.getElementById('mob-wl-dot');
     const mobTxt=document.getElementById('mob-wl-text');
@@ -1847,7 +2005,7 @@ async function fetchWhitelistStatus(){
     if(mobTxt){mobTxt.style.color=color;mobTxt.textContent=`🛡️ ${ip||'—'}`;mobTxt.title=txt.title;}
   }catch(e){
     if(dot)dot.style.background='rgba(160,255,216,0.15)';
-    if(txt){txt.style.color='rgba(160,255,216,0.25)';txt.textContent='Whitelist: n/a';}
+    if(txt){txt.style.color='rgba(160,255,216,0.25)';txt.textContent=t('wl_na');}
     const mobDot=document.getElementById('mob-wl-dot');
     const mobTxt=document.getElementById('mob-wl-text');
     if(mobDot)mobDot.style.background='rgba(160,255,216,0.15)';
@@ -1890,9 +2048,9 @@ function showCtx(ev,d){
 
 async function unbanIPDirect(ip, btn){
   if(!ip)return;
-  if(!confirm(`🔓 IP ${ip} wirklich entsperren?\n\nDiese IP wird aus allen aktiven CrowdSec-Bans entfernt.`))return;
+  if(!confirm(t('unban_confirm1',ip)))return;
   await new Promise(r=>setTimeout(r,100));
-  if(!confirm(`⚠️ Letzte Warnung!\n\nIP: ${ip}\n\nSicher entsperren? Diese Aktion kann nicht rückgängig gemacht werden.`))return;
+  if(!confirm(t('unban_confirm2',ip)))return;
 
   // Button direkt nutzen
   const targetBtn = btn || document.querySelector(`.feed-unban-btn[data-ip="${ip}"]`);
@@ -1930,11 +2088,11 @@ async function unbanIPDirect(ip, btn){
       },1500);
     } else {
       if(targetBtn){targetBtn.textContent='❌';targetBtn.style.color='var(--danger)';targetBtn.disabled=false;}
-      alert(`Fehler: ${data.message||'Unban fehlgeschlagen'}`);
+      alert(`${t('error_prefix')}${data.message||t('unban_fail')}`);
     }
   }catch(e){
     if(targetBtn){targetBtn.textContent='❌';targetBtn.style.color='var(--danger)';targetBtn.disabled=false;}
-    alert('Verbindungsfehler zum Exporter');
+    alert(t('unban_conn'));
   }
 }
 
@@ -1972,7 +2130,7 @@ function tipBodyHTML(d,pinned){
   const subnetStr=d.iprange&&d.iprange!=='-'?d.iprange:'';
   const timeStr=d.time_de||d.time_iso||'';
   const cityStr=d.city&&d.city!=='-'?translateCity(d.city):'';
-  const foot=pinned?'':'<div style="color:rgba(0,255,200,0.25);font-size:8px;margin-top:5px;border-top:1px solid rgba(0,255,200,0.1);padding-top:4px;letter-spacing:1px;">KLICK FÜR DETAILS</div>';
+  const foot=pinned?'':`<div style="color:rgba(0,255,200,0.25);font-size:8px;margin-top:5px;border-top:1px solid rgba(0,255,200,0.1);padding-top:4px;letter-spacing:1px;">${t('tip_click')}</div>`;
   return `
     <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:4px;">
       <span style="color:#ff2244;font-size:12px;">${d.ip}</span>
@@ -1980,7 +2138,7 @@ function tipBodyHTML(d,pinned){
     </div>
     ${subnetStr?`<div style="color:rgba(160,255,216,0.4);font-size:9px;margin-bottom:3px;">📡 ${subnetStr}</div>`:''}
     <div style="margin-bottom:3px;display:flex;align-items:center;gap:4px;flex-wrap:wrap;">
-      <span style="color:#ff8800;font-size:10px;">${f} ${COUNTRY_NAME[d.country]||d.country}</span>
+      <span style="color:#ff8800;font-size:10px;">${f} ${countryDisplayName(d.country)}</span>
       ${cityStr?`<span style="color:rgba(0,255,200,0.2);">·</span><span style="color:rgba(255,200,100,0.95);font-size:10px;">${cityStr}</span>`:''}
       ${asnStr?`<span style="color:rgba(0,255,200,0.2);">·</span><span style="color:rgba(0,255,200,0.5);font-size:9px;">${asnStr}</span>`:''}
     </div>
@@ -2022,25 +2180,25 @@ function feedItemHTML(d){
       <div class="feed-ip" style="flex:1;">${d.ip}</div>
       <button class="feed-action-btn feed-unban-btn" data-ip="${d.ip}"
         onclick="event.stopPropagation();unbanIPDirect('${d.ip}',this);"
-        title="${d.active_ban ? 'Aktiver Ban — entsperren' : 'Historie löschen'}"
+        title="${d.active_ban ? t('unban_active') : t('unban_history')}"
         style="font-size:16px;">${d.active_ban?'🚫':'📋'}</button>
       <button class="feed-action-btn feed-lookup-btn"
         onclick="event.stopPropagation();openCtxFeed('${d.ip}','${d.country}','${d.scenario}',1,event,'${d.iprange||''}');"
-        title="IP nachschlagen">🔍</button>
+        title="${t('lookup_title')}">🔍</button>
       <button class="feed-action-btn feed-map-btn"
         onclick="event.stopPropagation();jumpToPoint(${d.lat},${d.lon},'${d.ip}','${d.country}','${d.scenario}','${d.iprange||''}',event,'${(d.city||'').replace(/'/g,"\\'")}');"
-        title="Auf Karte zeigen">↗</button>
+        title="${t('map_title')}">↗</button>
     </div>
     <div style="font-size:clamp(7px,0.85vw,9px);color:rgba(160,255,216,0.35);margin-top:1px;">
       ${subnetStr?`${t('subnet_icon')} ${subnetStr}`:''}
     </div>
     <div class="feed-meta" style="margin-top:2px;display:flex;align-items:center;gap:4px;flex-wrap:wrap;">
-      <span class="feed-country">${f} ${COUNTRY_NAME[d.country]||d.country}</span>
+      <span class="feed-country">${f} ${countryDisplayName(d.country)}</span>
       ${cityStr?`<span style="color:rgba(0,255,200,0.2);">·</span><span style="color:rgba(255,200,100,0.95);font-size:clamp(8px,0.95vw,10px);font-weight:500;">${cityStr}</span>`:''}
       ${asnStr?`<span style="color:rgba(0,255,200,0.2);">·</span><span style="color:rgba(0,255,200,0.45);font-size:clamp(7px,0.8vw,9px);">${asnStr}</span>`:''}
     </div>
     <div style="font-size:clamp(7px,0.85vw,9px);color:rgba(160,255,216,0.5);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${d.asname}">${d.asname||''}</div>
-    <div class="feed-scenario" style="margin-top:2px;cursor:pointer;" onclick="event.stopPropagation();filterByScenario('${d.scenario.replace(/'/g,"\\'")}');" title="Klick: nach Szenario filtern">${t('scenario_icon')} ${d.scenario}</div>
+    <div class="feed-scenario" style="margin-top:2px;cursor:pointer;" onclick="event.stopPropagation();filterByScenario('${d.scenario.replace(/'/g,"\\'")}');" title="${t('filter_scenario')}">${t('scenario_icon')} ${d.scenario}</div>
     <div style="font-size:clamp(7px,0.8vw,9px);color:rgba(0,255,200,0.32);margin-top:3px;letter-spacing:0.5px;">${t('time_icon')} ${timeStr}</div>
   </div>`;
 }
@@ -2267,10 +2425,11 @@ function countryListHTML(items){
   return items.map((d,i)=>{
     const f=FLAG[d.country]||'🌐',pct=Math.round(d.count/max*100),col=countColor(d.count);
     const isActive=activeFilters.country===d.country;
-    return `<div class="top-item${isActive?' top-item-active':''}" onclick="filterByCountry('${d.country}')" title="Klick: nur ${d.country} anzeigen">
+    const cName=countryDisplayName(d.country);
+    return `<div class="top-item${isActive?' top-item-active':''}" onclick="filterByCountry('${d.country}')" title="${t('filter_country',cName)}">
       <div class="top-rank">#${i+1}</div><div class="top-flag">${f}</div>
       <div class="top-info">
-        <div class="top-country" style="${isActive?'color:var(--accent);':''}">${d.country}</div>
+        <div class="top-country" style="${isActive?'color:var(--accent);':''}">${cName}</div>
         <div class="top-bar-wrap"><div class="top-bar" style="width:${pct}%;background:${col}"></div></div>
       </div>
       <div class="top-count">${d.count}</div>
@@ -2327,7 +2486,7 @@ function renderFilterBar(){
   const bar=document.getElementById('filter-bar');
   const mobBar=document.getElementById('mob-filter-bar');
   let html='';
-  if(activeFilters.country) html+=`<div class="filter-chip" onclick="clearFilter('country')"><span>🌍 ${activeFilters.country}</span><span class="filter-chip-x">✕</span></div>`;
+  if(activeFilters.country) html+=`<div class="filter-chip" onclick="clearFilter('country')"><span>🌍 ${countryDisplayName(activeFilters.country)}</span><span class="filter-chip-x">✕</span></div>`;
   if(activeFilters.scenario) html+=`<div class="filter-chip" onclick="clearFilter('scenario')"><span>⚡ ${activeFilters.scenario}</span><span class="filter-chip-x">✕</span></div>`;
   if(activeFilters.search) html+=`<div class="filter-chip" onclick="document.getElementById('feed-search').value='';document.getElementById('mob-feed-search')&&(document.getElementById('mob-feed-search').value='');onFeedSearch();"><span>🔍 ${activeFilters.search}</span><span class="filter-chip-x">✕</span></div>`;
   if(bar)bar.innerHTML=html;
@@ -2394,7 +2553,7 @@ function checkAlarms(){} // Stub — kein Sound mehr
 
 // ── CSV EXPORT ──
 function exportCSV(){
-  const rows=[['IP','Land','Stadt','ASN','ASName','Szenario','Anzahl','Zeit']];
+  const rows=[t('csv_headers')];
   feedData.forEach(d=>{
     rows.push([d.ip,d.country,d.city||'',d.asnumber||'',d.asname||'',d.scenario,d.count||1,d.time_de||d.time_iso||'']);
   });
@@ -2561,6 +2720,8 @@ document.addEventListener('visibilitychange',()=>{
   else if(!document.hidden&&animOn&&linesOn)startAnimLoop();
 });
 
+normalizeLang();
+applyLang();
 init();
 </script>
 </body>
