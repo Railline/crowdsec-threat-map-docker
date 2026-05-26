@@ -693,8 +693,10 @@ const ROCKET_DURATION_MS = 4500;  // Dauer eines Raketenflugs bis Einschlag (lan
 const CROWDSEC_ARC_COLOR = '#ff9a3c'; // Orange wie CrowdSec Console
 const FIT_ZOOM_BOOST = 1.55;      // für fitMapToPoints (alle Angriffe)
 const FIT_MIN_SCALE = 1.35;
-const HOME_ZOOM_K_DESKTOP = 1.0;  // Standard-Zoom (Browser — wie Console-Übersicht)
+const HOME_ZOOM_K_DESKTOP = 1.1;  // Standard-Zoom (Console-Übersicht, Bild 2)
 const HOME_ZOOM_K_MOBILE = 1.0;
+const HOME_SCREEN_X_FRAC = 0.48;  // Server horizontal im sichtbaren Kartenbereich
+const HOME_SCREEN_Y_FRAC = 0.42;
 const ZOOM_STEP = 0.1;          // +/- Buttons
 const AUTO_ZOOM_MIN_MS = 2800;    // Abstand zwischen Auto-Zooms
 const AUTO_ZOOM_MAX_K = 5.5;      // Max. Zoom bei Einzelangriff
@@ -892,6 +894,7 @@ function nudgeAttackIntoView(lon,lat,opts={}){
     .call(zoomBeh.transform,t);
 }
 function maybeAutoZoomToAttack(ev){
+  if(!liveMode)return; // Replay soll Home-Übersicht nicht zerren
   if(!autoZoomOn||userHasZoomed||!ev||ev.lon==null||ev.lat==null)return;
   if(!animOn)return;
   const now=Date.now();
@@ -1478,6 +1481,7 @@ function startMapOnLoad(){
   setToggleBtn('lines-toggle',linesOn,'lines-dot');
   setToggleBtn('autozoom-toggle',autoZoomOn,'autozoom-dot');
   feedData.forEach(e=>lastLiveSeenKeys.add((e.ip||'')+'|'+(e.time_iso||'')));
+  scheduleHomeFit();
   if(animOn){
     if(liveMode)startAnimLoop();
     else if(allEvents.length){replayPlaying=true;updateReplayBtn();startReplayLoop();}
@@ -1593,6 +1597,7 @@ async function init(){
     worldData=await r.json();
     drawBaseMap();
     setupZoom();
+    scheduleHomeFit();
     if(lsEl)lsEl.textContent=t('load_feed');
     await fetchAndRender();
     const lsDone=document.getElementById('ls');
@@ -1615,13 +1620,14 @@ async function init(){
         setupProj();
         canvas.width=W;canvas.height=H;
         canvas.style.width=W+'px';canvas.style.height=H+'px';
-        fitMapToServerHome({duration:0});
+        scheduleHomeFit();
         if(!animOn)clearArcCanvas();
       } else if(fitAttempts<25){
         setTimeout(tryFit,120);
       }
     }
     setTimeout(tryFit,200);
+    setTimeout(scheduleHomeFit,700);
     setupReplayControls();
     setInterval(fetchAndRender,REFRESH_MS);
     setInterval(fetchWhitelistStatus, 60000);
@@ -1731,16 +1737,24 @@ function buildArcPaths(){
 
 // Bögen nur als temporäre Raketen (drawCrowdSecRockets) — keine dauerhaften arcPaths mehr
 
+function getMapPanelInsetLeft(){
+  const wrap=mapWrap;
+  if(!wrap)return 8;
+  const wr=wrap.getBoundingClientRect();
+  let l=8;
+  const left=document.getElementById('map-panels-left');
+  if(left&&left.offsetParent!==null&&getComputedStyle(left).display!=='none'){
+    const r=left.getBoundingClientRect();
+    l=Math.max(l,r.right-wr.left+8);
+  }
+  return l;
+}
 function getMapChromeInsets(){
   const wrap=mapWrap;
   if(!wrap)return{l:0,t:40,r:0,b:72};
   const wr=wrap.getBoundingClientRect();
   const ins={l:14,t:28,r:14,b:68};
-  const left=document.getElementById('map-panels-left');
-  if(left&&left.offsetParent!==null&&getComputedStyle(left).display!=='none'){
-    const r=left.getBoundingClientRect();
-    ins.l=Math.max(ins.l,r.right-wr.left+12);
-  }
+  ins.l=Math.max(ins.l,getMapPanelInsetLeft());
   const zc=document.getElementById('zoom-ctrl');
   if(zc){
     const r=zc.getBoundingClientRect();
@@ -1776,30 +1790,40 @@ function zoomByStep(delta){
   baseSvg.transition().duration(180).call(zoomBeh.transform,d3.zoomIdentity.translate(zt.x,zt.y).scale(k))
     .on('end',()=>updateZoomLevel(d3.zoomTransform(baseSvg.node()).k));
 }
-// Server im sichtbaren Kartenbereich (Panels links/oben/unten nicht verdecken)
+// Home: Weltübersicht mit Server im sichtbaren Bereich (wie CrowdSec Console / Bild 2)
 function fitMapToServerHome(opts={}){
   if(!zoomBeh||!proj)return;
+  setupProj();
   const srv=proj([SERVER_LON,SERVER_LAT]);
   if(!srv)return;
   const[sx,sy]=srv;
   const isMobile=window.innerWidth<=680;
   const k=opts.k??(isMobile?HOME_ZOOM_K_MOBILE:HOME_ZOOM_K_DESKTOP);
   const ins=getMapChromeInsets();
-  const cx=ins.l+(W-ins.l-ins.r)/2;
-  const visH=H-ins.t-ins.b;
-  const cy=ins.t+visH*0.47;
+  const panelL=getMapPanelInsetLeft();
+  const visW=Math.max(80,W-panelL-ins.r);
+  const visH=Math.max(80,H-ins.t-ins.b);
+  const cx=panelL+visW*HOME_SCREEN_X_FRAC;
+  const cy=ins.t+visH*HOME_SCREEN_Y_FRAC;
   const tx=cx-sx*k;
   const ty=cy-sy*k;
   homeTransform=d3.zoomIdentity.translate(tx,ty).scale(k);
   fitTransform=homeTransform;
+  currentScale=k;currentTx=tx;currentTy=ty;
   const dur=opts.duration!==undefined?opts.duration:650;
   if(dur>0){
     baseSvg.transition().duration(dur).ease(d3.easeCubicInOut).call(zoomBeh.transform,homeTransform);
   }else{
     baseSvg.call(zoomBeh.transform,homeTransform);
+    mapG.attr('transform',homeTransform);
+    dotG.attr('transform',homeTransform);
   }
   updateZoomLevel(k);
   if(opts.resetUser!==false)userHasZoomed=false;
+}
+function scheduleHomeFit(){
+  const run=()=>{if(!userHasZoomed)fitMapToServerHome({duration:0});};
+  requestAnimationFrame(()=>requestAnimationFrame(run));
 }
 
 // Optional: alle Angriffspunkte einrahmen (nicht Standard-Start)
