@@ -680,8 +680,9 @@ const ROCKET_DURATION_MS = 4500;  // Dauer eines Raketenflugs bis Einschlag (lan
 const CROWDSEC_ARC_COLOR = '#ff9a3c'; // Orange wie CrowdSec Console
 const FIT_ZOOM_BOOST = 1.55;      // für fitMapToPoints (alle Angriffe)
 const FIT_MIN_SCALE = 1.35;
-const HOME_ZOOM_K_DESKTOP = 3.35; // Start + Home: Server mittig, Karte füllt den Bereich
-const HOME_ZOOM_K_MOBILE = 2.75;
+const HOME_ZOOM_K_DESKTOP = 1.4;  // Standard-Zoom (Browser-Fenster)
+const HOME_ZOOM_K_MOBILE = 1.25;
+const ZOOM_STEP = 0.1;          // +/- Buttons
 const AUTO_ZOOM_MIN_MS = 2800;    // Abstand zwischen Auto-Zooms
 const AUTO_ZOOM_MAX_K = 5.5;      // Max. Zoom bei Einzelangriff
 
@@ -1325,8 +1326,8 @@ function setupZoom(){
   mapWrap.addEventListener('mousedown',()=>mapWrap.classList.add('panning'));
   mapWrap.addEventListener('mouseup',()=>mapWrap.classList.remove('panning'));
 
-  document.getElementById('bzi').onclick=()=>baseSvg.transition().duration(280).call(zoomBeh.scaleBy,2);
-  document.getElementById('bzo').onclick=()=>baseSvg.transition().duration(280).call(zoomBeh.scaleBy,0.5);
+  document.getElementById('bzi').onclick=()=>zoomByStep(ZOOM_STEP);
+  document.getElementById('bzo').onclick=()=>zoomByStep(-ZOOM_STEP);
   document.getElementById('bzr').onclick=()=>fitMapToServerHome({duration:500});
   document.getElementById('bzr').title=currentLang==='de'?'Zum Server-Standort':'Go to server';
 }
@@ -1528,16 +1529,57 @@ function buildArcPaths(){
 
 // Bögen nur als temporäre Raketen (drawCrowdSecRockets) — keine dauerhaften arcPaths mehr
 
-// Standardansicht: Server in der Mitte, Karte füllt den sichtbaren Bereich
+function getMapChromeInsets(){
+  const wrap=mapWrap;
+  if(!wrap)return{l:0,t:40,r:0,b:72};
+  const wr=wrap.getBoundingClientRect();
+  const ins={l:14,t:42,r:14,b:68};
+  const left=document.getElementById('map-panels-left');
+  if(left&&left.offsetParent!==null&&getComputedStyle(left).display!=='none'){
+    const r=left.getBoundingClientRect();
+    ins.l=Math.max(ins.l,r.right-wr.left+12);
+  }
+  const zc=document.getElementById('zoom-ctrl');
+  if(zc){
+    const r=zc.getBoundingClientRect();
+    ins.l=Math.max(ins.l,r.right-wr.left+10);
+  }
+  const zl=document.getElementById('zoom-level');
+  if(zl){
+    const r=zl.getBoundingClientRect();
+    ins.l=Math.max(ins.l,r.right-wr.left+8);
+  }
+  const consoleBar=document.getElementById('map-console-bar');
+  if(consoleBar){
+    const r=consoleBar.getBoundingClientRect();
+    ins.b=Math.max(ins.b,wr.bottom-r.top+6);
+  }
+  const replay=document.getElementById('replay-bar');
+  if(replay){
+    const r=replay.getBoundingClientRect();
+    ins.b=Math.max(ins.b,wr.bottom-r.top+10);
+  }
+  return ins;
+}
+function zoomByStep(delta){
+  if(!zoomBeh)return;
+  const t=d3.zoomTransform(baseSvg.node());
+  const k=Math.max(0.1,Math.min(25,t.k+delta));
+  baseSvg.transition().duration(180).call(zoomBeh.transform,d3.zoomIdentity.translate(t.x,t.y).scale(k));
+}
+// Server im sichtbaren Kartenbereich (Panels links/oben/unten nicht verdecken)
 function fitMapToServerHome(opts={}){
   if(!zoomBeh||!proj)return;
   const srv=proj([SERVER_LON,SERVER_LAT]);
   if(!srv)return;
   const[sx,sy]=srv;
   const isMobile=window.innerWidth<=680;
-  let k=Math.max(W/(isMobile?500:640),H/(isMobile?310:410));
-  k=Math.max(isMobile?HOME_ZOOM_K_MOBILE:HOME_ZOOM_K_DESKTOP,Math.min(k*1.18,6.8));
-  const tx=W/2-sx*k,ty=H/2-sy*k;
+  const k=opts.k??(isMobile?HOME_ZOOM_K_MOBILE:HOME_ZOOM_K_DESKTOP);
+  const ins=getMapChromeInsets();
+  const cx=ins.l+(W-ins.l-ins.r)/2;
+  const cy=ins.t+(H-ins.t-ins.b)/2;
+  const tx=cx-sx*k;
+  const ty=cy-sy*k;
   homeTransform=d3.zoomIdentity.translate(tx,ty).scale(k);
   fitTransform=homeTransform;
   const dur=opts.duration!==undefined?opts.duration:650;
