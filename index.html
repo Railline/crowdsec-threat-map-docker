@@ -65,14 +65,13 @@
     background:rgba(0,5,15,0.8);flex-shrink:0;
   }
   #toggle-row #lines-toggle,
-  #toggle-row #anim-toggle {
+  #toggle-row #anim-toggle,
+  #toggle-row #autozoom-toggle {
     flex:1;justify-content:center;
     flex-shrink:0;min-width:0;overflow:hidden;
   }
-  /* re-use existing anim-toggle styles - override sizing */
-  #anim-toggle{padding:4px 8px;font-size:clamp(7px,0.95vw,9px);letter-spacing:0.5px;gap:4px;}
-  #lines-toggle{padding:4px 8px;font-size:clamp(7px,0.95vw,9px);letter-spacing:0.5px;gap:4px;}
-  #anim-dot,#lines-dot{width:6px;height:6px;flex-shrink:0;}
+  #anim-toggle,#lines-toggle,#autozoom-toggle{padding:4px 6px;font-size:clamp(6px,0.9vw,8px);letter-spacing:0.4px;gap:4px;}
+  #anim-dot,#lines-dot,#autozoom-dot{width:6px;height:6px;flex-shrink:0;}
 
   /* CSV neben Seitenzahlen */
   #feed-pages-wrap{
@@ -502,13 +501,17 @@
         <div class="sb-stat"><span class="stat-val blink" style="color:var(--ok)">●</span><span class="stat-lbl" id="s-live-lbl">LIVE</span></div>
       </div>
       <div id="toggle-row">
-        <div id="lines-toggle" onclick="toggleLines()" title="Linien/Pfeile ein- oder ausblenden" class="on">
+        <div id="anim-toggle" onclick="toggleAnim()" title="Animierte Karte (Replay/Live) vs. statische Heatmap" class="on">
+          <div id="anim-dot"></div>
+          <span id="anim-label">ANIMATION</span>
+        </div>
+        <div id="lines-toggle" onclick="toggleLines()" title="Angriffslinien (Raketen) ein/aus" class="on">
           <div id="lines-dot"></div>
           <span id="lines-label">LINIEN</span>
         </div>
-        <div id="anim-toggle" onclick="toggleAnim()" title="Animation ein/ausschalten">
-          <div id="anim-dot"></div>
-          <span id="anim-label">ANIMATION</span>
+        <div id="autozoom-toggle" onclick="toggleAutoZoom()" title="Bei Angriff automatisch in die Region zoomen" class="on">
+          <div id="autozoom-dot"></div>
+          <span id="autozoom-label">AUTO-ZOOM</span>
         </div>
       </div>
       <!-- Theme row: separate line below controls -->
@@ -675,6 +678,10 @@ const ARC_FPS      = 30;
 const REPLAY_PLAY_MS = 180000;      // Replay-Zeitraum bei 1× (~3 Min für 48h)
 const ROCKET_DURATION_MS = 4500;  // Dauer eines Raketenflugs bis Einschlag (langsamer, Console-nah)
 const CROWDSEC_ARC_COLOR = '#ff9a3c'; // Orange wie CrowdSec Console
+const FIT_ZOOM_BOOST = 1.55;      // Standardansicht etwas näher als reiner Fit
+const FIT_MIN_SCALE = 1.35;       // Mindest-Zoom bei Weltverteilung
+const AUTO_ZOOM_MIN_MS = 2800;    // Abstand zwischen Auto-Zooms
+const AUTO_ZOOM_MAX_K = 5.5;      // Max. Zoom bei Einzelangriff
 
 const THREAT_TYPES = {
   cve:  { color:'#ff4400', labelDe:'CVE Exploit', labelEn:'CVE Exploit' },
@@ -693,6 +700,8 @@ let lastMetricsText='',replayInitialized=false,replayAutoStarted=false;
 let countriesGeo=null;
 let lastRocketDrawTs=0;
 let lastLiveSeenKeys=new Set();
+let autoZoomOn=true;
+let lastAutoZoomTs=0;
 
 const ISO2_NUM={US:'840',CA:'124',MX:'484',BR:'76',AR:'32',GB:'826',DE:'276',FR:'250',NL:'528',BE:'56',ES:'724',IT:'380',PL:'616',RU:'643',UA:'804',CN:'156',IN:'356',JP:'392',KR:'410',AU:'36',ID:'360',SG:'702',HK:'344',TW:'158',TH:'764',VN:'704',MY:'458',PH:'608',PK:'586',IR:'364',IQ:'368',SA:'682',AE:'784',IL:'376',TR:'792',ZA:'710',NG:'566',EG:'818',RO:'642',CZ:'203',SE:'752',NO:'578',DK:'208',FI:'246',AT:'40',CH:'756',PT:'620',GR:'300',HU:'348',RS:'688',BG:'100',HR:'191',SK:'703',LT:'440',LV:'428',EE:'233',IE:'372',NZ:'554',CO:'170',CL:'152',VE:'862',EC:'218',PE:'604',KZ:'398',UZ:'860',BD:'50',NP:'524',MM:'104'};
 function hexToRgba(hex,a){const h=(hex||'#888').replace('#','');const n=parseInt(h.length===3?h.split('').map(c=>c+c).join(''):h,16);return`rgba(${(n>>16)&255},${(n>>8)&255},${n&255},${a})`;}
@@ -824,6 +833,37 @@ function spawnRocketForEvent(ev){
     col:scenarioColor(ev.scenario),t:0,
   });
   if(!animRAF)startAnimLoop();
+  maybeAutoZoomToAttack(ev);
+}
+function maybeAutoZoomToAttack(ev){
+  if(!autoZoomOn||userHasZoomed||!ev||ev.lon==null||ev.lat==null)return;
+  if(!animOn)return;
+  const now=Date.now();
+  if(now-lastAutoZoomTs<AUTO_ZOOM_MIN_MS)return;
+  lastAutoZoomTs=now;
+  zoomToAttackPoint(ev.lon,ev.lat);
+}
+function zoomToAttackPoint(lon,lat,opts={}){
+  if(!zoomBeh||!proj)return;
+  const origin=proj([lon,lat]);
+  const srv=proj([SERVER_LON,SERVER_LAT]);
+  if(!origin)return;
+  const pts=srv&&opts.includeServer!==false?[origin,srv]:[origin];
+  const xs=pts.map(p=>p[0]),ys=pts.map(p=>p[1]);
+  let x0=Math.min(...xs),x1=Math.max(...xs),y0=Math.min(...ys),y1=Math.max(...ys);
+  const minSpan=45;
+  if(x1-x0<minSpan){const c=(x0+x1)/2;x0=c-minSpan/2;x1=c+minSpan/2;}
+  if(y1-y0<minSpan){const c=(y0+y1)/2;y0=c-minSpan/2;y1=c+minSpan/2;}
+  const pad=opts.pad||(window.innerWidth<=680?36:65);
+  const rangeX=x1-x0||1,rangeY=y1-y0||1;
+  let k=Math.min((W-pad*2)/rangeX,(H-pad*2)/rangeY,AUTO_ZOOM_MAX_K);
+  k=Math.max(k,opts.minK||2.4);
+  const cx=(x0+x1)/2,cy=(y0+y1)/2;
+  const tx=W/2-cx*k,ty=H/2-cy*k;
+  const t=d3.zoomIdentity.translate(tx,ty).scale(k);
+  fitTransform=t;
+  baseSvg.transition().duration(opts.duration||750).ease(d3.easeCubicInOut)
+    .call(zoomBeh.transform,t);
 }
 function spawnLiveRocketsFromFeed(){
   if(!liveMode||!animOn||!linesOn)return;
@@ -973,6 +1013,8 @@ const LANG = {
     anim_on:     'ANIMATION',
     lines_off:   'LINIEN',
     lines_on:    'LINIEN',
+    autozoom_on: 'AUTO-ZOOM',
+    autozoom_off:'AUTO-ZOOM',
     server_lbl:  SERVER_NAME_MAP,
     zoom_lbl:    'ZOOM',
     lookup:      'IP NACHSCHLAGEN',
@@ -1012,6 +1054,8 @@ const LANG = {
     anim_on:     'ANIMATION',
     lines_off:   'LINES',
     lines_on:    'LINES',
+    autozoom_on: 'AUTO-ZOOM',
+    autozoom_off:'AUTO-ZOOM',
     server_lbl:  SERVER_NAME_MAP,
     zoom_lbl:    'ZOOM',
     lookup:      'LOOKUP IP',
@@ -1079,6 +1123,8 @@ function applyLang(){
   if(animLbl) animLbl.textContent = animOn ? l.anim_on : l.anim_off;
   const linesLbl=document.getElementById('lines-label');
   if(linesLbl) linesLbl.textContent = linesOn ? l.lines_on : l.lines_off;
+  const azLbl=document.getElementById('autozoom-label');
+  if(azLbl) azLbl.textContent = autoZoomOn ? l.autozoom_on : l.autozoom_off;
   // Tabs desktop
   document.querySelectorAll('[data-tab="feed"]').forEach(e=>e.textContent=l.feed);
   document.querySelectorAll('[data-tab="top10"]').forEach(e=>e.textContent=l.top10);
@@ -1159,14 +1205,29 @@ let selectedDot=null;
 let selectedEl=null;
 let attackData=[],worldData=null,zoomBeh,mapG,dotG;
 let arcOffset=0,animRAF=null,lastFrameTime=0;
-let animOn=false;
+let animOn=true;
 let linesOn=true;
 let userHasZoomed=false; // tracks manual zoom so mobile safety-fit doesn't override it
 
 // ── ACTIVE FILTERS (declared here so available to all functions) ──
 const activeFilters={country:null,scenario:null,search:''};
 
-// ── LINES TOGGLE ──
+// ── MAP TOGGLES ──
+function setToggleBtn(id,on,dotId){
+  const btn=document.getElementById(id);
+  const dot=dotId?document.getElementById(dotId):null;
+  if(btn)btn.classList.toggle('on',on);
+  if(dot){
+    dot.style.background=on?'var(--ok)':'rgba(160,255,216,0.3)';
+    dot.style.boxShadow=on?'0 0 5px var(--ok)':'none';
+  }
+}
+function toggleAutoZoom(){
+  autoZoomOn=!autoZoomOn;
+  const lbl=document.getElementById('autozoom-label');
+  setToggleBtn('autozoom-toggle',autoZoomOn,'autozoom-dot');
+  if(lbl)lbl.textContent=autoZoomOn?(t('autozoom_on')||'ZOOM'):(t('autozoom_off')||'ZOOM');
+}
 function toggleLines(){
   linesOn=!linesOn;
   const btn=document.getElementById('lines-toggle');
@@ -1174,22 +1235,17 @@ function toggleLines(){
   const mobDot=document.getElementById('mob-lines-dot');
   const mobLbl=document.getElementById('mob-lines-label');
   const mobBtn=document.getElementById('mob-lines-toggle');
-  if(linesOn){
-    if(btn)btn.classList.add('on');
-    if(lbl)lbl.textContent=t('lines_on')||'LINIEN AN';
-    if(mobDot){mobDot.style.background='var(--ok)';mobDot.style.boxShadow='0 0 5px var(--ok)';}
-    if(mobLbl)mobLbl.textContent='LINIEN';
-    if(mobBtn){mobBtn.style.borderColor='rgba(0,255,200,0.35)';mobBtn.style.color='rgba(0,255,200,0.8)';mobBtn.style.background='rgba(0,255,200,0.08)';}
-    refreshMapFromData();
-  } else {
-    if(btn)btn.classList.remove('on');
-    if(lbl)lbl.textContent=t('lines_off')||'LINIEN AUS';
-    if(mobDot){mobDot.style.background='rgba(160,255,216,0.3)';mobDot.style.boxShadow='none';}
-    if(mobLbl)mobLbl.textContent='LINIEN';
-    if(mobBtn){mobBtn.style.borderColor='rgba(0,255,200,0.2)';mobBtn.style.color='rgba(160,255,216,0.45)';mobBtn.style.background='transparent';}
-    activeRockets=[];if(animRAF){cancelAnimationFrame(animRAF);animRAF=null;}
-    clearArcCanvas();clearFlightLabels();updateCountryFills();
+  setToggleBtn('lines-toggle',linesOn,'lines-dot');
+  if(lbl)lbl.textContent=linesOn?(t('lines_on')||'LINIEN'):(t('lines_off')||'LINIEN');
+  if(mobDot){mobDot.style.background=linesOn?'var(--ok)':'rgba(160,255,216,0.3)';mobDot.style.boxShadow=linesOn?'0 0 5px var(--ok)':'none';}
+  if(mobLbl)mobLbl.textContent='LINIEN';
+  if(mobBtn){
+    mobBtn.style.borderColor=linesOn?'rgba(0,255,200,0.35)':'rgba(0,255,200,0.2)';
+    mobBtn.style.color=linesOn?'rgba(0,255,200,0.8)':'rgba(160,255,216,0.45)';
+    mobBtn.style.background=linesOn?'rgba(0,255,200,0.08)':'transparent';
   }
+  if(linesOn)refreshMapFromData();
+  else{activeRockets=[];if(animRAF){cancelAnimationFrame(animRAF);animRAF=null;}clearArcCanvas();clearFlightLabels();if(animOn)refreshMapFromData();else updateCountryFills();}
 }
 
 // ── ANIMATION TOGGLE ──
@@ -1201,22 +1257,27 @@ function toggleAnim(){
   const mobDot=document.getElementById('mob-anim-dot');
   const mobLbl=document.getElementById('mob-anim-label');
   const mobBtn=document.getElementById('mob-anim-toggle');
+  setToggleBtn('anim-toggle',animOn,'anim-dot');
+  if(lbl)lbl.textContent=animOn?(t('anim_on')||'ANIMATION'):(t('anim_off')||'ANIMATION');
+  if(mobDot){mobDot.style.background=animOn?'var(--ok)':'rgba(160,255,216,0.3)';mobDot.style.boxShadow=animOn?'0 0 5px var(--ok)':'none';}
+  if(mobLbl)mobLbl.textContent='ANIMATION';
+  if(mobBtn){mobBtn.style.borderColor=animOn?'var(--ok)':'rgba(0,255,200,0.2)';mobBtn.style.color=animOn?'var(--ok)':'rgba(160,255,216,0.45)';}
   if(animOn){
-    if(btn)btn.classList.add('on');
-    if(lbl)lbl.textContent=t('anim_on')||'ANIM AN';
-    if(mobDot){mobDot.style.background='var(--ok)';mobDot.style.boxShadow='0 0 5px var(--ok)';}
-    if(mobLbl)mobLbl.textContent='ANIMATION';
-    if(mobBtn){mobBtn.style.borderColor='var(--ok)';mobBtn.style.color='var(--ok)';}
     feedData.forEach(e=>lastLiveSeenKeys.add((e.ip||'')+'|'+(e.time_iso||'')));
     if(liveMode)startAnimLoop();else{replayPlaying=true;updateReplayBtn();startReplayLoop();}
-  } else {
-    if(btn)btn.classList.remove('on');
-    if(lbl)lbl.textContent=t('anim_off')||'ANIMATION AUS';
-    if(mobDot){mobDot.style.background='rgba(160,255,216,0.3)';mobDot.style.boxShadow='none';}
-    if(mobLbl)mobLbl.textContent='ANIMATION';
-    if(mobBtn){mobBtn.style.borderColor='rgba(0,255,200,0.2)';mobBtn.style.color='rgba(160,255,216,0.45)';}
+  }else{
     replayPlaying=false;updateReplayBtn();
     refreshMapFromData();
+  }
+}
+function startMapOnLoad(){
+  setToggleBtn('anim-toggle',animOn,'anim-dot');
+  setToggleBtn('lines-toggle',linesOn,'lines-dot');
+  setToggleBtn('autozoom-toggle',autoZoomOn,'autozoom-dot');
+  feedData.forEach(e=>lastLiveSeenKeys.add((e.ip||'')+'|'+(e.time_iso||'')));
+  if(animOn){
+    if(liveMode)startAnimLoop();
+    else if(allEvents.length){replayPlaying=true;updateReplayBtn();startReplayLoop();}
   }
 }
 
@@ -1263,7 +1324,10 @@ function setupZoom(){
 
   document.getElementById('bzi').onclick=()=>baseSvg.transition().duration(280).call(zoomBeh.scaleBy,2);
   document.getElementById('bzo').onclick=()=>baseSvg.transition().duration(280).call(zoomBeh.scaleBy,0.5);
-  document.getElementById('bzr').onclick=()=>baseSvg.transition().duration(500).call(zoomBeh.transform,fitTransform);
+  document.getElementById('bzr').onclick=()=>{
+    userHasZoomed=false;
+    baseSvg.transition().duration(500).call(zoomBeh.transform,fitTransform);
+  };
 }
 
 function onZoom(event){
@@ -1331,7 +1395,7 @@ async function init(){
     await fetchAndRender();
     document.getElementById('loading').style.display='none';
     updateCountryFills();
-    if(animOn&&linesOn)startAnimLoop();else clearArcCanvas();
+    startMapOnLoad();
     // Auto-fit: poll until mapWrap has real dimensions
     let fitAttempts=0;
     let lastH=0;
@@ -1478,10 +1542,10 @@ function fitMapToPoints(){
   const rangeX=x1-x0||1,rangeY=y1-y0||1;
   const scaleX=(W-pad*2)/rangeX;
   const scaleY=(H-pad*2)/rangeY;
-  let k=Math.max(0.1,Math.min(scaleX,scaleY,6));
-  // On mobile: ensure map fills the available area (min scale so it looks filled)
+  let k=Math.max(0.1,Math.min(scaleX,scaleY,8));
+  k=Math.max(FIT_MIN_SCALE,Math.min(k*FIT_ZOOM_BOOST,8));
   if(window.innerWidth<=680){
-    const minFill=Math.max(W/650,H/350); // minimum scale to fill the map area
+    const minFill=Math.max(W/650,H/350);
     k=Math.max(k,minFill);
   }
   const cx=(x0+x1)/2,cy=(y0+y1)/2;
