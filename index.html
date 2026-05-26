@@ -678,8 +678,10 @@ const ARC_FPS      = 30;
 const REPLAY_PLAY_MS = 180000;      // Replay-Zeitraum bei 1× (~3 Min für 48h)
 const ROCKET_DURATION_MS = 4500;  // Dauer eines Raketenflugs bis Einschlag (langsamer, Console-nah)
 const CROWDSEC_ARC_COLOR = '#ff9a3c'; // Orange wie CrowdSec Console
-const FIT_ZOOM_BOOST = 1.55;      // Standardansicht etwas näher als reiner Fit
-const FIT_MIN_SCALE = 1.35;       // Mindest-Zoom bei Weltverteilung
+const FIT_ZOOM_BOOST = 1.55;      // für fitMapToPoints (alle Angriffe)
+const FIT_MIN_SCALE = 1.35;
+const HOME_ZOOM_K_DESKTOP = 3.35; // Start + Home: Server mittig, Karte füllt den Bereich
+const HOME_ZOOM_K_MOBILE = 2.75;
 const AUTO_ZOOM_MIN_MS = 2800;    // Abstand zwischen Auto-Zooms
 const AUTO_ZOOM_MAX_K = 5.5;      // Max. Zoom bei Einzelangriff
 
@@ -1286,7 +1288,7 @@ function setupProj(){
   W=mapWrap.clientWidth; H=mapWrap.clientHeight;
   canvas.width=W; canvas.height=H;
   canvas.style.width=W+'px'; canvas.style.height=H+'px';
-  proj=d3.geoNaturalEarth1().scale(Math.min(W/6.2,H/3.4)).translate([W/2,H/2]);
+  proj=d3.geoNaturalEarth1().scale(Math.min(W/5.0,H/2.85)).translate([W/2,H/2]);
   pathGen=d3.geoPath().projection(proj);
 }
 
@@ -1296,7 +1298,8 @@ function syncZoom(src,targets){
   });
 }
 
-let fitTransform = d3.zoomIdentity; // stored after first fit, used by reset button
+let fitTransform = d3.zoomIdentity;
+let homeTransform = d3.zoomIdentity; // Server-Standort — Home-Button + Seitenstart
 
 function setupZoom(){
   zoomBeh=d3.zoom().scaleExtent([0.1,25])
@@ -1324,10 +1327,8 @@ function setupZoom(){
 
   document.getElementById('bzi').onclick=()=>baseSvg.transition().duration(280).call(zoomBeh.scaleBy,2);
   document.getElementById('bzo').onclick=()=>baseSvg.transition().duration(280).call(zoomBeh.scaleBy,0.5);
-  document.getElementById('bzr').onclick=()=>{
-    userHasZoomed=false;
-    baseSvg.transition().duration(500).call(zoomBeh.transform,fitTransform);
-  };
+  document.getElementById('bzr').onclick=()=>fitMapToServerHome({duration:500});
+  document.getElementById('bzr').title=currentLang==='de'?'Zum Server-Standort':'Go to server';
 }
 
 function onZoom(event){
@@ -1374,7 +1375,7 @@ function mobileAdjustAndFit(){
       canvas.width=W;canvas.height=H;
       canvas.style.width=W+'px';canvas.style.height=H+'px';
       if(W>50&&H>50){
-        fitMapToPoints();
+        fitMapToServerHome({duration:0});
         if(!animOn)clearArcCanvas();
       }
     });
@@ -1411,7 +1412,7 @@ async function init(){
         setupProj();
         canvas.width=W;canvas.height=H;
         canvas.style.width=W+'px';canvas.style.height=H+'px';
-        fitMapToPoints();
+        fitMapToServerHome({duration:0});
         if(!animOn)clearArcCanvas();
       } else if(fitAttempts<25){
         setTimeout(tryFit,120);
@@ -1441,8 +1442,7 @@ function onResize(){
   baseSvg.selectAll('*').remove();
   drawBaseMap();
   renderDots();
-  fitMapToPoints();
-  currentScale=1;currentTx=0;currentTy=0;
+  if(!userHasZoomed)fitMapToServerHome({duration:0});
   updateCountryFills();
   if(animOn&&linesOn)startAnimLoop();else clearArcCanvas();
 }
@@ -1528,7 +1528,28 @@ function buildArcPaths(){
 
 // Bögen nur als temporäre Raketen (drawCrowdSecRockets) — keine dauerhaften arcPaths mehr
 
-// ── AUTO-FIT ZOOM TO ALL ATTACK POINTS ──
+// Standardansicht: Server in der Mitte, Karte füllt den sichtbaren Bereich
+function fitMapToServerHome(opts={}){
+  if(!zoomBeh||!proj)return;
+  const srv=proj([SERVER_LON,SERVER_LAT]);
+  if(!srv)return;
+  const[sx,sy]=srv;
+  const isMobile=window.innerWidth<=680;
+  let k=Math.max(W/(isMobile?500:640),H/(isMobile?310:410));
+  k=Math.max(isMobile?HOME_ZOOM_K_MOBILE:HOME_ZOOM_K_DESKTOP,Math.min(k*1.18,6.8));
+  const tx=W/2-sx*k,ty=H/2-sy*k;
+  homeTransform=d3.zoomIdentity.translate(tx,ty).scale(k);
+  fitTransform=homeTransform;
+  const dur=opts.duration!==undefined?opts.duration:650;
+  if(dur>0){
+    baseSvg.transition().duration(dur).ease(d3.easeCubicInOut).call(zoomBeh.transform,homeTransform);
+  }else{
+    baseSvg.call(zoomBeh.transform,homeTransform);
+  }
+  if(opts.resetUser!==false)userHasZoomed=false;
+}
+
+// Optional: alle Angriffspunkte einrahmen (nicht Standard-Start)
 function fitMapToPoints(){
   if(!attackData.length)return;
   const pts=attackData.map(d=>proj([d.lon,d.lat])).filter(Boolean);
