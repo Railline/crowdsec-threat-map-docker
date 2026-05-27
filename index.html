@@ -215,11 +215,13 @@
   #replay-slider::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:12px;border-radius:50%;background:var(--accent);}
   #timeline-labels{display:flex;justify-content:space-between;font-size:7px;color:rgba(160,255,216,0.35);padding:0 12px 2px;}
   #map-window-stats{
-    display:none;
+    display:block;
+    flex-shrink:0;
     padding:5px 10px 4px;
     border-bottom:1px solid rgba(0,255,200,0.1);
     background:rgba(0,255,200,0.04);
   }
+  #footer-stats{display:none;}
   .map-window-stats-title{
     font-size:6px;letter-spacing:1px;color:var(--accent);
     margin-bottom:4px;display:flex;align-items:center;gap:4px;
@@ -276,7 +278,7 @@
   .flight-tag-line .flight-tag-city{color:#fff;}
   .threat-leg{display:flex;align-items:center;gap:4px;font-size:7px;color:rgba(160,255,216,0.5);white-space:nowrap;}
   .threat-leg-dot{width:8px;height:8px;border-radius:2px;}
-  #footer-stats{display:flex;align-items:center;justify-content:center;gap:clamp(12px,3vw,28px);padding:6px 12px;border-top:1px solid rgba(0,255,200,0.06);flex-wrap:wrap;}
+  #footer-stats{display:none;align-items:center;justify-content:center;gap:clamp(12px,3vw,28px);padding:6px 12px;border-top:1px solid rgba(0,255,200,0.06);flex-wrap:wrap;}
   .fstat{display:flex;align-items:center;gap:5px;font-size:9px;}
   .fstat-val{font-family:'Orbitron',monospace;font-weight:700;color:var(--accent);}
 
@@ -488,13 +490,12 @@
   }
   .mob-tab-btn.active{color:var(--accent);border-bottom-color:var(--accent);background:rgba(0,255,200,0.06);}
   #map-mob-controls .mob-ctrl-pill{flex-shrink:0;}
-  #mob-stats-bar{
-    display:flex;flex-direction:column;gap:5px;
-    padding:6px 8px;border-bottom:1px solid rgba(0,255,200,0.12);
-    background:rgba(0,5,15,0.95);flex-shrink:0;
+  #mob-gesamt-bar{
+    flex-shrink:0;padding:6px 8px 4px;
+    border-bottom:1px solid rgba(0,255,200,0.1);
+    background:rgba(0,5,15,0.96);
   }
-  .mob-stats-blocks{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
-  .mob-stats-block.mob-stats-window{border-color:rgba(0,255,200,0.15);background:rgba(0,255,200,0.04);}
+  #mob-gesamt-bar .mob-stats-alltime{margin-bottom:4px;}
   .mob-stats-grid{display:flex;flex-direction:column;gap:5px;}
   .mob-stats-block{border:1px solid rgba(0,255,200,0.08);border-radius:4px;padding:4px 6px;background:rgba(0,12,24,0.5);}
   .mob-stats-block.mob-stats-alltime{border-color:rgba(160,255,216,0.12);background:rgba(0,8,18,0.55);}
@@ -558,9 +559,10 @@
       padding:5px 8px;border-bottom:1px solid var(--dim);
       background:rgba(0,5,15,0.92);flex-shrink:0;flex-wrap:wrap;
     }
-    #map-window-stats{display:none!important;}
-    #mob-stats-bar{padding:5px 8px;}
-    #mob-stats-bar .mob-stats-meta{display:flex;}
+    #map-window-stats{display:block!important;order:0;}
+    #map-mob-controls{order:1;}
+    #console-controls{order:2;}
+    #mob-gesamt-bar .mob-stats-meta{display:flex;padding-top:2px;}
     #mob-view-top10 .mob-panel-scroll,#mob-view-topall .mob-panel-scroll{flex:1;min-height:140px;}
     #mob-feed .feed-item{padding:5px 8px 6px;}
     #mob-feed .feed-action-btn{width:24px;height:24px;font-size:12px;}
@@ -575,7 +577,6 @@
       max-height:min(28vh,240px);overflow-y:auto;-webkit-overflow-scrolling:touch;
     }
     #mob-sheet{z-index:320;}
-    #footer-stats{display:none!important;}
     #timeline-wrap{padding:4px 8px 2px;}
     #timeline-labels{font-size:6px;padding:0 8px;}
     #console-controls{gap:3px;padding:3px 8px 5px;}
@@ -596,7 +597,6 @@
     #zoom-level{left:44px;top:26px;bottom:auto;font-size:7px;}
     #zoom-prefs-panel{bottom:auto;top:60px;left:6px;max-width:calc(100vw - 12px);}
     .zoom-btn{width:28px;height:28px;font-size:14px;}
-    #mob-stats-bar{padding:5px 6px;}
     .mob-stat-val{font-size:9px;}
     .mob-stats-block-title{font-size:5px;}
   }
@@ -629,7 +629,7 @@
     #sidebar{display:flex!important;}
     #layout{bottom:0!important;}
     #map-panels-left{display:none;}
-    #footer-stats{display:flex!important;}
+    #map-window-stats{display:block!important;}
   }
 </style>
 </head>
@@ -658,7 +658,7 @@
     <div id="map-wrap">
       <div id="map-title-overlay">
         <span id="h-title">CROWD<span>SEC</span> // THREAT MAP</span>
-        <span id="map-version-badge">v1.6.1</span>
+        <span id="map-version-badge">v1.6.4</span>
       </div>
       <svg id="base-svg" style="position:absolute;inset:0;width:100%;height:100%"></svg>
       <canvas id="arc-canvas"></canvas>
@@ -698,6 +698,15 @@
     <div id="map-console-bar">
       <div id="timeline-wrap"><input type="range" id="replay-slider" min="0" max="1000" value="0"></div>
       <div id="timeline-labels"><span id="tl-start">—</span><span id="tl-end">—</span></div>
+      <div id="map-window-stats">
+        <div class="map-window-stats-title" id="mws-title-lbl">ZEITFENSTER · KARTE</div>
+        <div class="map-window-stats-grid">
+          <div class="mws-item"><span class="mws-val" id="mws-alerts">—</span><span class="mws-lbl" id="mws-alerts-lbl">MELDUNGEN</span></div>
+          <div class="mws-item"><span class="mws-val" id="mws-ips">—</span><span class="mws-lbl" id="mws-ips-lbl">IPS</span></div>
+          <div class="mws-item"><span class="mws-val" id="mws-scenarios">—</span><span class="mws-lbl" id="mws-scn-lbl">SZENARIEN</span></div>
+          <div class="mws-item"><span class="mws-val" id="mws-countries">—</span><span class="mws-lbl" id="mws-ctry-lbl">LÄNDER</span></div>
+        </div>
+      </div>
       <div id="map-mob-controls" aria-label="Karten-Steuerung">
         <div id="mob-lines-toggle" class="mob-ctrl-pill on" onclick="toggleLines()">
           <div id="mob-lines-dot" class="mob-ctrl-pill-dot"></div>
@@ -710,15 +719,6 @@
         <div id="mob-autozoom-toggle" class="mob-ctrl-pill off" onclick="toggleAutoZoom()">
           <div id="mob-autozoom-dot" class="mob-ctrl-pill-dot"></div>
           <span id="mob-autozoom-label">AUTO-ZOOM</span>
-        </div>
-      </div>
-      <div id="map-window-stats">
-        <div class="map-window-stats-title" id="mws-title-lbl">ZEITFENSTER · KARTE</div>
-        <div class="map-window-stats-grid">
-          <div class="mws-item"><span class="mws-val" id="mws-alerts">—</span><span class="mws-lbl" id="mws-alerts-lbl">MELDUNGEN</span></div>
-          <div class="mws-item"><span class="mws-val" id="mws-ips">—</span><span class="mws-lbl" id="mws-ips-lbl">IPS</span></div>
-          <div class="mws-item"><span class="mws-val" id="mws-scenarios">—</span><span class="mws-lbl" id="mws-scn-lbl">SZENARIEN</span></div>
-          <div class="mws-item"><span class="mws-val" id="mws-countries">—</span><span class="mws-lbl" id="mws-ctry-lbl">LÄNDER</span></div>
         </div>
       </div>
       <div id="console-controls">
@@ -854,24 +854,13 @@
 
 <div id="mob-sheet">
   <div id="mob-data-panel">
-  <div id="mob-stats-bar">
-    <div class="mob-stats-blocks">
-      <div class="mob-stats-block mob-stats-window">
-        <div class="mob-stats-block-title" id="mob-mws-title-lbl">ZEITFENSTER · KARTE</div>
-        <div class="mob-stats-items">
-          <div class="mob-stat-item"><span class="mob-stat-val" id="mob-mws-alerts">—</span><span class="mob-stat-lbl" id="mob-mws-alerts-lbl">MELDUNGEN</span></div>
-          <div class="mob-stat-item"><span class="mob-stat-val" id="mob-mws-ips">—</span><span class="mob-stat-lbl" id="mob-mws-ips-lbl">IPS</span></div>
-          <div class="mob-stat-item"><span class="mob-stat-val" id="mob-mws-scenarios">—</span><span class="mob-stat-lbl" id="mob-mws-scn-lbl">SZENARIEN</span></div>
-          <div class="mob-stat-item"><span class="mob-stat-val" id="mob-mws-countries">—</span><span class="mob-stat-lbl" id="mob-mws-ctry-lbl">LÄNDER</span></div>
-        </div>
-      </div>
-      <div class="mob-stats-block mob-stats-alltime">
-        <div class="mob-stats-block-title" id="mob-lbl-alltime">GESAMT (ALLTIME)</div>
-        <div class="mob-stats-items">
-          <div class="mob-stat-item"><span class="mob-stat-val" id="mob-s-total">—</span><span class="mob-stat-lbl" id="mob-attacks-lbl">ANGRIFFE</span></div>
-          <div class="mob-stat-item"><span class="mob-stat-val" id="mob-s-countries">—</span><span class="mob-stat-lbl" id="mob-countries-lbl">LÄNDER</span></div>
-          <div class="mob-stat-item"><span class="mob-stat-val" id="mob-s-scenarios">—</span><span class="mob-stat-lbl" id="mob-scenarios-lbl">SZENARIEN</span></div>
-        </div>
+  <div id="mob-gesamt-bar">
+    <div class="mob-stats-block mob-stats-alltime">
+      <div class="mob-stats-block-title" id="mob-lbl-alltime">GESAMT (ALLTIME)</div>
+      <div class="mob-stats-items">
+        <div class="mob-stat-item"><span class="mob-stat-val" id="mob-s-total">—</span><span class="mob-stat-lbl" id="mob-attacks-lbl">ANGRIFFE</span></div>
+        <div class="mob-stat-item"><span class="mob-stat-val" id="mob-s-countries">—</span><span class="mob-stat-lbl" id="mob-countries-lbl">LÄNDER</span></div>
+        <div class="mob-stat-item"><span class="mob-stat-val" id="mob-s-scenarios">—</span><span class="mob-stat-lbl" id="mob-scenarios-lbl">SZENARIEN</span></div>
       </div>
     </div>
     <div class="mob-stats-meta">
@@ -927,11 +916,11 @@
       <div id="mob-feed-pages" style="display:flex;align-items:center;justify-content:center;gap:4px;padding:6px 8px;border-top:1px solid var(--dim);background:rgba(0,5,15,0.9);flex-wrap:wrap;flex-shrink:0;"></div>
     </div>
     <div id="mob-view-top10" class="mob-panel-view">
-      <div class="mob-panel-tab-hdr">🏆 TOP 10 LÄNDER</div>
+      <div class="mob-panel-tab-hdr">🏆 TOP 10 · ALLTIME</div>
       <div class="mob-panel-scroll" id="mob-top10"></div>
     </div>
     <div id="mob-view-topall" class="mob-panel-view">
-      <div class="mob-panel-tab-hdr">🌍 ALLE LÄNDER</div>
+      <div class="mob-panel-tab-hdr">🌍 ALLE LÄNDER · ALLTIME</div>
       <div class="mob-panel-scroll" id="mob-topall"></div>
     </div>
   </div>
@@ -966,7 +955,7 @@ const SERVER_NAME_MAP = 'MEIN-SERVER';
 // Ab hier nichts mehr ändern
 // ============================================================
 
-const APP_VERSION  = 'v1.6.1';
+const APP_VERSION  = 'v1.6.4';
 const REFRESH_MS   = 30000;
 const localUnbanned = new Set();
 const ARC_FPS      = 30;
@@ -1078,6 +1067,17 @@ function getAlltimeStats(){
     uniqueIps:new Set(events.map(e=>e.ip).filter(Boolean)).size,
   };
 }
+/** Länder-Ranking aus gesamtem Feed (Alltime), unabhängig vom Karten-Zeitfenster. */
+function getAlltimeCountryCounts(){
+  const byC={};
+  getAlltimeFeedEvents().forEach(e=>{
+    const cc=(e.country||'??').toUpperCase();
+    byC[cc]=(byC[cc]||0)+1;
+  });
+  return Object.entries(byC)
+    .map(([country,count])=>({country,count}))
+    .sort((a,b)=>b.count-a.count);
+}
 /** Events im gewählten Karten-Zeitfenster (ZEITRAUM + Replay-Position, ohne Feed-Filter). */
 function getMapWindowEvents(){
   if(liveMode)return feedData.length?feedData:allEvents;
@@ -1125,10 +1125,6 @@ function updateFooterStats(){
   set('mws-ips',ips);
   set('mws-scenarios',scenarios);
   set('mws-countries',countries);
-  set('mob-mws-alerts',reports);
-  set('mob-mws-ips',ips);
-  set('mob-mws-scenarios',scenarios);
-  set('mob-mws-countries',countries);
 }
 function renderMapPanels(){const events=liveMode?feedData:getEventsInReplay();const bySc={},byIp={},byCo={};events.forEach(e=>{bySc[e.scenario]=(bySc[e.scenario]||0)+1;byIp[e.ip]=(byIp[e.ip]||0)+1;byCo[e.country]=(byCo[e.country]||0)+1;});const row=(c,l,v)=>`<div class="map-panel-row"><span class="map-panel-dot" style="background:${c}"></span><span class="map-panel-label">${l}</span><span class="map-panel-val">${v}</span></div>`;document.getElementById('panel-scenarios-body').innerHTML=Object.entries(bySc).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([s,n])=>row(scenarioColor(s),s,n)).join('')||'—';document.getElementById('panel-ips-body').innerHTML=Object.entries(byIp).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([ip,n])=>{const c=events.find(e=>e.ip===ip)?.country||'??';return row(scenarioColor(events.find(e=>e.ip===ip)?.scenario),`${FLAG[c]||'🌐'} ${ip}`,n);}).join('')||'—';document.getElementById('panel-origins-body').innerHTML=Object.entries(byCo).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([cc,n],i)=>row('#888',`${i+1}. ${countryDisplayName(cc)}`,n)).join('')||'—';updateFooterStats();}
 function updateReplaySlider(){const sl=document.getElementById('replay-slider');if(!sl||replayWinEnd<=replayWinStart)return;sl.value=Math.round(1000*(replayCursor-replayWinStart)/(replayWinEnd-replayWinStart));document.getElementById('replay-clock').textContent=fmtReplayClock(replayCursor);document.getElementById('tl-start').textContent=fmtReplayClock(replayWinStart);document.getElementById('tl-end').textContent=fmtReplayClock(replayWinEnd);}
@@ -1602,6 +1598,7 @@ const LANG = {
     live_lbl:'LIVE',
     live_clock:'● LIVE',
     entries:     (s,e,t) => `${s}–${e} von ${t} Einträgen`,
+    top_list_empty:'Keine Alltime-Daten — Feed lädt…',
     prev:        '◀',
     next:        '▶',
     error_conn:  'VERBINDUNGSFEHLER: ',
@@ -1705,6 +1702,7 @@ const LANG = {
     autozoom_on: 'AUTO ZOOM',
     autozoom_off:'AUTO ZOOM',
     entries:     (s,e,t) => `${s}–${e} of ${t} entries`,
+    top_list_empty:'No all-time data — loading feed…',
     prev:        '◀',
     next:        '▶',
     error_conn:  'CONNECTION ERROR: ',
@@ -1900,24 +1898,14 @@ function applyLang(){
   if(mobAlltimeLbl)mobAlltimeLbl.textContent=l.mob_lbl_alltime;
   const mwsTitle=document.getElementById('mws-title-lbl');
   if(mwsTitle)mwsTitle.textContent=l.map_window_title;
-  const mobMwsTitle=document.getElementById('mob-mws-title-lbl');
-  if(mobMwsTitle)mobMwsTitle.textContent=l.map_window_title;
   const mwsAlerts=document.getElementById('mws-alerts-lbl');
   if(mwsAlerts)mwsAlerts.textContent=l.fs_alerts;
-  const mobMwsAlerts=document.getElementById('mob-mws-alerts-lbl');
-  if(mobMwsAlerts)mobMwsAlerts.textContent=l.fs_alerts;
   const mwsIps=document.getElementById('mws-ips-lbl');
   if(mwsIps)mwsIps.textContent=l.fs_ips;
-  const mobMwsIps=document.getElementById('mob-mws-ips-lbl');
-  if(mobMwsIps)mobMwsIps.textContent=l.fs_ips;
   const mwsScn=document.getElementById('mws-scn-lbl');
   if(mwsScn)mwsScn.textContent=l.fs_scenarios;
-  const mobMwsScn=document.getElementById('mob-mws-scn-lbl');
-  if(mobMwsScn)mobMwsScn.textContent=l.fs_scenarios;
   const mwsCtry=document.getElementById('mws-ctry-lbl');
   if(mwsCtry)mwsCtry.textContent=l.fs_countries;
-  const mobMwsCtry=document.getElementById('mob-mws-ctry-lbl');
-  if(mobMwsCtry)mobMwsCtry.textContent=l.fs_countries;
   const mobLiveLbl=document.getElementById('mob-live-lbl');
   if(mobLiveLbl)mobLiveLbl.textContent=l.live;
   const mobSparkTitle=document.getElementById('mob-sparkline-title');
@@ -3248,13 +3236,14 @@ function countryListHTML(items){
 }
 
 function renderCountryLists(){
-  const byC={};
-  attackData.forEach(d=>{byC[d.country]=(byC[d.country]||0)+d.count;});
-  const sorted=Object.entries(byC).map(([c,n])=>({country:c,count:n})).sort((a,b)=>b.count-a.count);
-  const h10=countryListHTML(sorted.slice(0,10));
-  const hall=countryListHTML(sorted);
-  ['top10','topall','mob-top10','mob-topall'].forEach((id,i)=>{
-    document.getElementById(id).innerHTML=i<2?[h10,hall][i]:[h10,hall][i-2];
+  const sorted=getAlltimeCountryCounts();
+  const empty=`<div class="top-item" style="justify-content:center;padding:12px;color:rgba(160,255,216,0.35);font-size:9px;letter-spacing:0.5px;cursor:default;">${t('top_list_empty')}</div>`;
+  const h10=sorted.length?countryListHTML(sorted.slice(0,10)):empty;
+  const hall=sorted.length?countryListHTML(sorted):empty;
+  const htmlById={top10:h10,topall:hall,'mob-top10':h10,'mob-topall':hall};
+  Object.entries(htmlById).forEach(([id,html])=>{
+    const el=document.getElementById(id);
+    if(el)el.innerHTML=html;
   });
 }
 
