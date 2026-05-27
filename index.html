@@ -570,18 +570,44 @@
     #mob-top10 .top-item,#mob-topall .top-item{padding:7px 10px;}
     .mob-tab-btn{font-size:9px;min-height:38px;padding:8px 4px;}
     #mob-panel{flex:1!important;min-height:0;max-height:none!important;}
-    #map-col{flex:1;min-height:0;display:flex;flex-direction:column;}
-    #map-wrap{flex:1 1 0;min-height:min(48vh,360px);max-height:none;}
+    #map-col{
+      flex:1;min-height:0;display:flex;flex-direction:column;
+      overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;
+    }
+    #map-wrap{flex:0 1 auto;min-height:min(36vh,280px);max-height:min(42vh,340px);}
     #map-console-bar{
-      font-size:8px;flex-shrink:0;
-      max-height:min(28vh,240px);overflow-y:auto;-webkit-overflow-scrolling:touch;
+      font-size:8px;flex:0 0 auto;
+      min-height:auto;max-height:none;overflow:visible;
+      padding-bottom:6px;
     }
     #mob-sheet{z-index:320;}
-    #timeline-wrap{padding:4px 8px 2px;}
-    #timeline-labels{font-size:6px;padding:0 8px;}
-    #console-controls{gap:3px;padding:3px 8px 5px;}
-    .ctrl-group-lbl{width:34px;font-size:5px;}
-    .pill-btn{padding:2px 5px;font-size:6px;min-height:18px;border-radius:2px;}
+    #timeline-wrap{padding:4px 8px 2px;flex-shrink:0;}
+    #timeline-labels{
+      font-size:6px;padding:0 8px 4px;line-height:1.35;
+      flex-direction:column;align-items:stretch;gap:2px;
+    }
+    #timeline-labels span{display:block;word-break:break-word;}
+    #tl-start,#tl-end{max-width:100%;}
+    #console-controls{
+      gap:8px;padding:6px 8px 8px;flex-shrink:0;
+    }
+    #console-controls .console-row{
+      flex-direction:column;align-items:stretch;gap:4px;
+    }
+    #console-controls .ctrl-group-lbl{
+      width:auto;font-size:7px;letter-spacing:0.6px;
+      color:rgba(160,255,216,0.55);padding-left:2px;
+    }
+    #console-controls .ctrl-chip-strip{
+      flex-wrap:wrap;overflow-x:visible;overflow-y:visible;
+      gap:4px;padding-bottom:2px;
+    }
+    .console-range-row .ctrl-chip-strip,
+    .console-speed-row .ctrl-chip-strip{
+      justify-content:flex-start;
+    }
+    .pill-btn{padding:4px 7px;font-size:7px;min-height:22px;border-radius:3px;}
+    .console-legend-row .ctrl-chip-strip{flex-wrap:wrap;justify-content:flex-start;}
     .map-window-stats-grid{gap:2px;}
     .mws-val{font-size:9px;}
     .mws-lbl{font-size:4px;}
@@ -602,8 +628,8 @@
   }
   @media(max-width:480px){
     #mob-sheet{height:min(60vh,400px);max-height:min(64vh,420px);}
-    #map-wrap{min-height:min(44vh,280px);}
-    #map-console-bar{max-height:min(30vh,220px);}
+    #map-wrap{min-height:min(34vh,240px);}
+    #map-console-bar{min-height:min(44vh,360px);}
     #replay-bar{max-width:calc(100% - 12px);}
     #replay-clock{display:none;}
     #mode-live-btn{margin-left:auto;}
@@ -658,7 +684,7 @@
     <div id="map-wrap">
       <div id="map-title-overlay">
         <span id="h-title">CROWD<span>SEC</span> // THREAT MAP</span>
-        <span id="map-version-badge">v1.6.4</span>
+        <span id="map-version-badge">v1.6.5</span>
       </div>
       <svg id="base-svg" style="position:absolute;inset:0;width:100%;height:100%"></svg>
       <canvas id="arc-canvas"></canvas>
@@ -955,7 +981,7 @@ const SERVER_NAME_MAP = 'MEIN-SERVER';
 // Ab hier nichts mehr ändern
 // ============================================================
 
-const APP_VERSION  = 'v1.6.4';
+const APP_VERSION  = 'v1.6.5';
 const REFRESH_MS   = 30000;
 const localUnbanned = new Set();
 const ARC_FPS      = 30;
