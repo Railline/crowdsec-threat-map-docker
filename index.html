@@ -1041,6 +1041,8 @@ let replayCursor=0,replayWinStart=0,replayWinEnd=0,replayLastFrame=0,activeRocke
 let lastMetricsText='',replayInitialized=false,replayAutoStarted=false;
 let countriesGeo=null;
 let lastRocketDrawTs=0;
+let rocketIdSeq=0;
+const pendingRocketsByIp=new Map();
 let lastLiveSeenKeys=new Set();
 let autoZoomOn=false;
 let lastAutoZoomTs=0;
@@ -1093,7 +1095,11 @@ function clearArcCanvas(){ctx2d.clearRect(0,0,canvas.width,canvas.height);}
 
 function parseEventTime(iso){if(!iso)return 0;const s=iso.trim().replace(' ','T');const t=Date.parse(/[zZ]$/.test(s)?s:s+'Z');return isNaN(t)?0:t;}
 function fmtReplayClock(ts){return ts?new Date(ts).toLocaleString(currentLang==='de'?'de-DE':'en-GB',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit',second:'2-digit'}):'—';}
-function initReplayWindow(){const times=allEvents.map(e=>e.ts).filter(t=>t>0);if(!times.length)return;replayWinEnd=Math.max(...times);replayWinStart=Math.max(Math.min(...times),replayWinEnd-replayRangeH*3600000);replayCursor=replayWinStart;lastReplaySpawnTs=replayWinStart;activeRockets=[];updateReplaySlider();}
+function clearRocketQueues(){pendingRocketsByIp.clear();}
+function resetRockets(){activeRockets=[];clearRocketQueues();}
+function rocketQueueKey(ev){return ev.ip||'?';}
+function ipHasFlyingRocket(ip){return activeRockets.some(r=>(r.queueIp||rocketQueueKey(r))===ip&&r.t<1);}
+function initReplayWindow(){const times=allEvents.map(e=>e.ts).filter(t=>t>0);if(!times.length)return;replayWinEnd=Math.max(...times);replayWinStart=Math.max(Math.min(...times),replayWinEnd-replayRangeH*3600000);replayCursor=replayWinStart;lastReplaySpawnTs=replayWinStart;resetRockets();updateReplaySlider();}
 function getEventsInReplay(){let list=allEvents.filter(e=>e.ts>=replayWinStart&&e.ts<=replayCursor);if(activeFilters.country)list=list.filter(d=>d.country===activeFilters.country);if(activeFilters.scenario)list=list.filter(d=>d.scenario===activeFilters.scenario);if(activeFilters.search){const q=activeFilters.search;list=list.filter(d=>(d.ip||'').includes(q)||(d.country||'').toLowerCase().includes(q)||(d.scenario||'').toLowerCase().includes(q));}return list;}
 function aggregateFromEvents(events){const by={};events.forEach(e=>{if(!e.lat&&!e.lon)return;const k=`${e.lat.toFixed(2)},${e.lon.toFixed(2)},${e.scenario}`;if(!by[k])by[k]={...e,count:0};by[k].count++;});return Object.values(by);}
 function getDisplayAttackData(){return liveMode?getFilteredAttackData():aggregateFromEvents(getEventsInReplay());}
@@ -1198,11 +1204,11 @@ function layoutFlightLabels(rockets,z){
   const inChrome=(x,y)=>x<minX||x>maxX||y<minY||y>maxY;
   const placed=[];
   const out=[];
-  const seenIp=new Set();
+  const seenRocket=new Set();
   const candidates=rockets.filter(r=>r.t>0.04&&r.t<0.97).sort((a,b)=>b.t-a.t);
   for(const r of candidates){
     if(out.length>=maxN)break;
-    if(seenIp.has(r.ip))continue;
+    if(seenRocket.has(r.id))continue;
     const baseX=r.sx*z.k+z.x,baseY=r.sy*z.k+z.y;
     const geoKey=`${Math.round(baseX/12)}_${Math.round(baseY/12)}`;
     if(out.some(o=>o.geoKey===geoKey))continue;
@@ -1212,7 +1218,7 @@ function layoutFlightLabels(rockets,z){
       if(inChrome(x,y))continue;
       if(placed.every(p=>Math.hypot(p.x-x,p.y-y)>=minDist)){
         placed.push({x,y});
-        seenIp.add(r.ip);
+        seenRocket.add(r.id);
         out.push({r,x,y,geoKey});
         placedOne=true;
         break;
@@ -1222,7 +1228,7 @@ function layoutFlightLabels(rockets,z){
       let x=Math.max(minX,Math.min(maxX,baseX));
       let y=Math.max(minY,Math.min(maxY,baseY-10));
       if(inChrome(x,y)){x=Math.max(minX,baseX+ins.l*0.15);y=Math.max(minY,baseY-10);}
-      seenIp.add(r.ip);
+      seenRocket.add(r.id);
       out.push({r,x,y,geoKey});
       placed.push({x,y});
     }
@@ -1249,13 +1255,14 @@ function updateFlightLabels(rockets){
     layer.appendChild(tag);
   });
 }
-function spawnRocketForEvent(ev){
-  if(!animOn||!linesOn)return;
-  if(activeRockets.some(r=>r.ip===ev.ip&&r.t<1))return;
-  const [sx,sy]=proj([SERVER_LON,SERVER_LAT]);const pt=proj([ev.lon,ev.lat]);if(!pt)return;
+function launchRocketFromEvent(ev){
+  const ip=rocketQueueKey(ev);
+  const [sx,sy]=proj([SERVER_LON,SERVER_LAT]);const pt=proj([ev.lon,ev.lat]);
+  if(!pt){drainRocketQueue(ip);return;}
   const[px,py]=pt;const dx=sx-px,dy=sy-py,dist=Math.sqrt(dx*dx+dy*dy);
   activeRockets.push({
-    ip:ev.ip,country:ev.country||'??',city:ev.city||'',scenario:ev.scenario,
+    id:++rocketIdSeq,
+    queueIp:ip,ip:ev.ip,country:ev.country||'??',city:ev.city||'',scenario:ev.scenario,
     sx:px,sy:py,ex:sx,ey:sy,
     cpx:(px+sx)/2,cpy:(py+sy)/2-Math.min(dist*0.38,130),
     col:scenarioColor(ev.scenario),t:0,
@@ -1266,6 +1273,28 @@ function spawnRocketForEvent(ev){
     maybeAutoZoomToAttack(ev);
     if(lastAutoZoomTs===tsBefore)nudgeAttackIntoView(ev.lon,ev.lat);
   }
+}
+function drainRocketQueue(ip){
+  if(ipHasFlyingRocket(ip))return;
+  const q=pendingRocketsByIp.get(ip);
+  if(!q||!q.length){pendingRocketsByIp.delete(ip);return;}
+  const ev=q.shift();
+  if(!q.length)pendingRocketsByIp.delete(ip);
+  launchRocketFromEvent(ev);
+}
+function spawnRocketForEvent(ev){
+  if(!animOn||!linesOn)return;
+  const ip=rocketQueueKey(ev);
+  if(ipHasFlyingRocket(ip)){
+    if(!pendingRocketsByIp.has(ip))pendingRocketsByIp.set(ip,[]);
+    pendingRocketsByIp.get(ip).push(ev);
+    if(!animRAF)startAnimLoop();
+    return;
+  }
+  launchRocketFromEvent(ev);
+}
+function hasRocketAnimWork(){
+  return activeRockets.length>0||pendingRocketsByIp.size>0;
 }
 function mapPointScreen(lon,lat,z){
   const pt=proj([lon,lat]);
@@ -1344,16 +1373,18 @@ function spawnLiveRocketsFromFeed(){
 function quadPoint(p,t){const u=1-t;return{x:u*u*p.sx+2*u*t*p.cpx+t*t*p.ex,y:u*u*p.sy+2*u*t*p.cpy+t*t*p.ey};}
 function drawCrowdSecRockets(ts){
   clearArcCanvas();
-  if(!animOn||!linesOn||!activeRockets.length){
-    clearFlightLabels();
-    return;
+  if(!animOn||!linesOn){clearFlightLabels();return;}
+  if(!activeRockets.length&&pendingRocketsByIp.size){
+    [...pendingRocketsByIp.keys()].forEach(ip=>drainRocketQueue(ip));
   }
+  if(!activeRockets.length){clearFlightLabels();return;}
   const now=typeof ts==='number'?ts:performance.now();
   const dt=lastRocketDrawTs?Math.min(48,now-lastRocketDrawTs):16;
   lastRocketDrawTs=now;
   const rocketStep=(dt/ROCKET_DURATION_MS)*(liveMode?1:replaySpeed);
   ctx2d.save();ctx2d.translate(currentTx,currentTy);ctx2d.scale(currentScale,currentScale);
   const ik=1/currentScale;
+  const finishedIps=new Set();
   activeRockets=activeRockets.filter(r=>{
     r.t=Math.min(1,r.t+rocketStep);
     const pt=quadPoint(r,r.t);
@@ -1373,8 +1404,11 @@ function drawCrowdSecRockets(ts){
       ctx2d.beginPath();ctx2d.fillStyle=col;ctx2d.globalAlpha=0.45*(1-flash);
       ctx2d.arc(r.ex,r.ey,2.5*ik,0,Math.PI*2);ctx2d.fill();
     }
-    return r.t<1.02;
+    const keep=r.t<1.02;
+    if(!keep)finishedIps.add(r.queueIp||rocketQueueKey(r));
+    return keep;
   });
+  finishedIps.forEach(ip=>drainRocketQueue(ip));
   updateFlightLabels(activeRockets);
   ctx2d.globalAlpha=1;ctx2d.restore();
 }
@@ -1382,8 +1416,7 @@ function drawReplayFrame(ts){drawCrowdSecRockets(ts);}
 function spawnRocketsForNewEvents(){
   const filt=e=>{if(e.ts<=lastReplaySpawnTs||e.ts>replayCursor)return false;if(activeFilters.country&&e.country!==activeFilters.country)return false;if(activeFilters.scenario&&e.scenario!==activeFilters.scenario)return false;return true;};
   const newEvts=allEvents.filter(filt).sort((a,b)=>a.ts-b.ts);
-  const seenIp=new Set();
-  newEvts.forEach(e=>{if(seenIp.has(e.ip))return;seenIp.add(e.ip);spawnRocketForEvent(e);});
+  newEvts.forEach(e=>spawnRocketForEvent(e));
   lastReplaySpawnTs=replayCursor;
 }
 function advanceReplay(ts){
@@ -1431,7 +1464,7 @@ function playReplay(){
   if(replayCursor>=replayWinEnd){
     replayCursor=replayWinStart;
     lastReplaySpawnTs=replayWinStart;
-    activeRockets=[];
+    resetRockets();
     updateReplaySlider();
   }
   replayPlaying=true;
@@ -1473,7 +1506,7 @@ function startAnimLoop(){
     }else{
       drawCrowdSecRockets(ts);
     }
-    const keepAnim=activeRockets.length>0||(!liveMode&&replayPlaying);
+    const keepAnim=hasRocketAnimWork()||(!liveMode&&replayPlaying);
     if(keepAnim)animRAF=requestAnimationFrame(loop);
     else animRAF=null;
   }
@@ -1499,7 +1532,7 @@ function setupReplayControls(){
     updateReplayControlsUI();
     replayCursor=replayWinStart+(parseInt(e.target.value,10)/1000)*(replayWinEnd-replayWinStart);
     lastReplaySpawnTs=replayWinStart;
-    activeRockets=[];
+    resetRockets();
     document.getElementById('replay-clock').textContent=fmtReplayClock(replayCursor);
     refreshMapFromData();
   });
@@ -1529,7 +1562,7 @@ function scheduleCompactMapFit(){
     const sizeChanged=Math.abs(w-prev.w)>10||Math.abs(h-prev.h)>10;
     scheduleCompactMapFit._last={w,h};
     setupProj();
-    activeRockets=[];
+    resetRockets();
     clearFlightLabels();
     clearArcCanvas();
     if(!baseSvg||!worldData)return;
@@ -2080,13 +2113,13 @@ function toggleLines(){
   if(lbl)lbl.textContent=linesOn?(t('lines_on')||'ANGRIFFE'):(t('lines_off')||'ANGRIFFE');
   if(mobLbl)mobLbl.textContent=linesOn?(t('lines_on')||'ANGRIFFE'):(t('lines_off')||'ANGRIFFE');
   if(linesOn)refreshMapFromData();
-  else{activeRockets=[];if(animRAF){cancelAnimationFrame(animRAF);animRAF=null;}clearArcCanvas();clearFlightLabels();if(animOn)refreshMapFromData();else updateCountryFills();}
+  else{resetRockets();if(animRAF){cancelAnimationFrame(animRAF);animRAF=null;}clearArcCanvas();clearFlightLabels();if(animOn)refreshMapFromData();else updateCountryFills();}
 }
 
 // ── ANIMATION TOGGLE ──
 function toggleAnim(){
   animOn=!animOn;
-  if(!animOn){activeRockets=[];clearArcCanvas();clearFlightLabels();if(animRAF){cancelAnimationFrame(animRAF);animRAF=null;}}
+  if(!animOn){resetRockets();clearArcCanvas();clearFlightLabels();if(animRAF){cancelAnimationFrame(animRAF);animRAF=null;}}
   const lbl=document.getElementById('anim-label');
   const mobLbl=document.getElementById('mob-anim-label');
   setToggleBtn('anim-toggle',animOn,'anim-dot');
@@ -2275,7 +2308,7 @@ function onResize(){
   const modeChanged=layoutModeSig!==null&&layoutModeSig!==sig;
   layoutModeSig=sig;
   syncCompactLayout();
-  activeRockets=[];
+  resetRockets();
   clearFlightLabels();
   setupProj();
   baseSvg.selectAll('*').remove();
