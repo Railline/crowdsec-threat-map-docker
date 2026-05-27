@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <!-- 
   CrowdSec Threat Map
-  © kabelsalatundklartext | https://github.com/kabelsalatundklartext/crowdsec-threat-map
+  © kabelsalatundklartext | https://github.com/kabelsalatundklartext/crowdsec-threat-map-docker
   Lizenz: CC BY-NC 4.0 — Nutzung & Änderung erlaubt, kein kommerzieller Einsatz
   https://creativecommons.org/licenses/by-nc/4.0/
 -->
@@ -24,13 +24,13 @@
   /* HEADER - hidden, replaced by map overlay */
   #header{display:none!important;}
 
-  /* MAP TITLE OVERLAY - always centered on map */
+  /* MAP TITLE — schwebt direkt über der Karte (kein extra Leerraum oben) */
   #map-title-overlay{
-    position:fixed;top:0;left:0;right:clamp(180px,22vw,250px);
-    height:36px;
+    position:absolute;top:0;left:0;right:0;
+    height:24px;
     display:flex;align-items:center;justify-content:center;gap:10px;
     z-index:150;pointer-events:none;
-    background:linear-gradient(to bottom,rgba(2,8,16,0.88) 0%,rgba(2,8,16,0) 100%);
+    background:linear-gradient(to bottom,rgba(2,8,16,0.5) 0%,transparent 100%);
   }
   #map-title-overlay #h-title{
     font-family:'Orbitron',monospace;font-size:clamp(8px,1.4vw,13px);font-weight:900;
@@ -55,24 +55,23 @@
     display:flex;gap:0;border-bottom:1px solid rgba(0,255,200,0.05);
     padding:5px 10px;justify-content:space-between;
   }
-  .sb-stat{display:flex;flex-direction:column;align-items:center;}
+  .sb-stat{display:flex;flex-direction:column;align-items:center;min-width:0;}
   #sidebar-controls{display:none;} /* entfernt — aufgeteilt in toggle-row */
 
   /* LINIE + ANIMATION — eigene Zeile, volle Breite, zentriert */
   #toggle-row{
-    display:flex;align-items:center;justify-content:center;gap:6px;
-    padding:4px 8px;border-bottom:1px solid var(--dim);
+    display:flex;align-items:stretch;justify-content:center;gap:3px;
+    padding:3px 5px;border-bottom:1px solid var(--dim);
     background:rgba(0,5,15,0.8);flex-shrink:0;
   }
   #toggle-row #lines-toggle,
-  #toggle-row #anim-toggle {
-    flex:1;justify-content:center;
-    flex-shrink:0;min-width:0;overflow:hidden;
+  #toggle-row #anim-toggle,
+  #toggle-row #autozoom-toggle {
+    flex:1 1 0;justify-content:center;
+    min-width:0;overflow:hidden;
+    padding:3px 4px;font-size:7px;letter-spacing:0.2px;gap:3px;
   }
-  /* re-use existing anim-toggle styles - override sizing */
-  #anim-toggle{padding:4px 8px;font-size:clamp(7px,0.95vw,9px);letter-spacing:0.5px;gap:4px;}
-  #lines-toggle{padding:4px 8px;font-size:clamp(7px,0.95vw,9px);letter-spacing:0.5px;gap:4px;}
-  #anim-dot,#lines-dot{width:6px;height:6px;flex-shrink:0;}
+  #toggle-row #autozoom-toggle span{overflow:hidden;text-overflow:ellipsis;}
 
   /* CSV neben Seitenzahlen */
   #feed-pages-wrap{
@@ -101,9 +100,9 @@
   #anim-toggle{
     display:flex;align-items:center;gap:6px;
     background:rgba(0,20,40,0.85);border:1px solid var(--dim);
-    border-radius:4px;padding:4px 10px;cursor:pointer;
-    font-family:'Share Tech Mono',monospace;font-size:clamp(8px,1vw,9px);
-    letter-spacing:1px;color:rgba(160,255,216,0.45);
+    border-radius:3px;padding:3px 6px;cursor:pointer;
+    font-family:'Share Tech Mono',monospace;font-size:7px;
+    letter-spacing:0.3px;color:rgba(160,255,216,0.45);
     transition:all 0.2s;white-space:nowrap;
     user-select:none;
   }
@@ -116,9 +115,9 @@
   #lines-toggle{
     display:flex;align-items:center;gap:6px;
     background:rgba(0,20,40,0.85);border:1px solid var(--dim);
-    border-radius:4px;padding:4px 10px;cursor:pointer;
-    font-family:'Share Tech Mono',monospace;font-size:clamp(8px,1vw,9px);
-    letter-spacing:1px;color:rgba(160,255,216,0.45);
+    border-radius:3px;padding:3px 6px;cursor:pointer;
+    font-family:'Share Tech Mono',monospace;font-size:7px;
+    letter-spacing:0.3px;color:rgba(160,255,216,0.45);
     transition:all 0.2s;white-space:nowrap;
     user-select:none;
   }
@@ -126,6 +125,32 @@
   #lines-toggle.on{border-color:var(--ok);color:var(--ok);background:rgba(0,255,136,0.08);}
   #lines-dot{width:7px;height:7px;border-radius:50%;background:var(--ok);box-shadow:0 0 6px var(--ok);transition:background 0.2s;flex-shrink:0;}
   #lines-toggle:not(.on) #lines-dot{background:rgba(160,255,216,0.3);box-shadow:none;}
+
+  /* AUTO-ZOOM TOGGLE (gleiches Design wie Animation / Flüge) */
+  #autozoom-toggle{
+    display:flex;align-items:center;gap:6px;
+    background:rgba(0,20,40,0.85);border:1px solid var(--dim);
+    border-radius:3px;padding:3px 4px;cursor:pointer;
+    font-family:'Share Tech Mono',monospace;font-size:6.5px;
+    letter-spacing:0.2px;color:rgba(160,255,216,0.45);
+    transition:all 0.2s;white-space:nowrap;
+    user-select:none;
+  }
+  #autozoom-toggle:hover{border-color:var(--accent);color:var(--accent);}
+  #autozoom-toggle.on{border-color:var(--ok);color:var(--ok);background:rgba(0,255,136,0.08);}
+  #autozoom-toggle.off,
+  #autozoom-toggle:not(.on){
+    border-color:rgba(80,120,110,0.3)!important;
+    color:rgba(120,160,150,0.55)!important;
+    background:rgba(0,8,16,0.55)!important;
+  }
+  #autozoom-dot{width:7px;height:7px;border-radius:50%;background:rgba(160,255,216,0.3);transition:background 0.2s;flex-shrink:0;}
+  #autozoom-toggle.on #autozoom-dot{background:var(--ok);box-shadow:0 0 6px var(--ok);}
+  #autozoom-toggle.off #autozoom-dot,
+  #autozoom-toggle:not(.on) #autozoom-dot{
+    background:rgba(90,110,105,0.45)!important;
+    box-shadow:none!important;
+  }
 
   /* LAYOUT */
   #layout{position:fixed;top:0;left:0;right:0;bottom:0;display:flex;}
@@ -144,12 +169,143 @@
   #leg-anim-hint{color:rgba(160,255,216,0.22);font-size:clamp(7px,0.85vw,9px);letter-spacing:1px;}
   #leg-hint{color:rgba(160,255,216,0.5);font-size:clamp(6px,0.75vw,8px);letter-spacing:0.5px;white-space:nowrap;}
 
-  /* Zoom controls */
-  #zoom-ctrl{position:absolute;bottom:10px;left:8px;display:flex;flex-direction:column;gap:4px;z-index:50;}
+  #map-wrap{position:relative;}
+  .map-panel{position:absolute;z-index:60;pointer-events:auto;background:rgba(4,12,28,0.88);border:1px solid rgba(0,255,200,0.12);border-radius:6px;padding:8px 10px;min-width:140px;max-width:200px;backdrop-filter:blur(6px);font-size:9px;}
+  .map-panel h4{font-family:'Orbitron',monospace;font-size:8px;color:rgba(160,255,216,0.45);margin:0 0 6px 0;letter-spacing:1px;}
+  .map-panel-row{display:flex;align-items:center;gap:6px;padding:3px 0;border-bottom:1px solid rgba(0,255,200,0.04);}
+  .map-panel-row:last-child{border-bottom:none;}
+  .map-panel-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
+  .map-panel-label{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .map-panel-val{font-family:'Orbitron',monospace;color:var(--accent);flex-shrink:0;}
+  #map-panels-left{
+    position:absolute;left:8px;top:28px;z-index:60;
+    display:flex;flex-direction:column;gap:6px;max-width:210px;pointer-events:none;
+  }
+  #map-panels-left .map-panel{position:relative;top:auto;left:auto;right:auto;transform:none;pointer-events:auto;}
+  #replay-bar{
+    position:absolute;bottom:14px;left:50%;transform:translateX(-50%);top:auto;
+    z-index:75;display:flex;align-items:center;gap:8px;padding:6px 14px;
+    background:rgba(4,12,28,0.94);border:1px solid rgba(255,200,0,0.3);
+    border-radius:20px;pointer-events:auto;box-shadow:0 4px 20px rgba(0,0,0,0.5);
+  }
+  @media(max-width:900px){#map-panels-left{display:none;}}
+  .replay-ctrl-btn{
+    width:28px;height:28px;display:flex;align-items:center;justify-content:center;
+    border:1px solid rgba(255,200,0,0.35);border-radius:50%;background:rgba(0,20,40,0.6);
+    color:#ffcc00;cursor:pointer;font-size:11px;line-height:1;padding:0;
+    font-family:'Share Tech Mono',monospace;transition:all 0.2s;flex-shrink:0;
+  }
+  .replay-ctrl-btn:hover{border-color:#ffcc00;background:rgba(255,200,0,0.12);}
+  .replay-ctrl-btn.active{background:rgba(255,200,0,0.2);border-color:#ffcc00;box-shadow:0 0 8px rgba(255,200,0,0.35);}
+  .replay-ctrl-btn:disabled{opacity:0.35;cursor:not-allowed;}
+  #replay-play-btn::before{content:'▶';margin-left:2px;}
+  #replay-stop-btn::before{content:'■';font-size:9px;}
+  #replay-bar:not(.is-playing) #replay-stop-btn{display:none;}
+  #replay-bar.is-playing #replay-play-btn{display:none;}
+  #replay-bar.is-playing #replay-stop-btn{display:flex;}
+  #replay-bar.is-live{border-color:rgba(0,255,136,0.35);}
+  #replay-bar.is-live .replay-ctrl-btn{border-color:rgba(0,255,136,0.3);color:rgba(160,255,216,0.5);}
+  #replay-clock{font-size:9px;color:rgba(160,255,216,0.7);white-space:nowrap;min-width:140px;text-align:center;}
+  #mode-live-btn{font-size:8px;padding:3px 10px;border:1px solid var(--dim);border-radius:12px;background:transparent;color:rgba(160,255,216,0.45);cursor:pointer;font-family:'Share Tech Mono',monospace;letter-spacing:1px;transition:all 0.2s;}
+  #mode-live-btn:hover{border-color:var(--ok);color:var(--ok);}
+  #mode-live-btn.active{border-color:var(--ok);color:var(--ok);background:rgba(0,255,136,0.12);box-shadow:0 0 8px rgba(0,255,136,0.25);}
+  #map-console-bar{display:flex;flex-direction:column;background:rgba(2,8,16,0.98);border-top:1px solid var(--dim);flex-shrink:0;}
+  #timeline-wrap{padding:6px 12px 4px;}
+  #replay-slider{width:100%;height:4px;-webkit-appearance:none;background:rgba(0,255,200,0.12);border-radius:2px;cursor:pointer;}
+  #replay-slider::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:12px;border-radius:50%;background:var(--accent);}
+  #timeline-labels{display:flex;justify-content:space-between;font-size:7px;color:rgba(160,255,216,0.35);padding:0 12px 2px;}
+  #map-window-stats{
+    display:block;
+    flex-shrink:0;
+    padding:5px 10px 4px;
+    border-bottom:1px solid rgba(0,255,200,0.1);
+    background:rgba(0,255,200,0.04);
+  }
+  #footer-stats{display:none;}
+  .map-window-stats-title{
+    font-size:6px;letter-spacing:1px;color:var(--accent);
+    margin-bottom:4px;display:flex;align-items:center;gap:4px;
+  }
+  .map-window-stats-title::before{content:'↑';opacity:0.7;font-size:7px;}
+  .map-window-stats-grid{
+    display:grid;grid-template-columns:repeat(4,1fr);gap:4px;
+  }
+  .mws-item{display:flex;flex-direction:column;align-items:center;gap:1px;min-width:0;}
+  .mws-val{font-family:'Orbitron',monospace;font-size:10px;font-weight:700;color:var(--accent);line-height:1;}
+  .mws-lbl{font-size:5px;color:rgba(160,255,216,0.45);letter-spacing:0.3px;text-align:center;}
+  #console-controls{display:flex;flex-direction:column;gap:4px;padding:5px 10px 6px;}
+  @media(min-width:901px){
+    #console-controls{
+      display:flex;flex-direction:row;flex-wrap:wrap;
+      justify-content:center;align-items:center;
+      gap:6px 18px;padding:6px 12px 8px;
+    }
+    #console-controls .console-row{
+      flex:0 1 auto;justify-content:center;width:auto;max-width:100%;
+    }
+    #console-controls .console-legend-row{
+      flex:1 1 100%;justify-content:center;
+    }
+    #console-controls .console-legend-row .ctrl-chip-strip{
+      justify-content:center;flex:0 1 auto;
+    }
+  }
+  .console-row{display:flex;align-items:center;gap:6px;min-width:0;}
+  .ctrl-group-lbl{
+    font-size:6px;color:rgba(160,255,216,0.4);letter-spacing:0.8px;
+    flex-shrink:0;width:38px;line-height:1.2;
+  }
+  .ctrl-chip-strip{
+    display:flex;flex-wrap:nowrap;gap:2px;overflow-x:auto;flex:1;min-width:0;
+    -webkit-overflow-scrolling:touch;padding-bottom:1px;
+  }
+  .ctrl-chip-strip::-webkit-scrollbar{height:2px;}
+  .pill-btn{
+    padding:2px 6px;font-size:7px;border:1px solid rgba(0,255,200,0.18);
+    border-radius:2px;background:rgba(0,12,24,0.5);color:rgba(160,255,216,0.5);
+    cursor:pointer;font-family:'Share Tech Mono',monospace;
+    flex-shrink:0;line-height:1.3;min-height:20px;
+  }
+  .pill-btn.active{border-color:var(--accent);color:var(--accent);background:rgba(0,255,200,0.12);}
+  .console-legend-row .ctrl-chip-strip{flex-wrap:nowrap;}
+  #threat-legend.console-legend-strip{gap:4px;}
+  #flight-labels-layer{position:absolute;inset:0;pointer-events:none;z-index:45;overflow:visible;}
+  .flight-tag{position:absolute;transform:translate(-50%,-100%);display:flex;align-items:center;gap:3px;padding:1px 5px 1px 4px;background:rgba(6,12,24,0.9);border:1px solid rgba(255,255,255,0.1);border-radius:4px;box-shadow:0 1px 4px rgba(0,0,0,0.35);white-space:nowrap;max-width:110px;border-left:2px solid var(--tag-accent,#00ffe0);}
+  .flight-tag-flag{font-size:9px;line-height:1;flex-shrink:0;}
+  .flight-tag-line{font-size:6.5px;color:rgba(220,245,255,0.92);font-family:'Share Tech Mono',monospace;line-height:1.15;overflow:hidden;text-overflow:ellipsis;}
+  .flight-tag-line .flight-tag-cc{opacity:0.7;font-weight:600;}
+  .flight-tag-line .flight-tag-sep{opacity:0.35;margin:0 2px;}
+  .flight-tag-line .flight-tag-city{color:#fff;}
+  .threat-leg{display:flex;align-items:center;gap:4px;font-size:7px;color:rgba(160,255,216,0.5);white-space:nowrap;}
+  .threat-leg-dot{width:8px;height:8px;border-radius:2px;}
+  #footer-stats{display:none;align-items:center;justify-content:center;gap:clamp(12px,3vw,28px);padding:6px 12px;border-top:1px solid rgba(0,255,200,0.06);flex-wrap:wrap;}
+  .fstat{display:flex;align-items:center;gap:5px;font-size:9px;}
+  .fstat-val{font-family:'Orbitron',monospace;font-weight:700;color:var(--accent);}
+
+  /* Zoom controls — über Replay-Leiste */
+  #zoom-ctrl{position:absolute;bottom:52px;left:8px;display:flex;flex-direction:column;gap:4px;z-index:50;}
   .zoom-btn{width:32px;height:32px;background:rgba(0,20,40,0.85);border:1px solid var(--dim);color:var(--accent);font-size:16px;display:flex;align-items:center;justify-content:center;cursor:pointer;border-radius:3px;user-select:none;font-family:'Orbitron',monospace;}
   .zoom-btn:hover{background:rgba(0,255,200,0.1);}
   .zoom-btn:active{background:rgba(0,255,200,0.2);}
-  #zoom-level{position:absolute;bottom:10px;left:48px;background:rgba(0,20,40,0.75);border:1px solid var(--dim);color:var(--accent);font-size:8px;padding:3px 6px;border-radius:3px;letter-spacing:1px;z-index:50;pointer-events:none;}
+  #zoom-level{position:absolute;bottom:52px;left:48px;background:rgba(0,20,40,0.75);border:1px solid var(--dim);color:var(--accent);font-size:8px;padding:3px 6px;border-radius:3px;letter-spacing:1px;z-index:50;pointer-events:none;}
+  #zoom-prefs-panel{
+    position:absolute;bottom:52px;left:8px;width:min(220px,calc(100vw - 24px));
+    background:rgba(0,20,40,0.94);border:1px solid var(--dim);border-radius:4px;
+    padding:8px 10px;z-index:55;display:none;flex-direction:column;gap:6px;
+    font-family:'Share Tech Mono',monospace;font-size:8px;color:rgba(160,255,216,0.75);
+    box-shadow:0 4px 20px rgba(0,0,0,0.45);
+  }
+  #zoom-prefs-panel.open{display:flex;}
+  #zoom-prefs-panel label{display:flex;align-items:center;gap:6px;cursor:pointer;user-select:none;}
+  #zoom-prefs-panel input[type=range]{width:100%;accent-color:var(--accent);}
+  .zoom-prefs-row{display:flex;flex-wrap:wrap;gap:4px;align-items:center;}
+  .zoom-prefs-btn{
+    background:rgba(0,255,200,0.08);border:1px solid var(--dim);color:var(--accent);
+    border-radius:3px;padding:3px 6px;cursor:pointer;font-size:7px;letter-spacing:0.5px;
+    font-family:'Share Tech Mono',monospace;
+  }
+  .zoom-prefs-btn:hover{background:rgba(0,255,200,0.14);}
+  #zoom-prefs-status{color:rgba(160,255,216,0.45);font-size:7px;line-height:1.35;}
 
   /* SIDEBAR */
   #sidebar{width:clamp(180px,22vw,250px);background:rgba(0,8,20,0.95);border-left:1px solid var(--dim);display:flex;flex-direction:column;overflow:hidden;flex-shrink:0;}
@@ -227,6 +383,19 @@
   .top-bar{height:2px;border-radius:1px;}
   .top-count{font-family:'Orbitron',monospace;font-size:clamp(9px,1vw,10px);color:var(--accent);flex-shrink:0;}
   #sidebar-bottom{padding:6px 10px;border-top:1px solid var(--dim);font-size:clamp(7px,0.8vw,8px);color:rgba(160,255,216,0.3);letter-spacing:1px;}
+  .wl-ip-privacy{margin:2px 0 4px;}
+  .wl-ip-toggle{
+    display:inline-flex;align-items:center;gap:5px;
+    background:rgba(0,20,40,0.85);border:1px solid var(--dim);
+    border-radius:4px;padding:2px 7px;cursor:pointer;
+    font-family:'Share Tech Mono',monospace;font-size:7px;
+    letter-spacing:0.5px;color:rgba(160,255,216,0.45);
+    transition:all 0.2s;user-select:none;
+  }
+  .wl-ip-toggle:hover{border-color:var(--accent);color:var(--accent);}
+  .wl-ip-toggle.on{border-color:var(--ok);color:var(--ok);background:rgba(0,255,136,0.08);}
+  .wl-ip-toggle-dot{width:6px;height:6px;border-radius:50%;background:rgba(160,255,216,0.3);flex-shrink:0;transition:background 0.2s;}
+  .wl-ip-toggle.on .wl-ip-toggle-dot{background:var(--ok);box-shadow:0 0 4px var(--ok);}
 
   /* FILTER ACTIVE INDICATOR */
   #filter-bar{display:flex;flex-wrap:wrap;gap:3px;padding:4px 8px;border-bottom:1px solid var(--dim);background:rgba(0,5,15,0.7);min-height:0;flex-shrink:0;}
@@ -289,19 +458,81 @@
   #ctx-close:hover{background:rgba(255,34,68,0.07);color:var(--danger);}
 
   /* TOOLTIP */
-  #tip{display:none;position:fixed;background:rgba(0,12,30,0.97);border:1px solid rgba(0,255,200,0.25);color:var(--text);font-family:'Share Tech Mono',monospace;font-size:10px;padding:9px 12px;border-radius:4px;pointer-events:none;z-index:800;line-height:1.6;min-width:180px;max-width:240px;box-shadow:0 4px 20px rgba(0,0,0,0.7);}
+  #tip{display:none;position:fixed;background:rgba(0,12,30,0.97);border:1px solid rgba(0,255,200,0.25);color:var(--text);font-family:'Share Tech Mono',monospace;font-size:10px;padding:9px 28px 9px 12px;border-radius:4px;pointer-events:none;z-index:800;line-height:1.6;min-width:180px;max-width:240px;box-shadow:0 4px 20px rgba(0,0,0,0.7);}
+  #tip.tip-pinned{pointer-events:auto;border-color:var(--accent);}
+  #tip-close{display:none;position:absolute;top:5px;right:6px;width:18px;height:18px;padding:0;border:none;background:rgba(255,34,68,0.15);color:var(--danger);border-radius:3px;cursor:pointer;font-size:11px;line-height:18px;text-align:center;font-family:inherit;}
+  #tip-close:hover{background:rgba(255,34,68,0.35);}
+  #tip.tip-pinned #tip-close{display:block;}
+  .city-map-label{pointer-events:none;opacity:0.85;}
 
   /* MOBILE BOTTOM SHEET */
-  #mob-sheet{display:none;position:fixed;bottom:0;left:0;right:0;background:var(--bg);border-top:1px solid var(--dim);z-index:300;flex-direction:column;}
-  #mob-tab-btns{display:flex;border-bottom:1px solid var(--dim);align-items:center;background:rgba(0,5,15,0.95);}
-  .mob-tab-btn{padding:10px 8px;text-align:center;font-size:10px;letter-spacing:1px;color:rgba(160,255,216,0.4);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;}
-  .mob-tab-btn.active{color:var(--accent);border-bottom:2px solid var(--accent);}
-  #mob-stats-bar{display:flex;align-items:center;justify-content:space-between;padding:5px 10px;border-bottom:1px solid var(--dim);background:rgba(0,5,15,0.95);gap:6px;flex-shrink:0;}
+  #mob-sheet{
+    display:none;position:fixed;bottom:0;left:0;right:0;
+    background:var(--bg);border-top:2px solid rgba(0,255,200,0.25);
+    z-index:320;flex-direction:column;
+    box-shadow:0 -8px 24px rgba(0,0,0,0.55);
+  }
+  #mob-data-panel{display:flex;flex-direction:column;flex:1;min-height:0;overflow:hidden;}
+  #mob-tab-btns{
+    display:flex;align-items:stretch;min-height:40px;flex-shrink:0;
+    background:rgba(0,5,15,0.95);border-bottom:1px solid var(--dim);
+  }
+  #map-mob-controls{display:none;}
+  .mob-tab-btn{
+    flex:1;min-width:72px;max-width:33%;
+    display:flex;align-items:center;justify-content:center;
+    padding:10px 6px;text-align:center;
+    font-size:10px;letter-spacing:0.8px;line-height:1.2;
+    color:rgba(160,255,216,0.45);cursor:pointer;
+    border:none;border-bottom:3px solid transparent;
+    background:transparent;white-space:nowrap;
+    font-family:'Share Tech Mono',monospace;
+  }
+  .mob-tab-btn.active{color:var(--accent);border-bottom-color:var(--accent);background:rgba(0,255,200,0.06);}
+  #map-mob-controls .mob-ctrl-pill{flex-shrink:0;}
+  #mob-legend-bar{display:none;}
+  .mob-legend-strip{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;}
+  #mob-gesamt-bar{
+    flex-shrink:0;padding:6px 8px 4px;
+    border-bottom:1px solid rgba(0,255,200,0.1);
+    background:rgba(0,5,15,0.96);
+  }
+  #mob-gesamt-bar .mob-stats-alltime{margin-bottom:4px;}
+  .mob-stats-grid{display:flex;flex-direction:column;gap:5px;}
+  .mob-stats-block{border:1px solid rgba(0,255,200,0.08);border-radius:4px;padding:4px 6px;background:rgba(0,12,24,0.5);}
+  .mob-stats-block.mob-stats-alltime{border-color:rgba(160,255,216,0.12);background:rgba(0,8,18,0.55);}
+  .mob-stats-block-title{font-size:6px;letter-spacing:1px;color:rgba(160,255,216,0.45);margin-bottom:3px;}
+  .mob-stats-items{display:flex;justify-content:space-around;gap:4px;flex-wrap:wrap;}
+  .mob-stat-item{display:flex;flex-direction:column;align-items:center;min-width:42px;}
+  .mob-stat-val{font-family:'Orbitron',monospace;font-size:10px;font-weight:700;color:var(--accent);line-height:1.1;}
+  .mob-stat-lbl{font-size:5px;color:rgba(160,255,216,0.4);letter-spacing:0.5px;text-align:center;}
+  .mob-stat-dot{font-size:7px;line-height:1;margin-bottom:1px;}
+  .mob-stats-meta{display:flex;align-items:center;justify-content:space-between;gap:6px;flex-wrap:wrap;}
+  .mob-stats-meta-left{display:flex;align-items:center;gap:6px;flex-wrap:wrap;min-width:0;}
+  .mob-stats-meta-right{display:flex;align-items:center;gap:4px;flex-shrink:0;}
+  .mob-ctrl-pill{
+    display:flex;align-items:center;gap:3px;border-radius:3px;padding:2px 5px;cursor:pointer;
+    font-family:'Share Tech Mono',monospace;font-size:7px;white-space:nowrap;user-select:none;
+    border:1px solid rgba(0,255,200,0.2);color:rgba(160,255,216,0.45);background:transparent;
+  }
+  .mob-ctrl-pill.on{border-color:var(--ok);color:var(--ok);background:rgba(0,255,136,0.08);}
+  .mob-ctrl-pill-dot{width:5px;height:5px;border-radius:50%;background:rgba(160,255,216,0.3);flex-shrink:0;}
+  .mob-ctrl-pill.on .mob-ctrl-pill-dot{background:var(--ok);box-shadow:0 0 4px var(--ok);}
   .mob-theme-dot{transition:all 0.15s;}
   .mob-theme-dot.active{border-color:#fff !important;transform:scale(1.25);}
-  #mob-panel{max-height:38vh;overflow-y:auto;}
-  #mob-panel::-webkit-scrollbar{width:2px;}
-  #mob-panel::-webkit-scrollbar-thumb{background:var(--dim);}
+  #mob-panel{flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden;}
+  .mob-panel-view{display:none;flex:1;min-height:0;flex-direction:column;overflow:hidden;}
+  .mob-panel-view.active{display:flex;}
+  .mob-panel-scroll{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;}
+  .mob-panel-scroll::-webkit-scrollbar{width:3px;}
+  .mob-panel-scroll::-webkit-scrollbar-thumb{background:var(--dim);}
+  #mob-feed,#mob-top10,#mob-topall{padding:2px 0;}
+  #mob-top10 .top-item,#mob-topall .top-item{padding:8px 10px;}
+  .mob-panel-tab-hdr{
+    flex-shrink:0;padding:6px 10px;font-size:8px;letter-spacing:1px;
+    color:var(--accent);border-bottom:1px solid var(--dim);
+    background:rgba(0,5,15,0.9);
+  }
 
   /* LOADING */
   #loading{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:500;gap:14px;font-family:'Orbitron',monospace;}
@@ -311,47 +542,142 @@
   @keyframes spin{to{transform:rotate(360deg)}}
   #err{display:none;position:fixed;top:60px;left:50%;transform:translateX(-50%);background:rgba(255,34,68,0.1);border:1px solid var(--danger);color:var(--danger);padding:7px 14px;font-size:10px;z-index:400;letter-spacing:1px;border-radius:2px;max-width:90vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 
-  /* Responsive */
-  @media(max-width:680px){
+  /* Responsive — Handy + Tablet Hochformat (≤900px): Bottom-Sheet statt Sidebar */
+  @media(max-width:900px){
     #sidebar{display:none!important;}
-    #mob-sheet{display:flex!important;}
-    /* JS sets exact pixel values — CSS fallback only */
-    #layout{top:0 !important;bottom:58vh;}
+    #mob-sheet{display:flex!important;flex-direction:column;}
+    #layout{top:0!important;}
     html,body{background:var(--bg)!important;}
     #grid-bg{display:block;}
-    /* Legend: compact centered, no gap */
-    #legend{
-      height:22px;
-      flex-wrap:nowrap;
-      gap:0 6px;
-      padding:0 6px;
-      justify-content:center;
-      align-items:center;
-      overflow:hidden;
-      flex-shrink:0;
+    #map-title-overlay{right:0;left:0;height:22px;padding:0 8px;}
+    #map-title-overlay #h-title{font-size:8px;letter-spacing:1px;}
+    #map-version-badge{font-size:6px;padding:1px 3px;}
+    #mob-sheet{
+      position:fixed;bottom:0;left:0;right:0;
+      height:min(52vh,420px);max-height:min(55vh,440px);min-height:240px;
     }
-    .leg-label{display:inline!important;font-size:7px;letter-spacing:0;}
-    .leg-item{font-size:7px;gap:2px;white-space:nowrap;}
-    .leg-dot{width:6px;height:6px;}
-    #leg-hint{display:none!important;}
-    #leg-anim-hint{display:none;}
-    #s-scenarios-wrap{display:none;}
-    #map-title-overlay{right:0;height:28px;}
-    #map-version-badge{display:inline!important;font-size:7px;padding:1px 3px;}
-    #mob-sheet{height:58vh;max-height:58vh;bottom:0;display:flex!important;flex-direction:column;}
-    #mob-panel{flex:1!important;overflow-y:auto;min-height:0;max-height:none!important;}
-    #map-col{flex:1;min-height:0;}
+    #map-mob-controls{
+      display:flex;align-items:center;justify-content:center;gap:6px;
+      padding:5px 8px;border-bottom:1px solid var(--dim);
+      background:rgba(0,5,15,0.92);flex-shrink:0;flex-wrap:wrap;
+    }
+    #map-window-stats{display:block!important;order:0;}
+    #map-mob-controls{order:1;}
+    #console-controls{order:2;}
+    #mob-gesamt-bar .mob-stats-meta{display:flex;padding-top:2px;}
+    #mob-view-top10 .mob-panel-scroll,#mob-view-topall .mob-panel-scroll{flex:1;min-height:140px;}
+    #mob-feed .feed-item{padding:5px 8px 6px;}
+    #mob-feed .feed-action-btn{width:24px;height:24px;font-size:12px;}
+    #mob-feed .feed-ip{font-size:10px;}
+    #mob-top10 .top-item,#mob-topall .top-item{padding:7px 10px;}
+    .mob-tab-btn{font-size:8px;min-height:34px;padding:6px 4px;}
+    #mob-gesamt-bar{padding:4px 6px 3px;}
+    #mob-gesamt-bar .mob-stats-block{padding:3px 5px;}
+    .mob-stat-val{font-size:8px;}
+    #mob-panel{flex:1!important;min-height:0;max-height:none!important;}
+    #map-col{flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden;}
+    #map-wrap{flex:1 1 0;min-height:0;}
+    #map-console-bar{
+      font-size:8px;flex:0 0 auto;overflow:visible;
+      padding-bottom:1px;
+    }
+    #mob-sheet{z-index:320;}
+    #timeline-wrap{padding:2px 8px 0;flex-shrink:0;}
+    #timeline-labels{display:none;}
+    #map-window-stats{padding:2px 6px 1px;}
+    .map-window-stats-title{font-size:5px;margin-bottom:1px;}
+    .map-window-stats-title::before{display:none;}
+    .map-window-stats-grid{gap:0;}
+    .mws-val{font-size:7px;}
+    .mws-lbl{font-size:3.5px;}
+    #map-mob-controls{
+      padding:2px 6px;gap:3px;
+      justify-content:center;
+    }
+    #map-mob-controls .mob-ctrl-pill{padding:1px 4px;font-size:5.5px;}
+    #mob-legend-bar{
+      display:block;padding:2px 6px 3px;
+      border-top:1px solid rgba(0,255,200,0.08);
+      border-bottom:1px solid rgba(0,255,200,0.06);
+      background:rgba(0,5,15,0.85);flex-shrink:0;
+    }
+    #mob-legend-bar .threat-leg{font-size:5px;gap:2px;color:rgba(160,255,216,0.55);}
+    #mob-legend-bar .threat-leg-dot{
+      width:7px;height:7px;border-radius:2px;flex-shrink:0;
+      display:inline-block;
+    }
+    #mob-legend-bar .mob-legend-strip{gap:3px 5px;justify-content:center;}
+    #console-controls{
+      display:flex;flex-direction:column;gap:2px;
+      padding:2px 6px 3px;flex-shrink:0;
+    }
+    #console-controls .console-legend-row{display:none!important;}
+    #console-controls .console-range-row{order:1;}
+    #console-controls .console-speed-row{order:2;}
+    #console-controls .console-row{
+      flex-direction:row;align-items:center;gap:3px;
+    }
+    #console-controls .ctrl-group-lbl{
+      width:40px;flex-shrink:0;font-size:5.5px;letter-spacing:0.2px;
+      color:var(--accent);line-height:1.1;padding:0;
+    }
+    #console-controls .ctrl-chip-strip{
+      flex:1;min-width:0;display:flex;flex-wrap:wrap;gap:2px;
+      align-content:flex-start;
+    }
+    #console-controls .pill-btn{
+      padding:1px 3px;font-size:5px;min-height:14px;line-height:1;
+      border-radius:2px;
+    }
+    #replay-bar{
+      padding:4px 10px;gap:5px;
+      max-width:min(calc(100% - 16px),340px);
+      bottom:10px;
+    }
+    .replay-ctrl-btn{width:26px;height:26px;}
+    #replay-clock{font-size:7px;min-width:0;flex:1;max-width:200px;overflow:hidden;text-overflow:ellipsis;}
+    #mode-live-btn{font-size:7px;padding:2px 8px;}
+    #zoom-ctrl{bottom:auto;top:26px;left:6px;}
+    #zoom-level{left:44px;top:26px;bottom:auto;font-size:7px;}
+    #zoom-prefs-panel{bottom:auto;top:60px;left:6px;max-width:calc(100vw - 12px);}
+    .zoom-btn{width:28px;height:28px;font-size:14px;}
+  }
+  @media(max-width:480px){
+    #mob-sheet{height:min(54vh,380px);max-height:min(58vh,400px);}
+    #console-controls .ctrl-group-lbl{width:42px;font-size:5.5px;}
+    #console-controls .pill-btn{font-size:5px;min-height:15px;padding:2px 3px;}
+    #replay-bar{max-width:calc(100% - 12px);}
+    #replay-clock{display:none;}
+    #mode-live-btn{margin-left:auto;}
+  }
+  /* Tablet Querformat / kleines Desktop-Fenster */
+  @media(min-width:901px) and (max-width:1200px){
+    #sidebar{width:clamp(170px,22vw,220px);}
+    #sidebar-stats{padding:4px 8px;}
+    .stat-val{font-size:clamp(9px,1.1vw,12px);}
+    #toggle-row{flex-wrap:wrap;gap:4px;}
+    #theme-row{flex-wrap:wrap;}
+    #map-console-bar{font-size:8px;}
+    .ctrl-speed .pill-btn,.ctrl-range .pill-btn{padding:2px 5px;font-size:6px;}
+    #footer-stats{gap:8px;padding:4px 8px;flex-wrap:wrap;}
+    .fstat{font-size:8px;}
+    #map-panels-left{max-width:175px;}
+    .map-panel{min-width:118px;max-width:168px;font-size:8px;padding:6px 8px;}
+    #feed-search{font-size:9px;}
+    .feed-item{padding:6px 8px;}
   }
   @media(max-height:500px) and (orientation:landscape){
     #mob-sheet{display:none!important;}
     #sidebar{display:flex!important;}
-    #layout{bottom:0;}
+    #layout{bottom:0!important;}
+    #map-panels-left{display:none;}
+    #map-window-stats{display:block!important;}
   }
 </style>
 </head>
 <body>
 <div id="grid-bg"></div>
-<div id="loading"><div class="loader"></div><h2>INITIALIZING</h2><p id="ls">CONNECTING...</p></div>
+<div id="loading"><div class="loader"></div><h2 id="load-title">INITIALIZING</h2><p id="ls">CONNECTING...</p></div>
 <div id="err"></div>
 
 <div id="ctx-menu">
@@ -364,14 +690,7 @@
   <a class="ctx-item" id="c-crim"   target="_blank"><span class="ctx-icon">⚠️</span>Criminal IP</a>
   <div id="ctx-close">✕ SCHLIESSEN</div>
 </div>
-<div id="tip"></div>
-
-<!-- Map overlay title (always visible, centered on map) -->
-<div id="map-title-overlay">
-  <span id="h-title">CROWD<span>SEC</span> // THREAT MAP</span>
-  <span id="map-version-badge">v1.4.2</span>
-</div>
-<!-- hidden lang refs removed - sidebar has the real IDs -->
+<div id="tip"><button type="button" id="tip-close" title="Close" aria-label="Close">✕</button><div id="tip-content"></div></div>
 
 <!-- MOBILE HEADER (kept for CSS, IDs moved to mob-sheet) -->
 <header id="mob-header" class="mob-header" style="display:none!important;"></header>
@@ -379,22 +698,113 @@
 <div id="layout">
   <div id="map-col">
     <div id="map-wrap">
+      <div id="map-title-overlay">
+        <span id="h-title">CROWD<span>SEC</span> // THREAT MAP</span>
+        <span id="map-version-badge">v1.6.8</span>
+      </div>
       <svg id="base-svg" style="position:absolute;inset:0;width:100%;height:100%"></svg>
       <canvas id="arc-canvas"></canvas>
+      <div id="flight-labels-layer"></div>
+      <div id="map-panels-left">
+        <div id="panel-scenarios" class="map-panel"><h4 id="lbl-top-scenarios">TOP SCENARIOS</h4><div id="panel-scenarios-body"></div></div>
+        <div id="panel-ips" class="map-panel"><h4 id="lbl-malevolent-ips">MALEVOLENT IPS</h4><div id="panel-ips-body"></div></div>
+        <div id="panel-origins" class="map-panel"><h4 id="lbl-top-origins">TOP ATTACK ORIGINS</h4><div id="panel-origins-body"></div></div>
+      </div>
+      <div id="replay-bar" class="is-replay">
+        <button type="button" id="replay-play-btn" class="replay-ctrl-btn" title="Wiedergabe starten" aria-label="Play"></button>
+        <button type="button" id="replay-stop-btn" class="replay-ctrl-btn" title="Wiedergabe stoppen" aria-label="Stop"></button>
+        <span id="replay-clock">—</span>
+        <button type="button" id="mode-live-btn" title="Live-Feed (Echtzeit)">LIVE</button>
+      </div>
       <div id="zoom-ctrl">
         <div class="zoom-btn" id="bzi">+</div>
         <div class="zoom-btn" id="bzo">−</div>
         <div class="zoom-btn" id="bzr" style="font-size:12px">⌂</div>
+        <div class="zoom-btn" id="bzp" style="font-size:11px" title="Karten-Zoom speichern">💾</div>
+      </div>
+      <div id="zoom-prefs-panel" aria-hidden="true">
+        <label><input type="checkbox" id="zoom-prefs-use-saved"> <span id="zoom-prefs-use-lbl">Beim Laden gespeicherte Ansicht</span></label>
+        <div class="zoom-prefs-row">
+          <button type="button" class="zoom-prefs-btn" id="zoom-prefs-save">Ansicht speichern</button>
+          <button type="button" class="zoom-prefs-btn" id="zoom-prefs-reset">Zurücksetzen</button>
+        </div>
+        <div>
+          <span id="zoom-prefs-home-lbl">Standard-Zoom (⌂):</span>
+          <input type="range" id="zoom-prefs-home-k" min="0.5" max="8" step="0.1" value="1.1">
+          <span id="zoom-prefs-home-val">1.1×</span>
+        </div>
+        <div id="zoom-prefs-status">—</div>
       </div>
       <div id="zoom-level">ZOOM 1×</div>
     </div>
-    <div id="legend">
-      <div class="leg-item"><div class="leg-dot" style="background:#00ff88"></div><span class="leg-label">1–4 ANGRIFFE</span></div>
-      <div class="leg-item"><div class="leg-dot" style="background:#ffff00"></div><span class="leg-label">5–9 ANGRIFFE</span></div>
-      <div class="leg-item"><div class="leg-dot" style="background:#ff8800"></div><span class="leg-label">10–19 ANGRIFFE</span></div>
-      <div class="leg-item"><div class="leg-dot" style="background:#ff2244"></div><span class="leg-label">20+ ANGRIFFE</span></div>
-      <div class="leg-item"><div class="leg-dot" style="background:#00aaff;border:2px solid #fff"></div><span class="leg-label">SERVER</span></div>
-      <span id="leg-hint">| KLICK AUF PUNKT = DETAILS</span>
+    <div id="map-console-bar">
+      <div id="timeline-wrap"><input type="range" id="replay-slider" min="0" max="1000" value="0"></div>
+      <div id="timeline-labels"><span id="tl-start">—</span><span id="tl-end">—</span></div>
+      <div id="map-window-stats">
+        <div class="map-window-stats-title" id="mws-title-lbl">ZEITFENSTER · KARTE</div>
+        <div class="map-window-stats-grid">
+          <div class="mws-item"><span class="mws-val" id="mws-alerts">—</span><span class="mws-lbl" id="mws-alerts-lbl">MELDUNGEN</span></div>
+          <div class="mws-item"><span class="mws-val" id="mws-ips">—</span><span class="mws-lbl" id="mws-ips-lbl">IPS</span></div>
+          <div class="mws-item"><span class="mws-val" id="mws-scenarios">—</span><span class="mws-lbl" id="mws-scn-lbl">SZENARIEN</span></div>
+          <div class="mws-item"><span class="mws-val" id="mws-countries">—</span><span class="mws-lbl" id="mws-ctry-lbl">LÄNDER</span></div>
+        </div>
+      </div>
+      <div id="map-mob-controls" aria-label="Karten-Steuerung">
+        <div id="mob-lines-toggle" class="mob-ctrl-pill on" onclick="toggleLines()">
+          <div id="mob-lines-dot" class="mob-ctrl-pill-dot"></div>
+          <span id="mob-lines-label">ANGRIFFE</span>
+        </div>
+        <div id="mob-anim-toggle" class="mob-ctrl-pill on" onclick="toggleAnim()">
+          <div id="mob-anim-dot" class="mob-ctrl-pill-dot"></div>
+          <span id="mob-anim-label">ANIMATION</span>
+        </div>
+        <div id="mob-autozoom-toggle" class="mob-ctrl-pill off" onclick="toggleAutoZoom()">
+          <div id="mob-autozoom-dot" class="mob-ctrl-pill-dot"></div>
+          <span id="mob-autozoom-label">AUTO-ZOOM</span>
+        </div>
+      </div>
+      <div id="mob-legend-bar" class="mob-legend-bar" aria-label="Legende">
+        <div id="threat-legend-mob" class="mob-legend-strip"></div>
+      </div>
+      <div id="console-controls">
+        <div class="console-row console-speed-row">
+          <span class="ctrl-group-lbl" id="lbl-speed">SPEED</span>
+          <div class="ctrl-chip-strip ctrl-speed-strip">
+            <button type="button" class="pill-btn" data-speed="0.25">0.25×</button>
+            <button type="button" class="pill-btn" data-speed="0.5">0.5×</button>
+            <button type="button" class="pill-btn active" data-speed="1">1×</button>
+            <button type="button" class="pill-btn" data-speed="1.5">1.5×</button>
+            <button type="button" class="pill-btn" data-speed="2">2×</button>
+            <button type="button" class="pill-btn" data-speed="3">3×</button>
+            <button type="button" class="pill-btn" data-speed="4">4×</button>
+          </div>
+        </div>
+        <div class="console-row console-range-row">
+          <span class="ctrl-group-lbl" id="lbl-range">RANGE</span>
+          <div class="ctrl-chip-strip ctrl-range-strip">
+            <button type="button" class="pill-btn" data-range="24">24H</button>
+            <button type="button" class="pill-btn active" data-range="48">48H</button>
+            <button type="button" class="pill-btn" data-range="168">7T</button>
+            <button type="button" class="pill-btn" data-range="720">1M</button>
+            <button type="button" class="pill-btn" data-range="4320">6M</button>
+            <button type="button" class="pill-btn" data-range="8760">12M</button>
+            <button type="button" class="pill-btn" data-range="17520">2J</button>
+            <button type="button" class="pill-btn" data-range="26280">3J</button>
+            <button type="button" class="pill-btn" data-range="35040">4J</button>
+            <button type="button" class="pill-btn" data-range="43800">5J</button>
+            <button type="button" class="pill-btn" data-range="52560">6J</button>
+          </div>
+        </div>
+        <div class="console-row console-legend-row">
+          <div id="threat-legend" class="ctrl-chip-strip console-legend-strip"></div>
+        </div>
+      </div>
+      <div id="footer-stats">
+        <div class="fstat"><span>🔴</span><span class="fstat-val" id="fs-alerts">—</span><span class="fstat-lbl" id="fs-alerts-lbl">ALERTS</span></div>
+        <div class="fstat"><span>🟡</span><span class="fstat-val" id="fs-ips">—</span><span class="fstat-lbl" id="fs-ips-lbl">UNIQUE IPS</span></div>
+        <div class="fstat"><span>🔵</span><span class="fstat-val" id="fs-scenarios">—</span><span class="fstat-lbl" id="fs-scn-lbl">SCENARIOS</span></div>
+        <div class="fstat"><span>🟢</span><span class="fstat-val" id="fs-countries">—</span><span class="fstat-lbl" id="fs-ctry-lbl">COUNTRIES</span></div>
+      </div>
     </div>
   </div>
 
@@ -402,19 +812,32 @@
     <!-- Sidebar top toolbar: stats + controls -->
     <div id="sidebar-toolbar">
       <div id="sidebar-stats">
-        <div class="sb-stat"><span class="stat-val" id="s-total">—</span><span class="stat-lbl" id="s-attacks-lbl">ANGRIFFE</span></div>
-        <div class="sb-stat"><span class="stat-val" id="s-countries">—</span><span class="stat-lbl" id="s-countries-lbl">LÄNDER</span></div>
-        <div class="sb-stat" id="s-scenarios-wrap"><span class="stat-val" id="s-scenarios">—</span><span class="stat-lbl" id="s-scenarios-lbl">SZENARIEN</span></div>
+        <div class="sb-stat">
+          <span class="stat-val" id="s-total">—</span>
+          <span class="stat-lbl" id="s-attacks-lbl">ANGRIFFE</span>
+        </div>
+        <div class="sb-stat">
+          <span class="stat-val" id="s-countries">—</span>
+          <span class="stat-lbl" id="s-countries-lbl">LÄNDER</span>
+        </div>
+        <div class="sb-stat" id="s-scenarios-wrap">
+          <span class="stat-val" id="s-scenarios">—</span>
+          <span class="stat-lbl" id="s-scenarios-lbl">SZENARIEN</span>
+        </div>
         <div class="sb-stat"><span class="stat-val blink" style="color:var(--ok)">●</span><span class="stat-lbl" id="s-live-lbl">LIVE</span></div>
       </div>
       <div id="toggle-row">
-        <div id="lines-toggle" onclick="toggleLines()" title="Linien/Pfeile ein- oder ausblenden" class="on">
-          <div id="lines-dot"></div>
-          <span id="lines-label">LINIEN</span>
-        </div>
-        <div id="anim-toggle" onclick="toggleAnim()" title="Animation ein/ausschalten">
+        <div id="anim-toggle" onclick="toggleAnim()" title="Animierte Karte (Replay/Live) vs. statische Heatmap" class="on">
           <div id="anim-dot"></div>
           <span id="anim-label">ANIMATION</span>
+        </div>
+        <div id="lines-toggle" onclick="toggleLines()" title="Angriffe auf der Karte ein/aus" class="on">
+          <div id="lines-dot"></div>
+          <span id="lines-label">ANGRIFFE</span>
+        </div>
+        <div id="autozoom-toggle" class="off" onclick="toggleAutoZoom()" title="Bei Angriff automatisch in die Region zoomen" aria-pressed="false">
+          <div id="autozoom-dot"></div>
+          <span id="autozoom-label">AUTO-ZOOM AUS</span>
         </div>
       </div>
       <!-- Theme row: separate line below controls -->
@@ -459,90 +882,93 @@
     </div>
     <div class="tab-content" id="tc-top10"><div id="top10"></div></div>
     <div class="tab-content" id="tc-topall"><div id="topall"></div></div>
-    <div id="sidebar-bottom">MEIN-SERVER &nbsp;|&nbsp; <span id="lu">—</span><br>
+    <div id="sidebar-bottom"><span id="sidebar-server-lbl">MEIN-SERVER</span> &nbsp;|&nbsp; <span id="lu">—</span><br>
       <div id="wl-badge" style="margin:4px 0 3px;display:flex;align-items:center;gap:5px;font-size:8px;letter-spacing:0.5px;">
         <span id="wl-dot" style="width:6px;height:6px;border-radius:50%;background:rgba(160,255,216,0.2);flex-shrink:0;display:inline-block;"></span>
         <span id="wl-text" style="color:rgba(160,255,216,0.3);">Whitelist: —</span>
       </div>
-      <a href="https://github.com/kabelsalatundklartext/crowdsec-threat-map" target="_blank" style="color:rgba(0,255,200,0.35);font-size:8px;text-decoration:none;letter-spacing:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;max-width:100%;" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='rgba(0,255,200,0.35)'">⭐ GitHub: crowdsec-threat-map</a></div>
+      <div class="wl-ip-privacy">
+        <button type="button" id="wl-ip-toggle" class="wl-ip-toggle on" aria-pressed="true" title="Eigene IP in der Ecke ein-/ausblenden">
+          <span class="wl-ip-toggle-dot"></span>
+          <span class="wl-ip-toggle-lbl">EIGENE IP AN</span>
+        </button>
+      </div>
+      <a href="https://github.com/kabelsalatundklartext/crowdsec-threat-map-docker" target="_blank" style="color:rgba(0,255,200,0.35);font-size:8px;text-decoration:none;letter-spacing:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;max-width:100%;" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='rgba(0,255,200,0.35)'">⭐ GitHub: crowdsec-threat-map-docker</a></div>
   </aside>
 </div>
 
 <div id="mob-sheet">
-  <!-- Mobile tab bar -->
-  <div id="mob-tab-btns">
-    <div class="mob-tab-btn active" data-mob="feed">▶ FEED</div>
-    <div class="mob-tab-btn" data-mob="top10">🏆 TOP 10</div>
-    <div class="mob-tab-btn" data-mob="topall">🌍 ALLE</div>
-    <!-- Controls inline in tab bar -->
-    <div style="display:flex;align-items:center;gap:4px;margin-left:auto;padding-right:6px;flex-shrink:0;">
-
-      <div id="mob-lines-toggle" onclick="toggleLines()" style="display:flex;align-items:center;gap:3px;background:rgba(0,255,200,0.08);border:1px solid rgba(0,255,200,0.35);border-radius:3px;padding:2px 4px;cursor:pointer;font-family:'Share Tech Mono',monospace;font-size:7px;color:rgba(0,255,200,0.8);white-space:nowrap;">
-        <div id="mob-lines-dot" style="width:5px;height:5px;border-radius:50%;background:var(--ok);box-shadow:0 0 5px var(--ok);flex-shrink:0;"></div>
-        <span id="mob-lines-label">LINIEN</span>
+  <div id="mob-data-panel">
+  <div id="mob-gesamt-bar">
+    <div class="mob-stats-block mob-stats-alltime">
+      <div class="mob-stats-block-title" id="mob-lbl-alltime">GESAMT (ALLTIME)</div>
+      <div class="mob-stats-items">
+        <div class="mob-stat-item"><span class="mob-stat-val" id="mob-s-total">—</span><span class="mob-stat-lbl" id="mob-attacks-lbl">ANGRIFFE</span></div>
+        <div class="mob-stat-item"><span class="mob-stat-val" id="mob-s-countries">—</span><span class="mob-stat-lbl" id="mob-countries-lbl">LÄNDER</span></div>
+        <div class="mob-stat-item"><span class="mob-stat-val" id="mob-s-scenarios">—</span><span class="mob-stat-lbl" id="mob-scenarios-lbl">SZENARIEN</span></div>
       </div>
-      <div id="mob-anim-toggle" onclick="toggleAnim()" style="display:flex;align-items:center;gap:3px;background:transparent;border:1px solid rgba(0,255,200,0.2);border-radius:3px;padding:2px 4px;cursor:pointer;font-family:'Share Tech Mono',monospace;font-size:7px;color:rgba(160,255,216,0.45);white-space:nowrap;">
-        <div id="mob-anim-dot" style="width:5px;height:5px;border-radius:50%;background:rgba(160,255,216,0.3);flex-shrink:0;"></div>
-        <span id="mob-anim-label">ANIMATION</span>
+    </div>
+    <div class="mob-stats-meta">
+      <div class="mob-stats-meta-left">
+        <span class="mob-stat-val blink" style="color:var(--ok);font-size:9px;">●</span>
+        <span class="mob-stat-lbl" id="mob-live-lbl">LIVE</span>
+        <span class="mob-stat-lbl"><span id="mob-lu">—</span></span>
+        <div id="mob-wl-badge" style="display:flex;align-items:center;gap:3px;" title="Whitelist Status">
+          <span id="mob-wl-dot" style="width:6px;height:6px;border-radius:50%;background:rgba(160,255,216,0.2);flex-shrink:0;"></span>
+          <span id="mob-wl-text" style="font-size:7px;color:rgba(160,255,216,0.3);white-space:nowrap;max-width:120px;overflow:hidden;text-overflow:ellipsis;">🛡️ —</span>
+        </div>
+        <button type="button" id="mob-wl-ip-toggle" class="wl-ip-toggle on" aria-pressed="true">
+          <span class="wl-ip-toggle-dot"></span>
+          <span class="wl-ip-toggle-lbl">IP AN</span>
+        </button>
+      </div>
+      <div class="mob-stats-meta-right">
+        <div class="mob-theme-dot" onclick="setTheme('cyan')" id="mob-t-cyan" style="width:9px;height:9px;border-radius:50%;background:#00ffe0;cursor:pointer;border:1px solid transparent;"></div>
+        <div class="mob-theme-dot" onclick="setTheme('red')" id="mob-t-red" style="width:9px;height:9px;border-radius:50%;background:#ff2244;cursor:pointer;border:1px solid transparent;"></div>
+        <div class="mob-theme-dot" onclick="setTheme('matrix')" id="mob-t-matrix" style="width:9px;height:9px;border-radius:50%;background:#00ff88;cursor:pointer;border:1px solid transparent;"></div>
+        <div class="mob-theme-dot" onclick="setTheme('amber')" id="mob-t-amber" style="width:9px;height:9px;border-radius:50%;background:#ffaa00;cursor:pointer;border:1px solid transparent;"></div>
+        <button class="ctrl-btn csv-feed-btn" onclick="exportCSV()" style="padding:2px 5px;font-size:8px;">↓ CSV</button>
+        <a href="https://github.com/kabelsalatundklartext/crowdsec-threat-map-docker" target="_blank" style="color:rgba(0,255,200,0.4);font-size:8px;text-decoration:none;">⭐</a>
       </div>
     </div>
   </div>
-
-  <!-- Mobile stats + controls bar -->
-  <div id="mob-stats-bar">
-    <div style="display:flex;gap:12px;align-items:center;">
-      <div style="display:flex;flex-direction:column;align-items:center;">
-        <span style="font-family:'Orbitron',monospace;font-size:11px;font-weight:700;color:var(--accent);line-height:1;" id="mob-s-total">—</span>
-        <span style="font-size:6px;color:rgba(160,255,216,0.4);letter-spacing:1px;" id="mob-attacks-lbl">ANGRIFFE</span>
-      </div>
-      <div style="display:flex;flex-direction:column;align-items:center;">
-        <span style="font-family:'Orbitron',monospace;font-size:11px;font-weight:700;color:var(--accent);line-height:1;" id="mob-s-countries">—</span>
-        <span style="font-size:6px;color:rgba(160,255,216,0.4);letter-spacing:1px;" id="mob-countries-lbl">LÄNDER</span>
-      </div>
-      <span style="font-family:'Orbitron',monospace;font-size:11px;font-weight:700;color:var(--ok);" class="blink">●</span>
-      <span style="font-size:7px;color:rgba(160,255,216,0.3);letter-spacing:0.5px;"><span id="mob-lu">—</span></span>
-      <!-- Whitelist Badge Mobile -->
-      <div id="mob-wl-badge" style="display:flex;align-items:center;gap:3px;" title="Whitelist Status">
-        <span id="mob-wl-dot" style="width:6px;height:6px;border-radius:50%;background:rgba(160,255,216,0.2);flex-shrink:0;display:inline-block;"></span>
-        <span id="mob-wl-text" style="font-size:7px;color:rgba(160,255,216,0.3);letter-spacing:0.5px;white-space:nowrap;">🛡️ —</span>
-      </div>
-    </div>
-    <div style="display:flex;align-items:center;gap:4px;flex-shrink:0;">
-      <!-- Mobile theme dots -->
-      <div style="width:9px;height:9px;border-radius:50%;background:#00ffe0;cursor:pointer;border:1px solid transparent;" class="mob-theme-dot" onclick="setTheme('cyan')" id="mob-t-cyan"></div>
-      <div style="width:9px;height:9px;border-radius:50%;background:#ff2244;cursor:pointer;border:1px solid transparent;" class="mob-theme-dot" onclick="setTheme('red')" id="mob-t-red"></div>
-      <div style="width:9px;height:9px;border-radius:50%;background:#00ff88;cursor:pointer;border:1px solid transparent;" class="mob-theme-dot" onclick="setTheme('matrix')" id="mob-t-matrix"></div>
-      <div style="width:9px;height:9px;border-radius:50%;background:#ffaa00;cursor:pointer;border:1px solid transparent;" class="mob-theme-dot" onclick="setTheme('amber')" id="mob-t-amber"></div>
-      <button class="ctrl-btn" onclick="exportCSV()" style="padding:2px 5px;font-size:8px;">↓CSV</button>
-      <a href="https://github.com/kabelsalatundklartext/crowdsec-threat-map" target="_blank" style="color:rgba(0,255,200,0.4);font-size:8px;text-decoration:none;">⭐</a>
-    </div>
-  </div>
-
-  <!-- Mobile panel content -->
+  <nav id="mob-tab-btns" aria-label="Feed navigation">
+    <button type="button" class="mob-tab-btn active" data-mob="feed">▶ FEED</button>
+    <button type="button" class="mob-tab-btn" data-mob="top10">🏆 TOP 10</button>
+    <button type="button" class="mob-tab-btn" data-mob="topall">🌍 ALLE</button>
+  </nav>
   <div id="mob-panel">
-    <!-- Sparkline mobile -->
-    <div id="mob-sparkline-wrap" style="padding:4px 10px 3px;border-bottom:1px solid var(--dim);background:rgba(0,5,15,0.7);">
-      <svg id="mob-sparkline-svg" style="width:100%;height:28px;display:block;"></svg>
-    </div>
-    <!-- Filter bar mobile -->
-    <div id="mob-filter-bar" style="display:flex;flex-wrap:wrap;gap:3px;padding:3px 8px;background:rgba(0,5,15,0.7);min-height:0;"></div>
-    <!-- Search mobile -->
-    <div style="padding:4px 8px;border-bottom:1px solid var(--dim);background:rgba(0,5,15,0.8);">
-      <input id="mob-feed-search" type="text" placeholder="🔍  IP, LAND, SZENARIO..." oninput="onMobFeedSearch()" style="width:100%;background:rgba(0,20,40,0.8);border:1px solid var(--dim);border-radius:3px;color:var(--text);font-family:'Share Tech Mono',monospace;font-size:10px;padding:5px 8px;letter-spacing:0.5px;outline:none;">
-    </div>
-    <!-- Sort -->
-    <div id="mob-feed-filter" style="display:flex;align-items:center;justify-content:space-between;padding:5px 10px;border-bottom:1px solid var(--dim);background:rgba(0,5,15,0.8);gap:6px;">
-      <span class="sort-lbl" style="font-size:8px;color:rgba(160,255,216,0.4);letter-spacing:1px;">SORTIERUNG:</span>
-      <div style="display:flex;gap:4px;">
-        <button class="fsort-btn active" id="mob-fsort-new" onclick="setFeedSort('newest')">▼ NEU</button>
-        <button class="fsort-btn" id="mob-fsort-old" onclick="setFeedSort('oldest')">▲ ALT</button>
+    <div id="mob-view-feed" class="mob-panel-view active">
+      <div id="mob-sparkline-wrap" style="padding:4px 10px 3px;border-bottom:1px solid var(--dim);background:rgba(0,5,15,0.7);flex-shrink:0;">
+        <div id="mob-sparkline-title" style="font-size:7px;color:rgba(160,255,216,0.35);letter-spacing:1px;margin-bottom:2px;">ANGRIFFE / STUNDE</div>
+        <svg id="mob-sparkline-svg" style="width:100%;height:28px;display:block;"></svg>
       </div>
+      <div id="mob-filter-bar" style="display:flex;flex-wrap:wrap;gap:3px;padding:3px 8px;background:rgba(0,5,15,0.7);flex-shrink:0;"></div>
+      <div style="padding:4px 8px;border-bottom:1px solid var(--dim);background:rgba(0,5,15,0.8);flex-shrink:0;">
+        <input id="mob-feed-search" type="text" placeholder="🔍  IP, LAND, SZENARIO..." oninput="onMobFeedSearch()" style="width:100%;background:rgba(0,20,40,0.8);border:1px solid var(--dim);border-radius:3px;color:var(--text);font-family:'Share Tech Mono',monospace;font-size:10px;padding:5px 8px;letter-spacing:0.5px;outline:none;">
+      </div>
+      <div id="mob-feed-filter" style="display:flex;align-items:center;justify-content:space-between;padding:5px 10px;border-bottom:1px solid var(--dim);background:rgba(0,5,15,0.8);gap:6px;flex-shrink:0;">
+        <span class="sort-lbl" style="font-size:8px;color:rgba(160,255,216,0.4);letter-spacing:1px;">SORTIERUNG:</span>
+        <div style="display:flex;gap:4px;">
+          <button class="fsort-btn active" id="mob-fsort-new" onclick="setFeedSort('newest')">▼ NEU</button>
+          <button class="fsort-btn" id="mob-fsort-old" onclick="setFeedSort('oldest')">▲ ALT</button>
+        </div>
+      </div>
+      <div id="mob-feed-info" style="font-size:8px;color:rgba(160,255,216,0.3);letter-spacing:1px;text-align:center;padding:3px 8px 0;flex-shrink:0;"></div>
+      <div class="mob-panel-scroll">
+        <div id="mob-feed"></div>
+      </div>
+      <div id="mob-feed-pages" style="display:flex;align-items:center;justify-content:center;gap:4px;padding:6px 8px;border-top:1px solid var(--dim);background:rgba(0,5,15,0.9);flex-wrap:wrap;flex-shrink:0;"></div>
     </div>
-    <div id="mob-feed-info" style="font-size:8px;color:rgba(160,255,216,0.3);letter-spacing:1px;text-align:center;padding:3px 8px 0;"></div>
-    <div id="mob-feed"></div>
-    <div id="mob-feed-pages" style="display:flex;align-items:center;justify-content:center;gap:4px;padding:6px 8px;border-top:1px solid var(--dim);background:rgba(0,5,15,0.9);flex-wrap:wrap;"></div>
-    <div id="mob-top10" style="display:none"></div>
-    <div id="mob-topall" style="display:none"></div>
+    <div id="mob-view-top10" class="mob-panel-view">
+      <div class="mob-panel-tab-hdr">🏆 TOP 10 · ALLTIME</div>
+      <div class="mob-panel-scroll" id="mob-top10"></div>
+    </div>
+    <div id="mob-view-topall" class="mob-panel-view">
+      <div class="mob-panel-tab-hdr">🌍 ALLE LÄNDER · ALLTIME</div>
+      <div class="mob-panel-scroll" id="mob-topall"></div>
+    </div>
+  </div>
   </div>
 </div>
 
@@ -574,34 +1000,602 @@ const SERVER_NAME_MAP = 'MEIN-SERVER';
 // Ab hier nichts mehr ändern
 // ============================================================
 
-const APP_VERSION  = 'v1.4.3';
-const REFRESH_MS   = 30000;  // Aktualisierung alle 30 Sekunden
-const localUnbanned = new Set(); // lokal entsperrte IPs
-const ARC_FPS      = 10;     // Frames/Sek für Animation
+const APP_VERSION  = 'v1.6.8';
+const REFRESH_MS   = 30000;
+const localUnbanned = new Set();
+const ARC_FPS      = 30;
+const REPLAY_PLAY_MS = 180000;      // Replay-Zeitraum bei 1× (~3 Min für 48h)
+const ROCKET_DURATION_MS = 4500;  // Dauer eines Raketenflugs bis Einschlag (langsamer, Console-nah)
+const CROWDSEC_ARC_COLOR = '#ff9a3c'; // Orange wie CrowdSec Console
+const FIT_ZOOM_BOOST = 1.55;      // für fitMapToPoints (alle Angriffe)
+const FIT_MIN_SCALE = 1.35;
+const HOME_ZOOM_K_DESKTOP = 1.1;  // Standard-Zoom (Console-Übersicht, Bild 2)
+const HOME_ZOOM_K_MOBILE = 1.0;
+const HOME_SCREEN_X_FRAC = 0.48;  // Server horizontal im sichtbaren Kartenbereich
+const HOME_SCREEN_Y_FRAC = 0.28;  // Server höher → Weltkarte füllt Bereich bis zum Logo
+const HOME_PROJ_Y_SHIFT = 0.11;   // Projektion nach oben
+const HOME_TY_NUDGE_PX = 42;      // zusätzlich Karte nach oben schieben
+const MAP_VIEW_STORAGE_KEY = 'csThreatMapViewPrefs';
+const SHOW_OWN_IP_STORAGE_KEY = 'csThreatMapShowOwnIp';
+const ZOOM_STEP = 0.1;          // +/- Buttons
+let mapViewPrefs={useSavedOnLoad:false,homeK:null,savedView:null};
+let lastAlertsTotal=null;
+let showOwnIp=true;
+let lastWhitelistData=null;
+const AUTO_ZOOM_MIN_MS = 2800;    // Abstand zwischen Auto-Zooms
+const AUTO_ZOOM_MAX_K = 5.5;      // Max. Zoom bei Einzelangriff
 
-// ── MOBILE LAYOUT SYNC ──
-// Run immediately: set layout bottom = mob-sheet height in exact pixels, no gap
-(function syncMobileLayout(){
-  if(window.innerWidth>680)return;
-  function doSync(){
-    const sh=document.getElementById('mob-sheet');
-    const lay=document.getElementById('layout');
-    if(!sh||!lay)return;
-    const h=sh.offsetHeight;
-    if(h>30){
-      lay.style.bottom=h+'px';
-    }else{
-      // mob-sheet not rendered yet — use pixel equivalent of 58vh
-      const px=Math.round(window.innerHeight*0.58);
-      sh.style.height=px+'px';
-      lay.style.bottom=px+'px';
+const THREAT_TYPES = {
+  cve:  { color:'#ff4400', labelDe:'CVE-Exploit', labelEn:'CVE Exploit' },
+  brute:{ color:'#ff6b9d', labelDe:'Brute-Force', labelEn:'Brute Force' },
+  recon:{ color:'#00cc66', labelDe:'Aufklärung', labelEn:'Reconnaissance' },
+  scan: { color:'#4488ff', labelDe:'Schwachstellen-Scan', labelEn:'Vulnerability Scan' },
+  other:{ color:'#888899', labelDe:'Sonstige', labelEn:'Other' },
+};
+function scenarioCategory(s){const x=(s||'').toLowerCase();if(/cve|exploit|sqli|rce|lfi|rfi/.test(x))return 'cve';if(/ssh|bf|brute|force|login|rdp/.test(x))return 'brute';if(/scan|probing|probe|discovery/.test(x))return 'scan';if(/http|sensitive|recon|path/.test(x))return 'recon';return 'other';}
+function scenarioColor(s){return THREAT_TYPES[scenarioCategory(s)]?.color||THREAT_TYPES.other.color;}
+function threatLabel(cat){const tr=THREAT_TYPES[cat];return tr?(currentLang==='de'?tr.labelDe:tr.labelEn):cat;}
+
+let allEvents=[],liveMode=false,replayPlaying=false,replayRangeH=48,replaySpeed=1;
+let replayCursor=0,replayWinStart=0,replayWinEnd=0,replayLastFrame=0,activeRockets=[],lastReplaySpawnTs=0;
+let lastMetricsText='',replayInitialized=false,replayAutoStarted=false;
+let countriesGeo=null;
+let lastRocketDrawTs=0;
+let lastLiveSeenKeys=new Set();
+let autoZoomOn=false;
+let lastAutoZoomTs=0;
+
+const ISO2_NUM={US:'840',CA:'124',MX:'484',BR:'76',AR:'32',GB:'826',DE:'276',FR:'250',NL:'528',BE:'56',ES:'724',IT:'380',PL:'616',RU:'643',UA:'804',CN:'156',IN:'356',JP:'392',KR:'410',AU:'36',ID:'360',SG:'702',HK:'344',TW:'158',TH:'764',VN:'704',MY:'458',PH:'608',PK:'586',IR:'364',IQ:'368',SA:'682',AE:'784',IL:'376',TR:'792',ZA:'710',NG:'566',EG:'818',RO:'642',CZ:'203',SE:'752',NO:'578',DK:'208',FI:'246',AT:'40',CH:'756',PT:'620',GR:'300',HU:'348',RS:'688',BG:'100',HR:'191',SK:'703',LT:'440',LV:'428',EE:'233',IE:'372',NZ:'554',CO:'170',CL:'152',VE:'862',EC:'218',PE:'604',KZ:'398',UZ:'860',BD:'50',NP:'524',MM:'104'};
+function hexToRgba(hex,a){const h=(hex||'#888').replace('#','');const n=parseInt(h.length===3?h.split('').map(c=>c+c).join(''):h,16);return`rgba(${(n>>16)&255},${(n>>8)&255},${n&255},${a})`;}
+function countryHeatFill(n,maxN){const r=n/Math.max(maxN,1);if(r>=0.45)return `rgba(220,40,70,${0.4+0.35*r})`;if(r>=0.15)return `rgba(160,90,220,${0.25+0.3*r})`;return `rgba(70,100,180,${0.2+0.2*r})`;}
+function countryStaticFill(cc,byCo,byCoCat,maxN){
+  const n=byCo[cc]||0;if(!n)return '#0a1a2e';
+  const r=n/Math.max(maxN,1);
+  const cat=byCoCat[cc]||'other';
+  const col=THREAT_TYPES[cat]?.color||THREAT_TYPES.other.color;
+  return hexToRgba(col,0.22+r*0.42);
+}
+function updateCountryFills(){
+  if(!mapG)return;
+  if(animOn){mapG.selectAll('.land').attr('fill','#0a1a2e');return;}
+  const events=liveMode?feedData:getEventsInReplay();
+  const byCo={},byCoCat={},catCount={};
+  events.forEach(e=>{
+    byCo[e.country]=(byCo[e.country]||0)+1;
+    const cat=scenarioCategory(e.scenario);
+    if(!catCount[e.country])catCount[e.country]={};
+    catCount[e.country][cat]=(catCount[e.country][cat]||0)+1;
+  });
+  Object.keys(catCount).forEach(cc=>{
+    byCoCat[cc]=Object.entries(catCount[cc]).sort((a,b)=>b[1]-a[1])[0]?.[0]||'other';
+  });
+  const maxC=Math.max(...Object.values(byCo),1);
+  mapG.selectAll('.land').attr('fill',function(d){
+    const id=String(d.id);
+    for(const cc in byCo){if(ISO2_NUM[cc]===id)return countryStaticFill(cc,byCo,byCoCat,maxC);}
+    return '#0a1a2e';
+  });
+}
+function labelPxToSvg(px){return px/Math.max(currentScale,0.15);}
+function countryLabelScreenPx(){
+  if(currentScale<1.15)return 0;
+  if(currentScale>=4)return 0;
+  if(currentScale<=1.3)return 13;
+  if(currentScale<=2.2)return 11;
+  return 10;
+}
+function cityLabelScreenPx(){
+  if(currentScale<2)return 0;
+  if(currentScale>=5)return 0;
+  return Math.min(12,Math.max(8,6+currentScale*0.55));
+}
+function clearArcCanvas(){ctx2d.clearRect(0,0,canvas.width,canvas.height);}
+
+function parseEventTime(iso){if(!iso)return 0;const s=iso.trim().replace(' ','T');const t=Date.parse(/[zZ]$/.test(s)?s:s+'Z');return isNaN(t)?0:t;}
+function fmtReplayClock(ts){return ts?new Date(ts).toLocaleString(currentLang==='de'?'de-DE':'en-GB',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit',second:'2-digit'}):'—';}
+function initReplayWindow(){const times=allEvents.map(e=>e.ts).filter(t=>t>0);if(!times.length)return;replayWinEnd=Math.max(...times);replayWinStart=Math.max(Math.min(...times),replayWinEnd-replayRangeH*3600000);replayCursor=replayWinStart;lastReplaySpawnTs=replayWinStart;activeRockets=[];updateReplaySlider();}
+function getEventsInReplay(){let list=allEvents.filter(e=>e.ts>=replayWinStart&&e.ts<=replayCursor);if(activeFilters.country)list=list.filter(d=>d.country===activeFilters.country);if(activeFilters.scenario)list=list.filter(d=>d.scenario===activeFilters.scenario);if(activeFilters.search){const q=activeFilters.search;list=list.filter(d=>(d.ip||'').includes(q)||(d.country||'').toLowerCase().includes(q)||(d.scenario||'').toLowerCase().includes(q));}return list;}
+function aggregateFromEvents(events){const by={};events.forEach(e=>{if(!e.lat&&!e.lon)return;const k=`${e.lat.toFixed(2)},${e.lon.toFixed(2)},${e.scenario}`;if(!by[k])by[k]={...e,count:0};by[k].count++;});return Object.values(by);}
+function getDisplayAttackData(){return liveMode?getFilteredAttackData():aggregateFromEvents(getEventsInReplay());}
+function buildThreatLegend(){
+  const html=Object.keys(THREAT_TYPES).map(k=>`<span class="threat-leg"><span class="threat-leg-dot" style="background:${THREAT_TYPES[k].color}"></span>${threatLabel(k)}</span>`).join('');
+  ['threat-legend','threat-legend-mob'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML=html;});
+}
+function getAlltimeFeedEvents(){
+  return feedData.length?feedData:allEvents;
+}
+function getAlltimeStats(){
+  const events=getAlltimeFeedEvents();
+  let attacks=lastAlertsTotal??'—';
+  if(attacks==='—'&&events.length)attacks=String(events.length);
+  return{
+    attacks,
+    countries:new Set(events.map(e=>e.country).filter(Boolean)).size,
+    scenarios:new Set(events.map(e=>e.scenario).filter(Boolean)).size,
+    uniqueIps:new Set(events.map(e=>e.ip).filter(Boolean)).size,
+  };
+}
+/** Länder-Ranking aus gesamtem Feed (Alltime), unabhängig vom Karten-Zeitfenster. */
+function getAlltimeCountryCounts(){
+  const byC={};
+  getAlltimeFeedEvents().forEach(e=>{
+    const cc=(e.country||'??').toUpperCase();
+    byC[cc]=(byC[cc]||0)+1;
+  });
+  return Object.entries(byC)
+    .map(([country,count])=>({country,count}))
+    .sort((a,b)=>b.count-a.count);
+}
+/** Events im gewählten Karten-Zeitfenster (ZEITRAUM + Replay-Position, ohne Feed-Filter). */
+function getMapWindowEvents(){
+  if(liveMode)return feedData.length?feedData:allEvents;
+  if(replayWinEnd<=replayWinStart)return [];
+  return allEvents.filter(e=>e.ts>=replayWinStart&&e.ts<=replayCursor);
+}
+function getMapWindowStats(){
+  const events=getMapWindowEvents();
+  return{
+    reports:events.length,
+    uniqueIps:new Set(events.map(e=>e.ip).filter(Boolean)).size,
+    scenarios:new Set(events.map(e=>e.scenario).filter(Boolean)).size,
+    countries:new Set(events.map(e=>e.country).filter(Boolean)).size,
+  };
+}
+function formatStatNumber(v){
+  const loc=currentLang==='de'?'de-DE':'en-US';
+  if(typeof v==='number')return v.toLocaleString(loc);
+  const n=parseInt(String(v).replace(/[^\d]/g,''),10);
+  return Number.isFinite(n)?n.toLocaleString(loc):v;
+}
+function updateSidebarStats(opts={}){
+  if(opts.totalAlerts!==undefined)lastAlertsTotal=opts.totalAlerts;
+  const s=getAlltimeStats();
+  const set=(id,val)=>{const el=document.getElementById(id);if(el)el.textContent=val;};
+  set('s-total',formatStatNumber(s.attacks));
+  set('s-countries',formatStatNumber(s.countries));
+  set('s-scenarios',formatStatNumber(s.scenarios));
+  set('mob-s-total',formatStatNumber(s.attacks));
+  set('mob-s-countries',formatStatNumber(s.countries));
+  set('mob-s-scenarios',formatStatNumber(s.scenarios));
+}
+function updateFooterStats(){
+  const w=getMapWindowStats();
+  const set=(id,val)=>{const el=document.getElementById(id);if(el)el.textContent=val;};
+  const reports=formatStatNumber(w.reports);
+  const ips=formatStatNumber(w.uniqueIps);
+  const scenarios=formatStatNumber(w.scenarios);
+  const countries=formatStatNumber(w.countries);
+  set('fs-alerts',reports);
+  set('fs-ips',ips);
+  set('fs-scenarios',scenarios);
+  set('fs-countries',countries);
+  set('mws-alerts',reports);
+  set('mws-ips',ips);
+  set('mws-scenarios',scenarios);
+  set('mws-countries',countries);
+}
+function renderMapPanels(){const events=liveMode?feedData:getEventsInReplay();const bySc={},byIp={},byCo={};events.forEach(e=>{bySc[e.scenario]=(bySc[e.scenario]||0)+1;byIp[e.ip]=(byIp[e.ip]||0)+1;byCo[e.country]=(byCo[e.country]||0)+1;});const row=(c,l,v)=>`<div class="map-panel-row"><span class="map-panel-dot" style="background:${c}"></span><span class="map-panel-label">${l}</span><span class="map-panel-val">${v}</span></div>`;document.getElementById('panel-scenarios-body').innerHTML=Object.entries(bySc).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([s,n])=>row(scenarioColor(s),s,n)).join('')||'—';document.getElementById('panel-ips-body').innerHTML=Object.entries(byIp).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([ip,n])=>{const c=events.find(e=>e.ip===ip)?.country||'??';return row(scenarioColor(events.find(e=>e.ip===ip)?.scenario),`${FLAG[c]||'🌐'} ${ip}`,n);}).join('')||'—';document.getElementById('panel-origins-body').innerHTML=Object.entries(byCo).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([cc,n],i)=>row('#888',`${i+1}. ${countryDisplayName(cc)}`,n)).join('')||'—';updateFooterStats();}
+function updateReplaySlider(){const sl=document.getElementById('replay-slider');if(!sl||replayWinEnd<=replayWinStart)return;sl.value=Math.round(1000*(replayCursor-replayWinStart)/(replayWinEnd-replayWinStart));document.getElementById('replay-clock').textContent=fmtReplayClock(replayCursor);document.getElementById('tl-start').textContent=fmtReplayClock(replayWinStart);document.getElementById('tl-end').textContent=fmtReplayClock(replayWinEnd);}
+function clearFlightLabels(){const layer=document.getElementById('flight-labels-layer');if(layer)layer.innerHTML='';}
+function escTag(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');}
+function flightTagText(r){
+  const cc=(r.country||'??').toUpperCase();
+  const cityRaw=r.city?translateCity(r.city):'';
+  const city=cityRaw.length>20?cityRaw.slice(0,18)+'…':cityRaw;
+  if(city)return `<span class="flight-tag-cc">${escTag(cc)}</span><span class="flight-tag-sep">·</span><span class="flight-tag-city">${escTag(city)}</span>`;
+  const short=countryDisplayName(cc);
+  return `<span class="flight-tag-city">${escTag(short)}</span>`;
+}
+const FLIGHT_LABEL_OFFSETS=[[0,-10],[0,-22],[0,-34],[14,-14],[-14,-14],[22,-26],[-22,-26],[0,-44],[28,-18],[-28,-18],[36,-32],[-36,-32]];
+function layoutFlightLabels(rockets,z){
+  const minDist=currentScale<1.5?44:32;
+  const maxN=currentScale<1.2?3:currentScale<2?5:8;
+  const ins=getMapChromeInsets();
+  const minX=ins.l+12;
+  const maxX=W-ins.r-72;
+  const minY=ins.t+8;
+  const maxY=H-ins.b-28;
+  const inChrome=(x,y)=>x<minX||x>maxX||y<minY||y>maxY;
+  const placed=[];
+  const out=[];
+  const seenIp=new Set();
+  const candidates=rockets.filter(r=>r.t>0.04&&r.t<0.97).sort((a,b)=>b.t-a.t);
+  for(const r of candidates){
+    if(out.length>=maxN)break;
+    if(seenIp.has(r.ip))continue;
+    const baseX=r.sx*z.k+z.x,baseY=r.sy*z.k+z.y;
+    const geoKey=`${Math.round(baseX/12)}_${Math.round(baseY/12)}`;
+    if(out.some(o=>o.geoKey===geoKey))continue;
+    let placedOne=false;
+    for(const[ox,oy]of FLIGHT_LABEL_OFFSETS){
+      const x=baseX+ox,y=baseY+oy;
+      if(inChrome(x,y))continue;
+      if(placed.every(p=>Math.hypot(p.x-x,p.y-y)>=minDist)){
+        placed.push({x,y});
+        seenIp.add(r.ip);
+        out.push({r,x,y,geoKey});
+        placedOne=true;
+        break;
+      }
+    }
+    if(!placedOne&&out.length<maxN){
+      let x=Math.max(minX,Math.min(maxX,baseX));
+      let y=Math.max(minY,Math.min(maxY,baseY-10));
+      if(inChrome(x,y)){x=Math.max(minX,baseX+ins.l*0.15);y=Math.max(minY,baseY-10);}
+      seenIp.add(r.ip);
+      out.push({r,x,y,geoKey});
+      placed.push({x,y});
     }
   }
-  doSync();
-  // Also sync after fonts/styles load
-  window.addEventListener('load',doSync);
-  setTimeout(doSync,100);
-  setTimeout(doSync,400);
+  return out;
+}
+function updateFlightLabels(rockets){
+  const layer=document.getElementById('flight-labels-layer');
+  if(!layer||!baseSvg)return;
+  layer.innerHTML='';
+  const z=d3.zoomTransform(baseSvg.node());
+  layoutFlightLabels(rockets,z).forEach(({r,x,y})=>{
+    const cc=r.country||'??';
+    const col=r.col||scenarioColor(r.scenario);
+    const city=r.city?translateCity(r.city):'';
+    const tip=city?`${cc} · ${city}`:(COUNTRY_NAME[cc]||cc);
+    const tag=document.createElement('div');
+    tag.className='flight-tag';
+    tag.style.left=x+'px';
+    tag.style.top=y+'px';
+    tag.style.setProperty('--tag-accent',col);
+    tag.title=tip;
+    tag.innerHTML=`<span class="flight-tag-flag">${FLAG[cc]||'🌐'}</span><span class="flight-tag-line">${flightTagText(r)}</span>`;
+    layer.appendChild(tag);
+  });
+}
+function spawnRocketForEvent(ev){
+  if(!animOn||!linesOn)return;
+  if(activeRockets.some(r=>r.ip===ev.ip&&r.t<1))return;
+  const [sx,sy]=proj([SERVER_LON,SERVER_LAT]);const pt=proj([ev.lon,ev.lat]);if(!pt)return;
+  const[px,py]=pt;const dx=sx-px,dy=sy-py,dist=Math.sqrt(dx*dx+dy*dy);
+  activeRockets.push({
+    ip:ev.ip,country:ev.country||'??',city:ev.city||'',scenario:ev.scenario,
+    sx:px,sy:py,ex:sx,ey:sy,
+    cpx:(px+sx)/2,cpy:(py+sy)/2-Math.min(dist*0.38,130),
+    col:scenarioColor(ev.scenario),t:0,
+  });
+  if(!animRAF)startAnimLoop();
+  if(autoZoomOn&&animOn&&!userHasZoomed){
+    const tsBefore=lastAutoZoomTs;
+    maybeAutoZoomToAttack(ev);
+    if(lastAutoZoomTs===tsBefore)nudgeAttackIntoView(ev.lon,ev.lat);
+  }
+}
+function mapPointScreen(lon,lat,z){
+  const pt=proj([lon,lat]);
+  if(!pt||!z)return null;
+  return{x:pt[0]*z.k+z.x,y:pt[1]*z.k+z.y};
+}
+function isScreenPointObscured(x,y){
+  const ins=getMapChromeInsets();
+  return x<ins.l+24||y<ins.t+16||x>W-ins.r-24||y>H-ins.b-28;
+}
+function nudgeAttackIntoView(lon,lat,opts={}){
+  if(!zoomBeh||!proj||lon==null||lat==null)return;
+  const z=d3.zoomTransform(baseSvg.node());
+  const scr=mapPointScreen(lon,lat,z);
+  if(!scr||!isScreenPointObscured(scr.x,scr.y))return;
+  const ins=getMapChromeInsets();
+  const visCx=ins.l+(W-ins.l-ins.r)/2;
+  const visCy=ins.t+(H-ins.t-ins.b)*0.45;
+  const tx=z.x+(visCx-scr.x);
+  const ty=z.y+(visCy-scr.y);
+  const t=d3.zoomIdentity.translate(tx,ty).scale(z.k);
+  fitTransform=t;
+  baseSvg.transition().duration(opts.duration||550).ease(d3.easeCubicInOut)
+    .call(zoomBeh.transform,t);
+}
+function maybeAutoZoomToAttack(ev){
+  if(!liveMode)return; // Replay soll Home-Übersicht nicht zerren
+  if(!autoZoomOn||userHasZoomed||!ev||ev.lon==null||ev.lat==null)return;
+  if(!animOn)return;
+  const now=Date.now();
+  if(now-lastAutoZoomTs<AUTO_ZOOM_MIN_MS)return;
+  lastAutoZoomTs=now;
+  zoomToAttackPoint(ev.lon,ev.lat);
+}
+function zoomToAttackPoint(lon,lat,opts={}){
+  if(!zoomBeh||!proj)return;
+  const origin=proj([lon,lat]);
+  const srv=proj([SERVER_LON,SERVER_LAT]);
+  if(!origin)return;
+  const pts=srv&&opts.includeServer!==false?[origin,srv]:[origin];
+  const xs=pts.map(p=>p[0]),ys=pts.map(p=>p[1]);
+  let x0=Math.min(...xs),x1=Math.max(...xs),y0=Math.min(...ys),y1=Math.max(...ys);
+  const minSpan=45;
+  if(x1-x0<minSpan){const c=(x0+x1)/2;x0=c-minSpan/2;x1=c+minSpan/2;}
+  if(y1-y0<minSpan){const c=(y0+y1)/2;y0=c-minSpan/2;y1=c+minSpan/2;}
+  const ins=getMapChromeInsets();
+  const visW=W-ins.l-ins.r;
+  const visH=H-ins.t-ins.b;
+  const pad=opts.pad||(window.innerWidth<=680?32:48);
+  const rangeX=x1-x0||1,rangeY=y1-y0||1;
+  let k=Math.min((visW-pad*2)/rangeX,(visH-pad*2)/rangeY,AUTO_ZOOM_MAX_K);
+  k=Math.max(k,opts.minK||2.4);
+  const cx=(x0+x1)/2,cy=(y0+y1)/2;
+  const visCx=ins.l+visW/2;
+  const visCy=ins.t+visH*0.45;
+  const tx=visCx-cx*k;
+  const ty=visCy-cy*k;
+  const t=d3.zoomIdentity.translate(tx,ty).scale(k);
+  fitTransform=t;
+  baseSvg.transition().duration(opts.duration||750).ease(d3.easeCubicInOut)
+    .call(zoomBeh.transform,t);
+}
+function spawnLiveRocketsFromFeed(){
+  if(!liveMode||!animOn||!linesOn)return;
+  feedData.forEach(e=>{
+    const key=(e.ip||'')+'|'+(e.time_iso||'');
+    if(!key||lastLiveSeenKeys.has(key))return;
+    lastLiveSeenKeys.add(key);
+    spawnRocketForEvent(e);
+  });
+  if(lastLiveSeenKeys.size>8000){
+    const keep=new Set(feedData.slice(0,500).map(e=>(e.ip||'')+'|'+(e.time_iso||'')));
+    lastLiveSeenKeys=keep;
+  }
+}
+function quadPoint(p,t){const u=1-t;return{x:u*u*p.sx+2*u*t*p.cpx+t*t*p.ex,y:u*u*p.sy+2*u*t*p.cpy+t*t*p.ey};}
+function drawCrowdSecRockets(ts){
+  clearArcCanvas();
+  if(!animOn||!linesOn||!activeRockets.length){
+    clearFlightLabels();
+    return;
+  }
+  const now=typeof ts==='number'?ts:performance.now();
+  const dt=lastRocketDrawTs?Math.min(48,now-lastRocketDrawTs):16;
+  lastRocketDrawTs=now;
+  const rocketStep=(dt/ROCKET_DURATION_MS)*(liveMode?1:replaySpeed);
+  ctx2d.save();ctx2d.translate(currentTx,currentTy);ctx2d.scale(currentScale,currentScale);
+  const ik=1/currentScale;
+  activeRockets=activeRockets.filter(r=>{
+    r.t=Math.min(1,r.t+rocketStep);
+    const pt=quadPoint(r,r.t);
+    const col=r.col||scenarioColor(r.scenario);
+    if(r.t<1){
+      ctx2d.beginPath();ctx2d.strokeStyle=col;ctx2d.lineWidth=0.9*ik;ctx2d.globalAlpha=0.12;
+      ctx2d.moveTo(r.sx,r.sy);ctx2d.quadraticCurveTo(r.cpx,r.cpy,r.ex,r.ey);ctx2d.stroke();
+      const tTail=Math.max(0,r.t-0.06);
+      const pTail=quadPoint(r,tTail);
+      ctx2d.beginPath();ctx2d.strokeStyle=col;ctx2d.lineWidth=1.1*ik;ctx2d.globalAlpha=0.9;
+      ctx2d.moveTo(pTail.x,pTail.y);ctx2d.lineTo(pt.x,pt.y);ctx2d.stroke();
+      ctx2d.beginPath();ctx2d.fillStyle='#fff8f0';ctx2d.globalAlpha=0.95;
+      ctx2d.arc(pt.x,pt.y,2.2*ik,0,Math.PI*2);ctx2d.fill();
+    }
+    if(r.t>=0.92){
+      const flash=Math.min(1,(r.t-0.92)/0.08);
+      ctx2d.beginPath();ctx2d.fillStyle=col;ctx2d.globalAlpha=0.45*(1-flash);
+      ctx2d.arc(r.ex,r.ey,2.5*ik,0,Math.PI*2);ctx2d.fill();
+    }
+    return r.t<1.02;
+  });
+  updateFlightLabels(activeRockets);
+  ctx2d.globalAlpha=1;ctx2d.restore();
+}
+function drawReplayFrame(ts){drawCrowdSecRockets(ts);}
+function spawnRocketsForNewEvents(){
+  const filt=e=>{if(e.ts<=lastReplaySpawnTs||e.ts>replayCursor)return false;if(activeFilters.country&&e.country!==activeFilters.country)return false;if(activeFilters.scenario&&e.scenario!==activeFilters.scenario)return false;return true;};
+  const newEvts=allEvents.filter(filt).sort((a,b)=>a.ts-b.ts);
+  const seenIp=new Set();
+  newEvts.forEach(e=>{if(seenIp.has(e.ip))return;seenIp.add(e.ip);spawnRocketForEvent(e);});
+  lastReplaySpawnTs=replayCursor;
+}
+function advanceReplay(ts){
+  if(!replayLastFrame)replayLastFrame=ts;
+  const dt=ts-replayLastFrame;replayLastFrame=ts;
+  if(replayWinEnd<=replayWinStart)return;
+  replayCursor=Math.min(replayWinEnd,replayCursor+dt*(replayWinEnd-replayWinStart)/(REPLAY_PLAY_MS/replaySpeed));
+  if(animOn)spawnRocketsForNewEvents();
+  updateReplaySlider();
+  attackData=aggregateFromEvents(getEventsInReplay());
+  renderDots();renderMapPanels();updateCountryFills();
+  if(animOn)drawReplayFrame(ts);else clearArcCanvas();
+  if(replayCursor>=replayWinEnd){replayPlaying=false;updateReplayControlsUI();}
+}
+function refreshMapFromData(){
+  attackData=liveMode?parseMetrics(lastMetricsText):aggregateFromEvents(getEventsInReplay());
+  enrichAttackData();
+  buildArcPaths();
+  renderDots();
+  renderMapPanels();
+  updateCountryFills();
+  if(!animOn||!linesOn){clearArcCanvas();clearFlightLabels();return;}
+  if(liveMode)spawnLiveRocketsFromFeed();
+  if(animOn)startAnimLoop();
+  else clearArcCanvas();
+}
+function updateReplayControlsUI(){
+  const live=document.getElementById('mode-live-btn');
+  const bar=document.getElementById('replay-bar');
+  const playing=replayPlaying&&!liveMode;
+  if(live)live.classList.toggle('active',!!liveMode);
+  if(bar){
+    bar.classList.toggle('is-live',!!liveMode);
+    bar.classList.toggle('is-replay',!liveMode);
+    bar.classList.toggle('is-playing',playing);
+  }
+}
+function playReplay(){
+  if(replayWinEnd<=replayWinStart&&!allEvents.length)return;
+  if(liveMode){
+    liveMode=false;
+    document.getElementById('mode-live-btn')?.classList.remove('active');
+    initReplayWindow();
+  }
+  if(replayCursor>=replayWinEnd){
+    replayCursor=replayWinStart;
+    lastReplaySpawnTs=replayWinStart;
+    activeRockets=[];
+    updateReplaySlider();
+  }
+  replayPlaying=true;
+  updateReplayControlsUI();
+  startReplayLoop();
+}
+function stopReplay(){
+  replayPlaying=false;
+  if(animRAF){cancelAnimationFrame(animRAF);animRAF=null;}
+  updateReplayControlsUI();
+  if(!liveMode){
+    refreshMapFromData();
+    if(animOn&&linesOn)drawReplayFrame(performance.now());
+  }
+}
+function enterLiveMode(){
+  if(liveMode)return;
+  liveMode=true;
+  replayPlaying=false;
+  if(animRAF){cancelAnimationFrame(animRAF);animRAF=null;}
+  document.getElementById('mode-live-btn')?.classList.add('active');
+  feedData.forEach(e=>lastLiveSeenKeys.add((e.ip||'')+'|'+(e.time_iso||'')));
+  const clk=document.getElementById('replay-clock');
+  if(clk)clk.textContent=t('live_clock');
+  updateReplayControlsUI();
+  refreshMapFromData();
+  if(animOn&&linesOn)startAnimLoop();
+}
+function startAnimLoop(){
+  if(animRAF)cancelAnimationFrame(animRAF);
+  replayLastFrame=0;lastRocketDrawTs=0;
+  function loop(ts){
+    if(!animOn||!linesOn){clearArcCanvas();clearFlightLabels();return;}
+    if(liveMode){
+      spawnLiveRocketsFromFeed();
+      drawCrowdSecRockets(ts);
+    }else if(replayPlaying){
+      advanceReplay(ts);
+    }else{
+      drawCrowdSecRockets(ts);
+    }
+    const keepAnim=activeRockets.length>0||(!liveMode&&replayPlaying);
+    if(keepAnim)animRAF=requestAnimationFrame(loop);
+    else animRAF=null;
+  }
+  animRAF=requestAnimationFrame(loop);
+}
+function startReplayLoop(){replayPlaying=true;updateReplayControlsUI();startAnimLoop();}
+function setupReplayControls(){
+  buildThreatLegend();
+  document.getElementById('replay-play-btn')?.addEventListener('click',playReplay);
+  document.getElementById('replay-stop-btn')?.addEventListener('click',stopReplay);
+  document.getElementById('mode-live-btn')?.addEventListener('click',enterLiveMode);
+  document.querySelectorAll('[data-speed]').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('[data-speed]').forEach(x=>x.classList.remove('active'));b.classList.add('active');replaySpeed=parseFloat(b.dataset.speed);}));
+  document.querySelectorAll('[data-range]').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('[data-range]').forEach(x=>x.classList.remove('active'));b.classList.add('active');replayRangeH=parseInt(b.dataset.range,10);initReplayWindow();refreshMapFromData();}));
+  updateReplayControlsUI();
+  document.getElementById('replay-slider')?.addEventListener('input',e=>{
+    if(replayWinEnd<=replayWinStart)return;
+    if(liveMode){
+      liveMode=false;
+      document.getElementById('mode-live-btn')?.classList.remove('active');
+      updateReplayControlsUI();
+    }
+    replayPlaying=false;
+    updateReplayControlsUI();
+    replayCursor=replayWinStart+(parseInt(e.target.value,10)/1000)*(replayWinEnd-replayWinStart);
+    lastReplaySpawnTs=replayWinStart;
+    activeRockets=[];
+    document.getElementById('replay-clock').textContent=fmtReplayClock(replayCursor);
+    refreshMapFromData();
+  });
+}
+
+// ── COMPACT LAYOUT (Handy + Tablet ≤900px) ──
+const COMPACT_MAX_W=900;
+let layoutModeSig=null;
+let compactMapFitTimer=null;
+function isCompactLayout(){return window.innerWidth<=COMPACT_MAX_W;}
+function getHomeFitParams(){
+  const compact=isCompactLayout();
+  return{
+    xFrac:compact?0.5:HOME_SCREEN_X_FRAC,
+    yFrac:compact?0.36:HOME_SCREEN_Y_FRAC,
+    tyNudge:compact?10:HOME_TY_NUDGE_PX,
+    projShift:compact?0.07:HOME_PROJ_Y_SHIFT,
+    defaultK:compact?HOME_ZOOM_K_MOBILE:HOME_ZOOM_K_DESKTOP,
+  };
+}
+function scheduleCompactMapFit(){
+  clearTimeout(compactMapFitTimer);
+  compactMapFitTimer=setTimeout(()=>{
+    if(!mapWrap||mapWrap.clientWidth<50||mapWrap.clientHeight<50)return;
+    const w=mapWrap.clientWidth,h=mapWrap.clientHeight;
+    const prev=scheduleCompactMapFit._last||{w:0,h:0};
+    const sizeChanged=Math.abs(w-prev.w)>10||Math.abs(h-prev.h)>10;
+    scheduleCompactMapFit._last={w,h};
+    setupProj();
+    activeRockets=[];
+    clearFlightLabels();
+    clearArcCanvas();
+    if(!baseSvg||!worldData)return;
+    baseSvg.selectAll('*').remove();
+    drawBaseMap();
+    if(isCompactLayout()&&sizeChanged)userHasZoomed=false;
+    renderDots();
+    if(!userHasZoomed)applyInitialMapView();
+    else{
+      const tr=d3.zoomTransform(baseSvg.node());
+      mapG.attr('transform',tr);
+      dotG.attr('transform',tr);
+      currentScale=tr.k;currentTx=tr.x;currentTy=tr.y;
+      updateServerScale();
+      updateZoomLevel(tr.k);
+    }
+    updateCountryFills();
+    if(animOn&&linesOn)startAnimLoop();
+  },120);
+}
+function syncCompactLayout(){
+  const sh=document.getElementById('mob-sheet');
+  const lay=document.getElementById('layout');
+  if(!lay)return;
+  const sig=isCompactLayout()?'compact':'wide';
+  const modeChanged=layoutModeSig!==null&&layoutModeSig!==sig;
+  layoutModeSig=sig;
+  if(!isCompactLayout()){
+    lay.style.bottom='';
+    if(sh)sh.style.height='';
+    if(modeChanged){
+      userHasZoomed=false;
+      scheduleCompactMapFit();
+    }
+    return;
+  }
+  if(!sh)return;
+  const h=sh.offsetHeight;
+  if(h>80){
+    lay.style.bottom=h+'px';
+    sh.style.height='';
+  }else{
+    const px=Math.round(window.innerHeight*0.54);
+    sh.style.height=px+'px';
+    lay.style.bottom=px+'px';
+  }
+  if(modeChanged)userHasZoomed=false;
+  scheduleCompactMapFit();
+}
+(function initCompactLayoutSync(){
+  syncCompactLayout();
+  window.addEventListener('load',syncCompactLayout);
+  window.addEventListener('resize',syncCompactLayout);
+  setTimeout(syncCompactLayout,100);
+  setTimeout(syncCompactLayout,500);
+  const sh=document.getElementById('mob-sheet');
+  if(sh&&window.ResizeObserver){
+    new ResizeObserver(syncCompactLayout).observe(sh);
+  }
+  const mw=document.getElementById('map-wrap');
+  if(mw&&window.ResizeObserver){
+    new ResizeObserver(()=>{
+      if(!isCompactLayout())return;
+      scheduleCompactMapFit();
+    }).observe(mw);
+  }
 })();
 
 // ── TRANSLATIONS ──
@@ -620,8 +1614,10 @@ const LANG = {
     oldest:      '▲ ÄLTESTE',
     anim_off:    'ANIMATION',
     anim_on:     'ANIMATION',
-    lines_off:   'LINIEN',
-    lines_on:    'LINIEN',
+    lines_off:   'ANGRIFFE',
+    lines_on:    'ANGRIFFE',
+    autozoom_on: 'ZOOM AUTO',
+    autozoom_off:'ZOOM AUTO',
     server_lbl:  SERVER_NAME_MAP,
     zoom_lbl:    'ZOOM',
     lookup:      'IP NACHSCHLAGEN',
@@ -634,13 +1630,79 @@ const LANG = {
     leg_20:      '20+ ANGRIFFE',
     leg_server:  'SERVER',
     leg_click:   '| KLICK AUF PUNKT = DETAILS',
+    top_scenarios:'TOP-SZENARIEN',
+    malevolent_ips:'BÖSWILLIGE IPS',
+    top_origins:'TOP-HERKUNFTEN',
+    fs_alerts:'MELDUNGEN',
+    fs_ips:'EINDEUTIGE IPS',
+    fs_scenarios:'SZENARIEN',
+    fs_countries:'LÄNDER',
+    lbl_speed:'TEMPO',
+    lbl_range:'ZEITRAUM',
+    mob_lbl_alltime:'GESAMT (ALLTIME)',
+    map_window_title:'ZEITFENSTER · KARTE',
+    replay_play_title:'Wiedergabe starten',
+    replay_stop_title:'Wiedergabe stoppen',
+    live_lbl:'LIVE',
+    live_clock:'● LIVE',
     entries:     (s,e,t) => `${s}–${e} von ${t} Einträgen`,
+    top_list_empty:'Keine Alltime-Daten — Feed lädt…',
     prev:        '◀',
     next:        '▶',
     error_conn:  'VERBINDUNGSFEHLER: ',
+    error_prefix:'FEHLER: ',
+    load_init:   'INITIALISIERUNG',
+    load_map:    'KARTENDATEN WERDEN GELADEN…',
+    load_feed:   'VERBINDUNG ZUM BEDROHUNGS-FEED…',
     time_icon:   '🕐',
     scenario_icon:'⚡',
     subnet_icon: '📡',
+    sparkline:   'ANGRIFFE / STUNDE',
+    search_ph:   '🔍  IP, LAND, SZENARIO…',
+    theme_lbl:   'THEMA:',
+    theme_cyan:  'CYAN',
+    theme_alarm: 'ALARM',
+    theme_matrix:'MATRIX',
+    theme_amber: 'AMBER',
+    csv_btn:     '↓ CSV',
+    csv_title:   'Feed als CSV exportieren',
+    tip_close:   'Schließen',
+    tip_click:   'KLICK FÜR DETAILS',
+    live_title:  'Live-Feed — aktuelle Angriffe in Echtzeit',
+    home_zoom:   'Zum Server-Standort',
+    zoom_prefs_title:'Karten-Zoom speichern',
+    zoom_prefs_use:'Beim Laden gespeicherte Ansicht',
+    zoom_prefs_save:'Ansicht speichern',
+    zoom_prefs_reset:'Zurücksetzen',
+    zoom_prefs_home:'Standard-Zoom (⌂):',
+    zoom_prefs_saved:(k)=>`Gespeichert: ${k.toFixed(1)}×`,
+    zoom_prefs_none:'Keine gespeicherte Ansicht',
+    zoom_prefs_ok:'Ansicht gespeichert',
+    zoom_prefs_saved_desktop_only:'Gespeicherte Ansicht nur am Desktop (Handy: ⌂)',
+    anim_title:  'Animierte Karte (Replay/Live) vs. statische Heatmap',
+    lines_title: 'Angriffe auf der Karte ein/aus',
+    autozoom_title:'Bei Angriff automatisch in die Region zoomen',
+    wl_title:    'Whitelist-Status',
+    wl_na:       'Whitelist: n/a',
+    wl_err:      '⚠️ Whitelist-Fehler',
+    wl_updated:  (ip) => `🔄 ${ip} aktualisiert`,
+    wl_check:    (c,ch) => `Letzter Check: ${c}${ch ? ' | Geändert: '+ch : ''}`,
+    show_own_ip_on:'EIGENE IP AN',
+    show_own_ip_off:'EIGENE IP AUS',
+    show_own_ip_title:'Eigene IP in der Ecke ein-/ausblenden',
+    wl_ip_hidden:'🛡️ IP ausgeblendet',
+    filter_country: (cc) => `Klick: nur ${cc} anzeigen`,
+    filter_scenario:'Klick: nach Szenario filtern',
+    unban_active:  'Aktiver Ban — entsperren',
+    unban_history: 'Historie löschen',
+    lookup_title:  'IP nachschlagen',
+    map_title:     'Auf Karte zeigen',
+    unban_confirm1:(ip) => `🔓 IP ${ip} wirklich entsperren?\n\nDiese IP wird aus allen aktiven CrowdSec-Bans entfernt.`,
+    unban_confirm2:(ip) => `⚠️ Letzte Warnung!\n\nIP: ${ip}\n\nSicher entsperren? Diese Aktion kann nicht rückgängig gemacht werden.`,
+    unban_fail:    'Unban fehlgeschlagen',
+    unban_conn:    'Verbindungsfehler zum Exporter',
+    csv_headers:   ['IP','Land','Stadt','ASN','AS-Name','Szenario','Anzahl','Zeit'],
+    range_labels:  {'168':'7T','720':'1M','4320':'6M','8760':'12M','17520':'2J','26280':'3J','35040':'4J','43800':'5J','52560':'6J'},
   },
   en: {
     title:       'CROWD<span>SEC</span> // THREAT MAP',
@@ -656,8 +1718,8 @@ const LANG = {
     oldest:      '▲ OLDEST',
     anim_off:    'ANIMATION',
     anim_on:     'ANIMATION',
-    lines_off:   'LINES',
-    lines_on:    'LINES',
+    lines_off:   'FLIGHTS',
+    lines_on:    'FLIGHTS',
     server_lbl:  SERVER_NAME_MAP,
     zoom_lbl:    'ZOOM',
     lookup:      'LOOKUP IP',
@@ -670,16 +1732,91 @@ const LANG = {
     leg_20:      '20+ ATTACKS',
     leg_server:  'SERVER',
     leg_click:   '| CLICK POINT = DETAILS',
+    top_scenarios:'TOP SCENARIOS',
+    malevolent_ips:'MALEVOLENT IPS',
+    top_origins:'TOP ATTACK ORIGINS',
+    fs_alerts:'ALERTS',
+    fs_ips:'UNIQUE IPS',
+    fs_scenarios:'SCENARIOS',
+    fs_countries:'COUNTRIES',
+    lbl_speed:'SPEED',
+    lbl_range:'RANGE',
+    mob_lbl_alltime:'TOTAL (ALLTIME)',
+    map_window_title:'MAP WINDOW',
+    replay_play_title:'Start replay',
+    replay_stop_title:'Stop replay',
+    live_lbl:'LIVE',
+    live_clock:'● LIVE',
+    autozoom_on: 'AUTO ZOOM',
+    autozoom_off:'AUTO ZOOM',
     entries:     (s,e,t) => `${s}–${e} of ${t} entries`,
+    top_list_empty:'No all-time data — loading feed…',
     prev:        '◀',
     next:        '▶',
     error_conn:  'CONNECTION ERROR: ',
+    error_prefix:'ERROR: ',
+    load_init:   'INITIALIZING',
+    load_map:    'LOADING MAP DATA…',
+    load_feed:   'CONNECTING TO THREAT FEED…',
     time_icon:   '🕐',
     scenario_icon:'⚡',
     subnet_icon: '📡',
+    sparkline:   'ATTACKS / HOUR',
+    search_ph:   '🔍  IP, COUNTRY, SCENARIO…',
+    theme_lbl:   'THEME:',
+    theme_cyan:  'CYAN',
+    theme_alarm: 'ALERT',
+    theme_matrix:'MATRIX',
+    theme_amber: 'AMBER',
+    csv_btn:     '↓ CSV',
+    csv_title:   'Export feed as CSV',
+    tip_close:   'Close',
+    tip_click:   'CLICK FOR DETAILS',
+    live_title:  'Live feed — current attacks in real time',
+    home_zoom:   'Go to server',
+    zoom_prefs_title:'Save map zoom',
+    zoom_prefs_use:'Use saved view on load',
+    zoom_prefs_save:'Save current view',
+    zoom_prefs_reset:'Reset defaults',
+    zoom_prefs_home:'Default zoom (⌂):',
+    zoom_prefs_saved:(k)=>`Saved: ${k.toFixed(1)}×`,
+    zoom_prefs_none:'No saved view',
+    zoom_prefs_ok:'View saved',
+    zoom_prefs_saved_desktop_only:'Saved view: desktop only (mobile: use ⌂)',
+    anim_title:  'Animated map (replay/live) vs. static heatmap',
+    lines_title: 'Attack flights (rockets) on/off',
+    autozoom_title:'Auto-zoom to attack region',
+    wl_title:    'Whitelist status',
+    wl_na:       'Whitelist: n/a',
+    wl_err:      '⚠️ Whitelist error',
+    wl_updated:  (ip) => `🔄 ${ip} updated`,
+    wl_check:    (c,ch) => `Last check: ${c}${ch ? ' | Changed: '+ch : ''}`,
+    show_own_ip_on:'SHOW OWN IP',
+    show_own_ip_off:'HIDE OWN IP',
+    show_own_ip_title:'Show or hide your IP in the footer',
+    wl_ip_hidden:'🛡️ IP hidden',
+    filter_country: (cc) => `Click: show only ${cc}`,
+    filter_scenario:'Click: filter by scenario',
+    unban_active:  'Active ban — unban',
+    unban_history: 'Clear history',
+    lookup_title:  'Look up IP',
+    map_title:     'Show on map',
+    unban_confirm1:(ip) => `🔓 Really unban IP ${ip}?\n\nThis IP will be removed from all active CrowdSec bans.`,
+    unban_confirm2:(ip) => `⚠️ Final warning!\n\nIP: ${ip}\n\nAre you sure? This cannot be undone.`,
+    unban_fail:    'Unban failed',
+    unban_conn:    'Connection error to exporter',
+    csv_headers:   ['IP','Country','City','ASN','AS Name','Scenario','Count','Time'],
+    range_labels:  {'168':'7D','720':'1M','4320':'6M','8760':'12M','17520':'2Y','26280':'3Y','35040':'4Y','43800':'5Y','52560':'6Y'},
   }
 };
 let currentLang = 'LANGUAGE_PLACEHOLDER'; // wird durch entrypoint.sh ersetzt
+
+function normalizeLang(){
+  let lang=String(currentLang||'de').toLowerCase().trim();
+  if(lang==='LANGUAGE_PLACEHOLDER'||!LANG[lang]) lang='de';
+  currentLang=lang;
+  document.documentElement.lang=lang;
+}
 const CITY_NAMES_DE = {
   "Antwerp": "Antwerpen", "Athens": "Athen", "Beijing": "Peking",
   "Belgrade": "Belgrad", "Brasov": "Kronstadt", "Brno": "Brünn",
@@ -704,53 +1841,126 @@ function translateCity(city) {
   return city;
 }
 
-function t(key, ...args){ const tr=LANG[currentLang]; if(typeof tr[key]==='function') return tr[key](...args); return tr[key]||key; }
+function t(key, ...args){
+  const tr=LANG[currentLang]||LANG.de;
+  const v=tr[key];
+  if(typeof v==='function') return v(...args);
+  return v!=null?v:key;
+}
 
 function applyLang(){
+  normalizeLang();
   const l=LANG[currentLang];
-  // Version badge
   const vbadge=document.getElementById('map-version-badge');
   if(vbadge)vbadge.textContent=APP_VERSION;
-  // Header / map title
-  document.getElementById('h-title').innerHTML = l.title;
-  document.getElementById('s-attacks-lbl').textContent  = l.attacks;
-  document.getElementById('s-countries-lbl').textContent= l.countries;
-  document.getElementById('s-scenarios-lbl').textContent= l.scenarios;
-  document.getElementById('s-live-lbl').textContent     = l.live;
-  // Anim button
-  const animLbl=document.getElementById('anim-label');
-  if(animLbl) animLbl.textContent = animOn ? l.anim_on : l.anim_off;
-  const linesLbl=document.getElementById('lines-label');
-  if(linesLbl) linesLbl.textContent = linesOn ? l.lines_on : l.lines_off;
-  // Tabs desktop
+  const hTitle=document.getElementById('h-title');
+  if(hTitle)hTitle.innerHTML=LANG.en.title;
+  const loadTitle=document.getElementById('load-title');
+  if(loadTitle)loadTitle.textContent=l.load_init;
+  const ls=document.getElementById('ls');
+  if(ls&&!ls.dataset.busy)ls.textContent=l.load_feed;
+  document.getElementById('s-attacks-lbl').textContent=l.attacks;
+  document.getElementById('s-countries-lbl').textContent=l.countries;
+  document.getElementById('s-scenarios-lbl').textContent=l.scenarios;
+  document.getElementById('s-live-lbl').textContent=l.live;
+  syncMapToggleStates();
   document.querySelectorAll('[data-tab="feed"]').forEach(e=>e.textContent=l.feed);
   document.querySelectorAll('[data-tab="top10"]').forEach(e=>e.textContent=l.top10);
   document.querySelectorAll('[data-tab="topall"]').forEach(e=>e.textContent=l.all);
-  // Tabs mobile
   document.querySelectorAll('[data-mob="feed"]').forEach(e=>e.textContent=l.feed);
   document.querySelectorAll('[data-mob="top10"]').forEach(e=>e.textContent=l.top10);
   document.querySelectorAll('[data-mob="topall"]').forEach(e=>e.textContent=l.all);
-  // Sort bar
   document.querySelectorAll('.sort-lbl').forEach(e=>e.textContent=l.sort);
   document.querySelectorAll('#fsort-new,#mob-fsort-new').forEach(e=>e.textContent=l.newest);
   document.querySelectorAll('#fsort-old,#mob-fsort-old').forEach(e=>e.textContent=l.oldest);
-  // Legend
   const legs=document.querySelectorAll('.leg-label');
   const legKeys=['leg_1_4','leg_5_9','leg_10_19','leg_20','leg_server'];
-  legs.forEach((el,i)=>{ if(legKeys[i]) el.textContent=l[legKeys[i]]; });
+  legs.forEach((el,i)=>{if(legKeys[i])el.textContent=l[legKeys[i]];});
   const legHint=document.getElementById('leg-hint');
-  if(legHint) legHint.textContent=l.leg_click;
-  // Ctx menu close
+  if(legHint)legHint.textContent=l.leg_click;
+  [['lbl-top-scenarios','top_scenarios'],['lbl-malevolent-ips','malevolent_ips'],['lbl-top-origins','top_origins'],['fs-alerts-lbl','fs_alerts'],['fs-ips-lbl','fs_ips'],['fs-scn-lbl','fs_scenarios'],['fs-ctry-lbl','fs_countries'],['lbl-speed','lbl_speed'],['lbl-range','lbl_range']].forEach(([id,k])=>{const el=document.getElementById(id);if(el&&l[k])el.textContent=l[k];});
+  const liveBtn=document.getElementById('mode-live-btn');
+  if(liveBtn){liveBtn.textContent=l.live_lbl;liveBtn.title=l.live_title;}
+  const playBtn=document.getElementById('replay-play-btn');
+  if(playBtn)playBtn.title=l.replay_play_title;
+  const stopBtn=document.getElementById('replay-stop-btn');
+  if(stopBtn)stopBtn.title=l.replay_stop_title;
+  if(liveMode){const clk=document.getElementById('replay-clock');if(clk)clk.textContent=l.live_clock;}
+  const bzr=document.getElementById('bzr');
+  if(bzr)bzr.title=l.home_zoom;
+  const bzp=document.getElementById('bzp');
+  if(bzp)bzp.title=l.zoom_prefs_title;
+  const zpu=document.getElementById('zoom-prefs-use-lbl');
+  if(zpu)zpu.textContent=l.zoom_prefs_use;
+  const zps=document.getElementById('zoom-prefs-save');
+  if(zps)zps.textContent=l.zoom_prefs_save;
+  const zpr=document.getElementById('zoom-prefs-reset');
+  if(zpr)zpr.textContent=l.zoom_prefs_reset;
+  const zph=document.getElementById('zoom-prefs-home-lbl');
+  if(zph)zph.textContent=l.zoom_prefs_home;
+  syncZoomPrefsUI();
+  const animT=document.getElementById('anim-toggle');
+  if(animT)animT.title=l.anim_title;
+  const linesT=document.getElementById('lines-toggle');
+  if(linesT)linesT.title=l.lines_title;
+  const azT=document.getElementById('autozoom-toggle');
+  if(azT)azT.title=l.autozoom_title;
+  const themeLbl=document.getElementById('theme-lbl');
+  if(themeLbl)themeLbl.textContent=l.theme_lbl;
+  const themeSpans={theme_cyan:'theme-cyan',theme_alarm:'theme-red',theme_matrix:'theme-matrix',theme_amber:'theme-amber'};
+  Object.entries(themeSpans).forEach(([k,id])=>{const btn=document.getElementById(id);const span=btn&&btn.querySelector('span:last-child');if(span&&l[k])span.textContent=l[k];});
+  const sparkTitle=document.getElementById('sparkline-title');
+  if(sparkTitle)sparkTitle.textContent=l.sparkline;
+  const feedSearch=document.getElementById('feed-search');
+  if(feedSearch)feedSearch.placeholder=l.search_ph;
+  const mobFeedSearch=document.getElementById('mob-feed-search');
+  if(mobFeedSearch)mobFeedSearch.placeholder=l.search_ph;
+  document.querySelectorAll('.csv-feed-btn').forEach(btn=>{btn.textContent=l.csv_btn;btn.title=l.csv_title;});
+  const tipClose=document.getElementById('tip-close');
+  if(tipClose){tipClose.title=l.tip_close;tipClose.setAttribute('aria-label',l.tip_close);}
   const ctxClose=document.getElementById('ctx-close');
-  if(ctxClose) ctxClose.textContent=l.close;
-  // Re-render feed (updates time icons, labels etc)
+  if(ctxClose)ctxClose.textContent=l.close;
+  const srvLbl=document.getElementById('sidebar-server-lbl');
+  if(srvLbl)srvLbl.textContent=SERVER_NAME_MAP;
+  const mobWlBadge=document.getElementById('mob-wl-badge');
+  if(mobWlBadge)mobWlBadge.title=l.wl_title;
+  updateZoomLevel(currentScale);
+  if(l.range_labels){
+    document.querySelectorAll('.pill-btn[data-range]').forEach(btn=>{
+      const lbl=l.range_labels[btn.dataset.range];
+      if(lbl)btn.textContent=lbl;
+    });
+  }
+  buildThreatLegend();
   renderFeed();
   renderCountryLists();
-  // Mobile header labels
+  renderFilterBar();
+  renderMapPanels();
   const mobAtLbl=document.getElementById('mob-attacks-lbl');
-  if(mobAtLbl) mobAtLbl.textContent=LANG[currentLang].attacks;
+  if(mobAtLbl)mobAtLbl.textContent=l.attacks;
   const mobCoLbl=document.getElementById('mob-countries-lbl');
-  if(mobCoLbl) mobCoLbl.textContent=LANG[currentLang].countries;
+  if(mobCoLbl)mobCoLbl.textContent=l.countries;
+  const mobScLbl=document.getElementById('mob-scenarios-lbl');
+  if(mobScLbl)mobScLbl.textContent=l.scenarios;
+  const mobAlltimeLbl=document.getElementById('mob-lbl-alltime');
+  if(mobAlltimeLbl)mobAlltimeLbl.textContent=l.mob_lbl_alltime;
+  const mwsTitle=document.getElementById('mws-title-lbl');
+  if(mwsTitle)mwsTitle.textContent=l.map_window_title;
+  const mwsAlerts=document.getElementById('mws-alerts-lbl');
+  if(mwsAlerts)mwsAlerts.textContent=l.fs_alerts;
+  const mwsIps=document.getElementById('mws-ips-lbl');
+  if(mwsIps)mwsIps.textContent=l.fs_ips;
+  const mwsScn=document.getElementById('mws-scn-lbl');
+  if(mwsScn)mwsScn.textContent=l.fs_scenarios;
+  const mwsCtry=document.getElementById('mws-ctry-lbl');
+  if(mwsCtry)mwsCtry.textContent=l.fs_countries;
+  const mobLiveLbl=document.getElementById('mob-live-lbl');
+  if(mobLiveLbl)mobLiveLbl.textContent=l.live;
+  const mobSparkTitle=document.getElementById('mob-sparkline-title');
+  if(mobSparkTitle)mobSparkTitle.textContent=l.sparkline;
+  updateSidebarStats();
+  updateFooterStats();
+  syncWlIpToggleUI();
 }
 
 // toggleLang entfernt — Sprache wird über LANGUAGE Docker-Variable gesetzt
@@ -799,64 +2009,107 @@ let selectedDot=null;
 let selectedEl=null;
 let attackData=[],worldData=null,zoomBeh,mapG,dotG;
 let arcOffset=0,animRAF=null,lastFrameTime=0;
-let animOn=false;
+let animOn=true;
 let linesOn=true;
 let userHasZoomed=false; // tracks manual zoom so mobile safety-fit doesn't override it
 
 // ── ACTIVE FILTERS (declared here so available to all functions) ──
 const activeFilters={country:null,scenario:null,search:''};
 
-// ── LINES TOGGLE ──
+// ── MAP TOGGLES ──
+function setToggleBtn(id,on,dotId){
+  const btn=document.getElementById(id);
+  const dot=dotId?document.getElementById(dotId):null;
+  if(btn){
+    btn.classList.toggle('on',on);
+    btn.classList.toggle('off',!on);
+    if(id==='autozoom-toggle'||id==='mob-autozoom-toggle')btn.setAttribute('aria-pressed',on?'true':'false');
+  }
+  if(dot){
+    dot.style.background=on?'var(--ok)':'rgba(90,110,105,0.45)';
+    dot.style.boxShadow=on?'0 0 5px var(--ok)':'none';
+  }
+}
+function ensureAutoZoomOff(){
+  autoZoomOn=false;
+  setToggleBtn('autozoom-toggle',false,'autozoom-dot');
+  setToggleBtn('mob-autozoom-toggle',false,'mob-autozoom-dot');
+  const l=LANG[currentLang]||LANG.de;
+  const lbl=document.getElementById('autozoom-label');
+  const mobLbl=document.getElementById('mob-autozoom-label');
+  if(lbl)lbl.textContent=l.autozoom_off;
+  if(mobLbl)mobLbl.textContent=l.autozoom_off;
+}
+function syncMapToggleStates(){
+  setToggleBtn('anim-toggle',animOn,'anim-dot');
+  setToggleBtn('lines-toggle',linesOn,'lines-dot');
+  setToggleBtn('autozoom-toggle',autoZoomOn,'autozoom-dot');
+  setToggleBtn('mob-anim-toggle',animOn,'mob-anim-dot');
+  setToggleBtn('mob-lines-toggle',linesOn,'mob-lines-dot');
+  setToggleBtn('mob-autozoom-toggle',autoZoomOn,'mob-autozoom-dot');
+  const l=LANG[currentLang]||LANG.de;
+  const animLbl=document.getElementById('anim-label');
+  if(animLbl)animLbl.textContent=animOn?l.anim_on:l.anim_off;
+  const linesLbl=document.getElementById('lines-label');
+  if(linesLbl)linesLbl.textContent=linesOn?l.lines_on:l.lines_off;
+  const mobLinesLbl=document.getElementById('mob-lines-label');
+  if(mobLinesLbl)mobLinesLbl.textContent=linesOn?l.lines_on:l.lines_off;
+  const mobAnimLbl=document.getElementById('mob-anim-label');
+  if(mobAnimLbl)mobAnimLbl.textContent=animOn?l.anim_on:l.anim_off;
+  const azLbl=document.getElementById('autozoom-label');
+  if(azLbl)azLbl.textContent=autoZoomOn?l.autozoom_on:l.autozoom_off;
+  const mobAzLbl=document.getElementById('mob-autozoom-label');
+  if(mobAzLbl)mobAzLbl.textContent=autoZoomOn?l.autozoom_on:l.autozoom_off;
+}
+function toggleAutoZoom(){
+  autoZoomOn=!autoZoomOn;
+  setToggleBtn('autozoom-toggle',autoZoomOn,'autozoom-dot');
+  setToggleBtn('mob-autozoom-toggle',autoZoomOn,'mob-autozoom-dot');
+  const lbl=document.getElementById('autozoom-label');
+  const mobLbl=document.getElementById('mob-autozoom-label');
+  const txt=autoZoomOn?t('autozoom_on'):t('autozoom_off');
+  if(lbl)lbl.textContent=txt;
+  if(mobLbl)mobLbl.textContent=txt;
+}
 function toggleLines(){
   linesOn=!linesOn;
-  const btn=document.getElementById('lines-toggle');
   const lbl=document.getElementById('lines-label');
-  const mobDot=document.getElementById('mob-lines-dot');
   const mobLbl=document.getElementById('mob-lines-label');
-  const mobBtn=document.getElementById('mob-lines-toggle');
-  if(linesOn){
-    if(btn)btn.classList.add('on');
-    if(lbl)lbl.textContent=t('lines_on')||'LINIEN AN';
-    if(mobDot){mobDot.style.background='var(--ok)';mobDot.style.boxShadow='0 0 5px var(--ok)';}
-    if(mobLbl)mobLbl.textContent='LINIEN';
-    if(mobBtn){mobBtn.style.borderColor='rgba(0,255,200,0.35)';mobBtn.style.color='rgba(0,255,200,0.8)';mobBtn.style.background='rgba(0,255,200,0.08)';}
-    if(dotG)dotG.selectAll('.srv-ring').style('display',null);
-    if(animOn) startArcAnimation(); else drawStaticArcs();
-  } else {
-    if(btn)btn.classList.remove('on');
-    if(lbl)lbl.textContent=t('lines_off')||'LINIEN AUS';
-    if(mobDot){mobDot.style.background='rgba(160,255,216,0.3)';mobDot.style.boxShadow='none';}
-    if(mobLbl)mobLbl.textContent='LINIEN';
-    if(mobBtn){mobBtn.style.borderColor='rgba(0,255,200,0.2)';mobBtn.style.color='rgba(160,255,216,0.45)';mobBtn.style.background='transparent';}
-    if(dotG)dotG.selectAll('.srv-ring').style('display','none');
-    if(animRAF){cancelAnimationFrame(animRAF);animRAF=null;}
-    ctx2d.clearRect(0,0,canvas.width,canvas.height);
-  }
+  setToggleBtn('lines-toggle',linesOn,'lines-dot');
+  setToggleBtn('mob-lines-toggle',linesOn,'mob-lines-dot');
+  if(lbl)lbl.textContent=linesOn?(t('lines_on')||'ANGRIFFE'):(t('lines_off')||'ANGRIFFE');
+  if(mobLbl)mobLbl.textContent=linesOn?(t('lines_on')||'ANGRIFFE'):(t('lines_off')||'ANGRIFFE');
+  if(linesOn)refreshMapFromData();
+  else{activeRockets=[];if(animRAF){cancelAnimationFrame(animRAF);animRAF=null;}clearArcCanvas();clearFlightLabels();if(animOn)refreshMapFromData();else updateCountryFills();}
 }
 
 // ── ANIMATION TOGGLE ──
 function toggleAnim(){
   animOn=!animOn;
-  const btn=document.getElementById('anim-toggle');
+  if(!animOn){activeRockets=[];clearArcCanvas();clearFlightLabels();if(animRAF){cancelAnimationFrame(animRAF);animRAF=null;}}
   const lbl=document.getElementById('anim-label');
-  const mobDot=document.getElementById('mob-anim-dot');
   const mobLbl=document.getElementById('mob-anim-label');
-  const mobBtn=document.getElementById('mob-anim-toggle');
+  setToggleBtn('anim-toggle',animOn,'anim-dot');
+  setToggleBtn('mob-anim-toggle',animOn,'mob-anim-dot');
+  const animTxt=animOn?(t('anim_on')||'ANIMATION'):(t('anim_off')||'ANIMATION');
+  if(lbl)lbl.textContent=animTxt;
+  if(mobLbl)mobLbl.textContent=animTxt;
   if(animOn){
-    if(btn)btn.classList.add('on');
-    if(lbl)lbl.textContent=t('anim_on')||'ANIM AN';
-    if(mobDot){mobDot.style.background='var(--ok)';mobDot.style.boxShadow='0 0 5px var(--ok)';}
-    if(mobLbl)mobLbl.textContent='ANIMATION';
-    if(mobBtn){mobBtn.style.borderColor='var(--ok)';mobBtn.style.color='var(--ok)';}
-    startArcAnimation();
-  } else {
-    if(btn)btn.classList.remove('on');
-    if(lbl)lbl.textContent=t('anim_off')||'ANIMATION AUS';
-    if(mobDot){mobDot.style.background='rgba(160,255,216,0.3)';mobDot.style.boxShadow='none';}
-    if(mobLbl)mobLbl.textContent='ANIMATION';
-    if(mobBtn){mobBtn.style.borderColor='rgba(0,255,200,0.2)';mobBtn.style.color='rgba(160,255,216,0.45)';}
-    if(animRAF){cancelAnimationFrame(animRAF);animRAF=null;}
-    drawStaticArcs();
+    feedData.forEach(e=>lastLiveSeenKeys.add((e.ip||'')+'|'+(e.time_iso||'')));
+    if(liveMode)startAnimLoop();else{replayPlaying=true;updateReplayControlsUI();startReplayLoop();}
+  }else{
+    replayPlaying=false;updateReplayControlsUI();
+    refreshMapFromData();
+  }
+  drawCountryLabels();
+}
+function startMapOnLoad(){
+  syncMapToggleStates();
+  feedData.forEach(e=>lastLiveSeenKeys.add((e.ip||'')+'|'+(e.time_iso||'')));
+  if(!userHasZoomed)applyInitialMapView();
+  if(animOn){
+    if(liveMode)startAnimLoop();
+    else if(allEvents.length){replayPlaying=true;updateReplayControlsUI();startReplayLoop();}
   }
 }
 
@@ -865,7 +2118,8 @@ function setupProj(){
   W=mapWrap.clientWidth; H=mapWrap.clientHeight;
   canvas.width=W; canvas.height=H;
   canvas.style.width=W+'px'; canvas.style.height=H+'px';
-  proj=d3.geoNaturalEarth1().scale(Math.min(W/6.2,H/3.4)).translate([W/2,H/2]);
+  const {projShift}=getHomeFitParams();
+  proj=d3.geoNaturalEarth1().scale(Math.min(W/4.85,H/2.58)).translate([W/2,H/2-H*projShift]);
   pathGen=d3.geoPath().projection(proj);
 }
 
@@ -875,7 +2129,8 @@ function syncZoom(src,targets){
   });
 }
 
-let fitTransform = d3.zoomIdentity; // stored after first fit, used by reset button
+let fitTransform = d3.zoomIdentity;
+let homeTransform = d3.zoomIdentity; // Server-Standort — Home-Button + Seitenstart
 
 function setupZoom(){
   zoomBeh=d3.zoom().scaleExtent([0.1,25])
@@ -901,30 +2156,51 @@ function setupZoom(){
   mapWrap.addEventListener('mousedown',()=>mapWrap.classList.add('panning'));
   mapWrap.addEventListener('mouseup',()=>mapWrap.classList.remove('panning'));
 
-  document.getElementById('bzi').onclick=()=>baseSvg.transition().duration(280).call(zoomBeh.scaleBy,2);
-  document.getElementById('bzo').onclick=()=>baseSvg.transition().duration(280).call(zoomBeh.scaleBy,0.5);
-  document.getElementById('bzr').onclick=()=>baseSvg.transition().duration(500).call(zoomBeh.transform,fitTransform);
+  document.getElementById('bzi').onclick=()=>zoomByStep(ZOOM_STEP);
+  document.getElementById('bzo').onclick=()=>zoomByStep(-ZOOM_STEP);
+  document.getElementById('bzr').onclick=()=>fitMapToServerHome({duration:500});
+  document.getElementById('bzp')?.addEventListener('click',e=>{e.stopPropagation();toggleZoomPrefsPanel();});
+  document.getElementById('zoom-prefs-save')?.addEventListener('click',saveCurrentMapViewAsStart);
+  document.getElementById('zoom-prefs-reset')?.addEventListener('click',()=>{resetMapViewPrefs();if(!userHasZoomed)fitMapToServerHome({duration:400});});
+  document.getElementById('zoom-prefs-use-saved')?.addEventListener('change',e=>{
+    mapViewPrefs.useSavedOnLoad=!!e.target.checked;
+    persistMapViewPrefs();
+  });
+  const homeSlider=document.getElementById('zoom-prefs-home-k');
+  if(homeSlider){
+    homeSlider.addEventListener('input',e=>{
+      mapViewPrefs.homeK=parseFloat(e.target.value);
+      syncZoomPrefsUI();
+    });
+    homeSlider.addEventListener('change',()=>{
+      persistMapViewPrefs();
+      if(!userHasZoomed)fitMapToServerHome({duration:350});
+    });
+  }
 }
 
 function onZoom(event){
-  const t=event.transform;
+  const tr=event.transform;
   const prevScale=currentScale;
-  currentScale=t.k;currentTx=t.x;currentTy=t.y;
-  mapG.attr('transform',t);
-  dotG.attr('transform',t);
-  const ik=1/t.k;
+  currentScale=tr.k;currentTx=tr.x;currentTy=tr.y;
+  mapG.attr('transform',tr);
+  dotG.attr('transform',tr);
+  const ik=1/tr.k;
   dotG.selectAll('.adot').attr('r',function(){return parseFloat(this.dataset.sr||4)*ik;});
   updateServerScale();
-  document.getElementById('zoom-level').textContent=`ZOOM ${t.k.toFixed(1)}×`;
+  updateZoomLevel(tr.k);
   updateSelectionRing();
   drawCountryLabels();
   // Mark manual user zoom (sourceEvent = null means programmatic)
   if(event.sourceEvent) userHasZoomed=true;
   const wasCluster=prevScale<=1.5;
-  const isCluster=t.k<=1.5;
+  const isCluster=tr.k<=1.5;
   if(wasCluster!==isCluster) renderDots();
-  if(animOn)return;
-  drawStaticArcs();
+  else{updateCityLabelScale();updateCountryLabelScale();}
+  drawCountryLabels();
+  if(!animOn){updateCountryFills();}
+  if(!animOn||!linesOn){if(!animOn)return;updateCountryFills();return;}
+  if(animOn&&linesOn){drawCrowdSecRockets();updateFlightLabels(activeRockets);}
 }
 
 function loadScript(src){
@@ -934,41 +2210,25 @@ function loadScript(src){
   });
 }
 
-// ── MOBILE LAYOUT + FIT ──
-function mobileAdjustAndFit(){
-  const isMobile=window.innerWidth<=680;
-  if(isMobile){
-    const sheet=document.getElementById('mob-sheet');
-    const sheetH=sheet?sheet.offsetHeight:0;
-    if(sheetH>30) document.getElementById('layout').style.bottom=sheetH+'px';
-  }
-  requestAnimationFrame(()=>{
-    requestAnimationFrame(()=>{
-      setupProj();
-      canvas.width=W;canvas.height=H;
-      canvas.style.width=W+'px';canvas.style.height=H+'px';
-      if(W>50&&H>50){
-        fitMapToPoints();
-        if(!animOn)drawStaticArcs();
-      }
-    });
-  });
-}
-
 // ── INIT ──
 async function init(){
   try{
     setupProj();
     await loadScript('https://cdnjs.cloudflare.com/ajax/libs/topojson/3.0.2/topojson.min.js');
-    document.getElementById('ls').textContent='LOADING MAP DATA...';
+    const lsEl=document.getElementById('ls');
+    if(lsEl){lsEl.dataset.busy='1';lsEl.textContent=t('load_map');}
     const r=await fetch('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json');
     worldData=await r.json();
     drawBaseMap();
     setupZoom();
-    document.getElementById('ls').textContent='CONNECTING TO THREAT FEED...';
+    scheduleHomeFit();
+    if(lsEl)lsEl.textContent=t('load_feed');
     await fetchAndRender();
+    const lsDone=document.getElementById('ls');
+    if(lsDone)delete lsDone.dataset.busy;
     document.getElementById('loading').style.display='none';
-    drawStaticArcs();
+    updateCountryFills();
+    startMapOnLoad();
     // Auto-fit: poll until mapWrap has real dimensions
     let fitAttempts=0;
     let lastH=0;
@@ -976,24 +2236,26 @@ async function init(){
       fitAttempts++;
       const wh=mapWrap.clientHeight;
       const ww=mapWrap.clientWidth;
-      const isMobile=window.innerWidth<=680;
-      // On mobile: wait until height stabilizes (stops changing between polls)
+      const isMobile=isCompactLayout();
+      // On compact: wait until height stabilizes (stops changing between polls)
       const heightStable=!isMobile||(wh===lastH&&wh>50);
       lastH=wh;
       if(wh>50&&ww>50&&(heightStable||fitAttempts>10)){
         setupProj();
         canvas.width=W;canvas.height=H;
         canvas.style.width=W+'px';canvas.style.height=H+'px';
-        fitMapToPoints();
-        if(!animOn)drawStaticArcs();
+        scheduleHomeFit();
+        if(!animOn)clearArcCanvas();
       } else if(fitAttempts<25){
         setTimeout(tryFit,120);
       }
     }
     setTimeout(tryFit,200);
+    setTimeout(scheduleHomeFit,700);
+    setupReplayControls();
     setInterval(fetchAndRender,REFRESH_MS);
-    setInterval(fetchWhitelistStatus, 60000); // alle 60s Badge aktualisieren
-    fetchWhitelistStatus(); // sofort beim Start
+    setInterval(fetchWhitelistStatus, 60000);
+    fetchWhitelistStatus();
 
     // Theme-Label ausblenden wenn Sidebar zu schmal
     const sidebar = document.getElementById('sidebar') || document.querySelector('aside');
@@ -1005,17 +2267,25 @@ async function init(){
       }).observe(sidebar);
     }
     window.addEventListener('resize',onResize);
-  }catch(e){showErr('FEHLER: '+e.message);document.getElementById('loading').style.display='none';}
+  }catch(e){showErr(t('error_prefix')+e.message);document.getElementById('loading').style.display='none';}
 }
 
 function onResize(){
+  const sig=isCompactLayout()?'compact':'wide';
+  const modeChanged=layoutModeSig!==null&&layoutModeSig!==sig;
+  layoutModeSig=sig;
+  syncCompactLayout();
+  activeRockets=[];
+  clearFlightLabels();
   setupProj();
   baseSvg.selectAll('*').remove();
   drawBaseMap();
   renderDots();
-  fitMapToPoints();
-  currentScale=1;currentTx=0;currentTy=0;
-  if(animOn){}else drawStaticArcs();
+  if(modeChanged)userHasZoomed=false;
+  if(!userHasZoomed)applyInitialMapView();
+  updateCountryFills();
+  clearArcCanvas();
+  if(animOn&&linesOn)startAnimLoop();
 }
 
 function drawBaseMap(){
@@ -1025,46 +2295,54 @@ function drawBaseMap(){
   baseSvg.append('rect').attr('width',W).attr('height',H).attr('fill',bgCol==='#020810'?'#020d1a':bgCol);
   mapG=baseSvg.append('g').attr('id','map-g');
   mapG.append('path').datum(d3.geoGraticule()()).attr('d',pathGen).attr('fill','none').attr('stroke','rgba(0,255,200,0.04)').attr('stroke-width',0.5);
-  mapG.selectAll('.land').data(countries.features).join('path').attr('class','land').attr('d',pathGen).attr('fill','#0a1a2e').attr('stroke','rgba(0,255,200,0.09)').attr('stroke-width',0.4);
+  countriesGeo=countries.features;
+  mapG.selectAll('.land').data(countriesGeo).join('path').attr('class','land').attr('d',pathGen).attr('fill','#0a1a2e').attr('stroke','rgba(0,255,200,0.09)').attr('stroke-width',0.4);
   mapG.append('path').datum(borders).attr('d',pathGen).attr('fill','none').attr('stroke','rgba(0,255,200,0.06)').attr('stroke-width',0.3);
   dotG=baseSvg.append('g').attr('id','dot-g');
   drawServerDots();
 }
 
+const SERVER_DOT_R=4;
+const SERVER_LABEL_GAP=7;
+
 function drawServerDots(){
   const [sx,sy]=proj([SERVER_LON,SERVER_LAT]);
-  dotG.selectAll('.srv-ring,.srv-dot,.srv-label').remove();
-  // Always use r=1 in SVG coords - scaling happens via onZoom/updateServerScale
-  [20,34,50].forEach(r=>{
-    dotG.append('circle').attr('class','srv-ring').attr('cx',sx).attr('cy',sy)
-      .attr('r',r).attr('data-r',r)
-      .attr('fill','none').attr('stroke','rgba(0,170,255,0.12)').attr('stroke-width',1)
-      .style('display', linesOn ? null : 'none');
-  });
+  dotG.selectAll('.srv-dot,.srv-label').remove();
+  const srvCol=getComputedStyle(document.documentElement).getPropertyValue('--server').trim()||'#00aaff';
   dotG.append('circle').attr('class','srv-dot').attr('cx',sx).attr('cy',sy)
-    .attr('r',7).attr('fill','#00aaff').attr('stroke','#fff').attr('stroke-width',1.5);
-  dotG.append('text').attr('class','srv-label').attr('x',sx+14).attr('y',sy+4)
-    .attr('data-sx',sx).attr('fill','#00aaff').attr('font-size','9px')
-    .attr('font-family','Share Tech Mono,monospace').attr('letter-spacing','0px').attr('font-size','7px').text(SERVER_NAME_MAP||'SERVER') //  ← Server-Name auf der Karte;
-  // Apply current scale immediately after drawing
+    .attr('r',SERVER_DOT_R).attr('fill',srvCol).attr('stroke','rgba(255,255,255,0.85)').attr('stroke-width',1);
+  dotG.append('text').attr('class','srv-label').attr('x',sx+SERVER_LABEL_GAP).attr('y',sy+3)
+    .attr('data-sx',sx).attr('fill',srvCol)
+    .attr('font-family','Share Tech Mono,monospace').attr('font-size','7px').text(SERVER_NAME_MAP||'SERVER');
   updateServerScale();
 }
 
+function updateCityLabelScale(){
+  if(!dotG)return;
+  const px=cityLabelScreenPx();
+  dotG.selectAll('.city-map-label')
+    .attr('font-size',px?`${labelPxToSvg(px)}px`:'0')
+    .style('display',px?null:'none');
+}
+function updateCountryLabelScale(){
+  if(!mapG)return;
+  const px=countryLabelScreenPx();
+  mapG.selectAll('.country-label')
+    .attr('font-size',px?`${labelPxToSvg(px)}px`:'0')
+    .style('display',px?null:'none')
+    .attr('opacity',px?0.78:0);
+}
 function updateServerScale(){
   if(!dotG)return;
   const ik=1/currentScale;
-  dotG.selectAll('.srv-ring').each(function(){
-    const r=parseFloat(this.dataset.r||30);
-    d3.select(this).attr('r',r*ik).attr('stroke-width',ik);
-  });
-  dotG.selectAll('.srv-dot').attr('r',7*ik).attr('stroke-width',1.5*ik);
+  dotG.selectAll('.srv-dot').attr('r',SERVER_DOT_R*ik).attr('stroke-width',ik);
   const [sx]=proj([SERVER_LON,SERVER_LAT]);
   dotG.selectAll('.srv-label')
-    .attr('font-size', (9*ik)+'px')
-    .attr('x',sx+14*ik)
+    .attr('font-size',(7*ik)+'px')
+    .attr('x',sx+SERVER_LABEL_GAP*ik)
     .attr('y',function(){
       const [,sy]=proj([SERVER_LON,SERVER_LAT]);
-      return sy+4*ik;
+      return sy+3*ik;
     });
 }
 
@@ -1073,7 +2351,7 @@ let arcPaths=[];
 function buildArcPaths(){
   arcPaths=[];
   const [sx,sy]=proj([SERVER_LON,SERVER_LAT]);
-  const data=getFilteredAttackData();
+  const data=getDisplayAttackData();
   data.forEach(d=>{
     const pt=proj([d.lon,d.lat]);
     if(!pt)return;
@@ -1082,73 +2360,196 @@ function buildArcPaths(){
     arcPaths.push({
       sx:px,sy:py,ex:sx,ey:sy,
       cpx:(px+sx)/2,cpy:(py+sy)/2-Math.min(dist*0.38,130),
-      col:countColor(d.count),
+      col:scenarioColor(d.scenario),
       phase:Math.random()*10,
+      scenario:d.scenario,
     });
   });
 }
 
-// Static arcs (no animation) – drawn once
-function drawStaticArcs(){
-  ctx2d.clearRect(0,0,canvas.width,canvas.height);
-  if(!linesOn)return;
-  if(!arcPaths.length)return;
-  ctx2d.save();
-  ctx2d.translate(currentTx,currentTy);
-  ctx2d.scale(currentScale,currentScale);
-  const ik=1/currentScale;
-  arcPaths.forEach(p=>{
-    ctx2d.beginPath();
-    ctx2d.strokeStyle=p.col;
-    ctx2d.lineWidth=1.0*ik;
-    ctx2d.setLineDash([5*ik,4*ik]);
-    ctx2d.lineDashOffset=0;
-    ctx2d.globalAlpha=0.45;
-    ctx2d.moveTo(p.sx,p.sy);
-    ctx2d.quadraticCurveTo(p.cpx,p.cpy,p.ex,p.ey);
-    ctx2d.stroke();
-  });
-  ctx2d.globalAlpha=1;
-  ctx2d.setLineDash([]);
-  ctx2d.restore();
-}
+// Bögen nur als temporäre Raketen (drawCrowdSecRockets) — keine dauerhaften arcPaths mehr
 
-// Animated arcs
-function startArcAnimation(){
-  if(animRAF)cancelAnimationFrame(animRAF);
-  const interval=1000/ARC_FPS;
-  function frame(ts){
-    animRAF=requestAnimationFrame(frame);
-    if(!linesOn){ctx2d.clearRect(0,0,canvas.width,canvas.height);return;}
-    const elapsed=ts-lastFrameTime;
-    if(elapsed<interval)return;
-    lastFrameTime=ts-(elapsed%interval);
-    arcOffset+=0.3;
-    ctx2d.clearRect(0,0,canvas.width,canvas.height);
-    ctx2d.save();
-    ctx2d.translate(currentTx,currentTy);
-    ctx2d.scale(currentScale,currentScale);
-    const ik=1/currentScale;
-    const seg=5*ik,gap=4*ik,dash=seg+gap;
-    arcPaths.forEach(p=>{
-      ctx2d.beginPath();
-      ctx2d.strokeStyle=p.col;
-      ctx2d.lineWidth=1.1*ik;
-      ctx2d.setLineDash([seg,gap]);
-      ctx2d.lineDashOffset=-((arcOffset+p.phase)%dash);
-      ctx2d.globalAlpha=0.62;
-      ctx2d.moveTo(p.sx,p.sy);
-      ctx2d.quadraticCurveTo(p.cpx,p.cpy,p.ex,p.ey);
-      ctx2d.stroke();
-    });
-    ctx2d.globalAlpha=1;
-    ctx2d.setLineDash([]);
-    ctx2d.restore();
+function getMapPanelInsetLeft(){
+  const wrap=mapWrap;
+  if(!wrap)return 8;
+  const wr=wrap.getBoundingClientRect();
+  let l=8;
+  const left=document.getElementById('map-panels-left');
+  if(left&&left.offsetParent!==null&&getComputedStyle(left).display!=='none'){
+    const r=left.getBoundingClientRect();
+    l=Math.max(l,r.right-wr.left+8);
   }
-  animRAF=requestAnimationFrame(frame);
+  return l;
+}
+function getMapChromeInsets(){
+  const wrap=mapWrap;
+  if(!wrap)return{l:0,t:40,r:0,b:72};
+  const wr=wrap.getBoundingClientRect();
+  const ins={l:14,t:28,r:14,b:68};
+  ins.l=Math.max(ins.l,getMapPanelInsetLeft());
+  const zc=document.getElementById('zoom-ctrl');
+  if(zc){
+    const r=zc.getBoundingClientRect();
+    ins.l=Math.max(ins.l,r.right-wr.left+10);
+  }
+  const zl=document.getElementById('zoom-level');
+  if(zl){
+    const r=zl.getBoundingClientRect();
+    ins.l=Math.max(ins.l,r.right-wr.left+8);
+  }
+  const consoleBar=document.getElementById('map-console-bar');
+  if(consoleBar&&!isCompactLayout()){
+    const r=consoleBar.getBoundingClientRect();
+    if(r.top<wr.bottom+2)ins.b=Math.max(ins.b,wr.bottom-r.top+6);
+  }
+  const replay=document.getElementById('replay-bar');
+  if(replay){
+    const r=replay.getBoundingClientRect();
+    ins.b=Math.max(ins.b,wr.bottom-r.top+10);
+  }
+  return ins;
+}
+function getHomeViewInsets(){
+  const ins=getMapChromeInsets();
+  const wrap=mapWrap;
+  const title=document.getElementById('map-title-overlay');
+  ins.t=0;
+  if(wrap&&title){
+    const wr=wrap.getBoundingClientRect();
+    const tr=title.getBoundingClientRect();
+    ins.t=Math.max(0,Math.round(tr.bottom-wr.top));
+  }
+  return ins;
+}
+function updateZoomLevel(kOrTransform){
+  const zl=document.getElementById('zoom-level');
+  if(!zl)return;
+  const k=typeof kOrTransform==='number'?kOrTransform:(kOrTransform?.k??currentScale);
+  zl.textContent=`${t('zoom_lbl')} ${k.toFixed(1)}×`;
+}
+function zoomByStep(delta){
+  if(!zoomBeh)return;
+  const zt=d3.zoomTransform(baseSvg.node());
+  const k=Math.max(0.1,Math.min(25,zt.k+delta));
+  baseSvg.transition().duration(180).call(zoomBeh.transform,d3.zoomIdentity.translate(zt.x,zt.y).scale(k))
+    .on('end',()=>updateZoomLevel(d3.zoomTransform(baseSvg.node()).k));
+}
+function loadMapViewPrefs(){
+  try{
+    const raw=localStorage.getItem(MAP_VIEW_STORAGE_KEY);
+    if(raw){
+      const p=JSON.parse(raw);
+      if(typeof p.useSavedOnLoad==='boolean')mapViewPrefs.useSavedOnLoad=p.useSavedOnLoad;
+      if(typeof p.homeK==='number'&&p.homeK>=0.5&&p.homeK<=25)mapViewPrefs.homeK=p.homeK;
+      if(p.savedView&&typeof p.savedView.k==='number')mapViewPrefs.savedView={k:p.savedView.k,x:p.savedView.x,y:p.savedView.y};
+    }
+  }catch(e){}
+  syncZoomPrefsUI();
+}
+function persistMapViewPrefs(){
+  try{localStorage.setItem(MAP_VIEW_STORAGE_KEY,JSON.stringify(mapViewPrefs));}catch(e){}
+  syncZoomPrefsUI();
+}
+function syncZoomPrefsUI(){
+  const useEl=document.getElementById('zoom-prefs-use-saved');
+  const homeEl=document.getElementById('zoom-prefs-home-k');
+  const homeVal=document.getElementById('zoom-prefs-home-val');
+  const status=document.getElementById('zoom-prefs-status');
+  const {defaultK}=getHomeFitParams();
+  const hk=mapViewPrefs.homeK??defaultK;
+  if(useEl)useEl.checked=!!mapViewPrefs.useSavedOnLoad;
+  if(homeEl){homeEl.value=String(hk);homeEl.title=t('zoom_prefs_home');}
+  if(homeVal)homeVal.textContent=hk.toFixed(1)+'×';
+  if(status){
+    if(isCompactLayout()&&mapViewPrefs.savedView)status.textContent=t('zoom_prefs_saved_desktop_only');
+    else if(mapViewPrefs.savedView)status.textContent=t('zoom_prefs_saved',mapViewPrefs.savedView.k);
+    else status.textContent=t('zoom_prefs_none');
+  }
+}
+function toggleZoomPrefsPanel(){
+  const panel=document.getElementById('zoom-prefs-panel');
+  if(!panel)return;
+  const open=!panel.classList.contains('open');
+  panel.classList.toggle('open',open);
+  panel.setAttribute('aria-hidden',open?'false':'true');
+}
+function saveCurrentMapViewAsStart(){
+  if(!baseSvg||!zoomBeh)return;
+  const tr=d3.zoomTransform(baseSvg.node());
+  mapViewPrefs.savedView={k:tr.k,x:tr.x,y:tr.y};
+  mapViewPrefs.useSavedOnLoad=true;
+  persistMapViewPrefs();
+  const status=document.getElementById('zoom-prefs-status');
+  if(status)status.textContent=t('zoom_prefs_ok');
+}
+function resetMapViewPrefs(){
+  mapViewPrefs={useSavedOnLoad:false,homeK:null,savedView:null};
+  try{localStorage.removeItem(MAP_VIEW_STORAGE_KEY);}catch(e){}
+  syncZoomPrefsUI();
+}
+function applySavedMapView(opts={}){
+  if(isCompactLayout())return false;
+  if(!mapViewPrefs.useSavedOnLoad||!mapViewPrefs.savedView||!zoomBeh||!baseSvg||!mapG||!dotG)return false;
+  const {k,x,y}=mapViewPrefs.savedView;
+  const t=d3.zoomIdentity.translate(x,y).scale(Math.max(0.1,Math.min(25,k)));
+  fitTransform=t;
+  currentScale=t.k;currentTx=t.x;currentTy=t.y;
+  userHasZoomed=true;
+  const dur=opts.duration!==undefined?opts.duration:0;
+  if(dur>0)baseSvg.transition().duration(dur).call(zoomBeh.transform,t);
+  else{
+    baseSvg.call(zoomBeh.transform,t);
+    mapG.attr('transform',t);
+    dotG.attr('transform',t);
+  }
+  updateZoomLevel(t.k);
+  drawCountryLabels();
+  renderDots();
+  if(animOn&&linesOn)drawCrowdSecRockets();
+  return true;
+}
+function applyInitialMapView(){
+  if(!isCompactLayout()&&applySavedMapView({duration:0}))return true;
+  fitMapToServerHome({duration:0,resetUser:false});
+  return false;
+}
+// Home: Weltübersicht mit Server im sichtbaren Bereich (wie CrowdSec Console / Bild 2)
+function fitMapToServerHome(opts={}){
+  if(!zoomBeh||!proj)return;
+  setupProj();
+  const srv=proj([SERVER_LON,SERVER_LAT]);
+  if(!srv)return;
+  const[sx,sy]=srv;
+  const {xFrac,yFrac,tyNudge,defaultK}=getHomeFitParams();
+  const k=opts.k??mapViewPrefs.homeK??defaultK;
+  const ins=getHomeViewInsets();
+  const panelL=getMapPanelInsetLeft();
+  const visW=Math.max(80,W-panelL-ins.r);
+  const visH=Math.max(80,H-ins.t-ins.b);
+  const cx=panelL+visW*xFrac;
+  const cy=ins.t+visH*yFrac;
+  const tx=cx-sx*k;
+  const ty=cy-sy*k-tyNudge;
+  homeTransform=d3.zoomIdentity.translate(tx,ty).scale(k);
+  fitTransform=homeTransform;
+  currentScale=k;currentTx=tx;currentTy=ty;
+  const dur=opts.duration!==undefined?opts.duration:650;
+  if(dur>0){
+    baseSvg.transition().duration(dur).ease(d3.easeCubicInOut).call(zoomBeh.transform,homeTransform);
+  }else{
+    baseSvg.call(zoomBeh.transform,homeTransform);
+    mapG.attr('transform',homeTransform);
+    dotG.attr('transform',homeTransform);
+  }
+  updateZoomLevel(k);
+  if(opts.resetUser!==false)userHasZoomed=false;
+}
+function scheduleHomeFit(){
+  const run=()=>{if(!userHasZoomed)applyInitialMapView();};
+  requestAnimationFrame(()=>requestAnimationFrame(run));
 }
 
-// ── AUTO-FIT ZOOM TO ALL ATTACK POINTS ──
+// Optional: alle Angriffspunkte einrahmen (nicht Standard-Start)
 function fitMapToPoints(){
   if(!attackData.length)return;
   const pts=attackData.map(d=>proj([d.lon,d.lat])).filter(Boolean);
@@ -1162,10 +2563,10 @@ function fitMapToPoints(){
   const rangeX=x1-x0||1,rangeY=y1-y0||1;
   const scaleX=(W-pad*2)/rangeX;
   const scaleY=(H-pad*2)/rangeY;
-  let k=Math.max(0.1,Math.min(scaleX,scaleY,6));
-  // On mobile: ensure map fills the available area (min scale so it looks filled)
+  let k=Math.max(0.1,Math.min(scaleX,scaleY,8));
+  k=Math.max(FIT_MIN_SCALE,Math.min(k*FIT_ZOOM_BOOST,8));
   if(window.innerWidth<=680){
-    const minFill=Math.max(W/650,H/350); // minimum scale to fill the map area
+    const minFill=Math.max(W/650,H/350);
     k=Math.max(k,minFill);
   }
   const cx=(x0+x1)/2,cy=(y0+y1)/2;
@@ -1176,12 +2577,12 @@ function fitMapToPoints(){
 }
 
 function renderDots(){
-  dotG.selectAll('.adot,.cluster-dot,.country-label').remove();
+  dotG.selectAll('.adot,.cluster-dot,.city-map-label').remove();
   const ik=1/currentScale;
-  const data=getFilteredAttackData();
+  const data=getDisplayAttackData();
 
-  // Cluster ONLY at base zoom level (≤1.5×) — any zoom-in shows real dots
-  const useCluster=currentScale<=1.5;
+  // Cluster nur bei Animation an + weit rausgezoomt; sonst Städte-Punkte sichtbar
+  const useCluster=animOn&&currentScale<=1.5;
 
   const dots=useCluster ? getClusteredDots(data) : data.map(d=>{
     const pt=proj([d.lon,d.lat]);
@@ -1192,17 +2593,16 @@ function renderDots(){
   dots.forEach(d=>{
     const px=d._px, py=d._py;
     if(px==null||py==null)return;
-    const col=countColor(d.count);
+    const col=scenarioColor(d.scenario);
     const isCluster=useCluster&&(d._cluster||1)>1;
 
     if(isCluster){
-      // Cluster badge: normal dot size + small number, NO scaling with zoom
-      const sr=Math.min(4+Math.log(d.count+1)*0.6,8); // same formula as normal dots
+      const sr=Math.min(4+Math.log(d.count+1)*0.6,8);
       dotG.append('circle').attr('class','cluster-dot')
         .attr('cx',px).attr('cy',py)
-        .attr('r',sr*ik)  // same size as a normal dot
+        .attr('r',sr*ik)
         .attr('fill',col)
-        .attr('stroke','rgba(0,0,0,0.4)').attr('stroke-width',0.5*ik)
+        .attr('stroke',col).attr('stroke-width',1.1*ik).attr('opacity',0.95)
         .on('click',function(ev){ev.stopPropagation();selectDot(ev,this,d);})
         .on('mouseover',(ev)=>showTip(ev,d)).on('mouseout',hideTip);
       // Tiny count number inside
@@ -1220,24 +2620,28 @@ function renderDots(){
       const sr=Math.min(3+Math.log(d.count+1)*0.7,7);
       dotG.append('circle').attr('class','adot')
         .attr('cx',px).attr('cy',py).attr('r',sr*ik).attr('data-sr',sr)
-        .attr('fill',col).attr('stroke','rgba(0,0,0,0.3)').attr('stroke-width',0.4*ik)
+        .attr('fill',col).attr('stroke',col).attr('stroke-width',1.2*ik).attr('opacity',0.95)
         .on('click',function(ev){ev.stopPropagation();selectDot(ev,this,d);})
         .on('mouseover',(ev)=>showTip(ev,d)).on('mouseout',hideTip);
-      // Stadtname bei genug Zoom — nur einmal pro Stadt
-      if(currentScale > 3.0 && d.city && !_renderedCityLabels.has(d.city)){
-        _renderedCityLabels.add(d.city);
-        dotG.append('text').attr('class','adot')
-          .attr('x', px + (sr+2)*ik).attr('y', py + 3*ik)
-          .attr('fill','rgba(0,255,180,0.85)')
-          .attr('font-size', `${6*ik}px`)
-          .attr('font-family','Orbitron,monospace')
-          .attr('pointer-events','none')
-          .text(translateCity(d.city));
+      {
+        const cityPx=cityLabelScreenPx();
+        if(cityPx&&d.city&&!_renderedCityLabels.has(d.city)){
+          _renderedCityLabels.add(d.city);
+          dotG.append('text').attr('class','city-map-label')
+            .attr('x',px+(sr+2)*ik).attr('y',py+3*ik)
+            .attr('fill',col)
+            .attr('font-size',`${labelPxToSvg(cityPx)}px`)
+            .attr('font-family','Share Tech Mono,monospace')
+            .attr('pointer-events','none')
+            .text(translateCity(d.city));
+        }
       }
     }
   });
   drawServerDots();
   drawCountryLabels();
+  updateCountryFills();
+  if(!animOn||!linesOn)clearArcCanvas();
   if(selectedDot){dotG.selectAll('.sel-ring').remove();}
 }
 
@@ -1267,6 +2671,7 @@ function enrichAttackData(){
       time_de: f.time_de,
       time_iso:f.time_iso,
       city:    f.city,
+      scenario:f.scenario,
     };
   });
   attackData.forEach(d=>{
@@ -1278,6 +2683,7 @@ function enrichAttackData(){
       d.time_de = extra.time_de;
       d.time_iso= extra.time_iso;
       d.city    = extra.city || d.city;
+      if(extra.scenario&&(!d.scenario||d.scenario==='unknown'))d.scenario=extra.scenario;
     }
   });
 }
@@ -1308,6 +2714,8 @@ function parseFeedData(text){
         lat:      parseFloat(lb.latitude||0),
         lon:      parseFloat(lb.longitude||0),
         count:    1,
+        active_ban: lb.active_ban==='1',
+        ts:       parseEventTime(lb.attack_time_iso),
       });
     }catch(e){}
   }
@@ -1318,19 +2726,26 @@ async function fetchAndRender(){
   try{
     const res=await fetch(EXPORTER_URL,{cache:'no-store'});
     const text=await res.text();
-    attackData=parseMetrics(text);
+    lastMetricsText=text;
+    allEvents=parseFeedData(text).filter(d=>!localUnbanned.has(d.ip)&&d.ts>0);
+    if(!liveMode){
+      const times=allEvents.map(e=>e.ts).filter(t=>t>0);
+      if(times.length){
+        if(!replayInitialized){initReplayWindow();replayInitialized=true;}
+        else{replayWinEnd=Math.max(...times);replayWinStart=Math.max(Math.min(...times),replayWinEnd-replayRangeH*3600000);if(replayCursor>replayWinEnd)replayCursor=replayWinEnd;}
+      }
+    }
+    attackData=liveMode?parseMetrics(text):aggregateFromEvents(getEventsInReplay());
     feedData=parseFeedData(text).filter(d=>!localUnbanned.has(d.ip));
     enrichAttackData();
     const total=(text.match(/cs_exporter_total_alerts (\d+)/)||[])[1]||'—';
-    document.getElementById('s-total').textContent=total;
-    const mobTotal=document.getElementById('mob-s-total');
-    if(mobTotal)mobTotal.textContent=total;
-    const ccSize=new Set(attackData.map(d=>d.country)).size;
-    document.getElementById('s-countries').textContent=ccSize;
-    const mobCC=document.getElementById('mob-s-countries');
-    if(mobCC)mobCC.textContent=ccSize;
-    document.getElementById('s-scenarios').textContent=new Set(attackData.map(d=>d.scenario)).size;
-    const timeStr=new Date().toLocaleTimeString('de-DE');
+    updateSidebarStats({totalAlerts:total});
+    updateFooterStats();
+    if(liveMode){
+      const clk=document.getElementById('replay-clock');
+      if(clk)clk.textContent=t('live_clock');
+    }
+    const timeStr=new Date().toLocaleTimeString(currentLang==='de'?'de-DE':'en-GB');
     document.getElementById('lu').textContent=timeStr;
     const mobLu=document.getElementById('mob-lu');
     if(mobLu)mobLu.textContent=timeStr;
@@ -1340,58 +2755,107 @@ async function fetchAndRender(){
     renderCountryLists();
     renderFilterBar();
     renderSparkline();
+    renderMapPanels();
     checkAlarms();
     hideErr();
-    applyLang(); // update all translated labels
-    if(!animOn)drawStaticArcs();
-  }catch(e){showErr('VERBINDUNGSFEHLER: '+EXPORTER_URL);}
+    applyLang();
+    ensureAutoZoomOff();
+    refreshMapFromData();
+  }catch(e){showErr(t('error_conn')+EXPORTER_URL);}
 }
 
 function countColor(n){if(n>=20)return'#ff2244';if(n>=10)return'#ff8800';if(n>=5)return'#ffff00';return'#00ff88';}
 
 // ── WHITELIST STATUS BADGE ──
-async function fetchWhitelistStatus(){
+function loadShowOwnIpPrefs(){
+  try{
+    const raw=localStorage.getItem(SHOW_OWN_IP_STORAGE_KEY);
+    if(raw===null)return;
+    showOwnIp=raw!=='0'&&raw!=='false';
+  }catch(e){}
+  syncWlIpToggleUI();
+}
+function persistShowOwnIpPrefs(){
+  try{localStorage.setItem(SHOW_OWN_IP_STORAGE_KEY,showOwnIp?'1':'0');}catch(e){}
+}
+function displayOwnIp(ip){
+  if(showOwnIp)return ip||'—';
+  return '••••••••';
+}
+function syncWlIpToggleUI(){
+  document.querySelectorAll('.wl-ip-toggle').forEach(btn=>{
+    btn.classList.toggle('on',showOwnIp);
+    btn.setAttribute('aria-pressed',showOwnIp?'true':'false');
+    btn.title=t('show_own_ip_title');
+  });
+  document.querySelectorAll('.wl-ip-toggle-lbl').forEach(el=>{
+    el.textContent=showOwnIp?t('show_own_ip_on'):t('show_own_ip_off');
+  });
+}
+function toggleShowOwnIp(){
+  showOwnIp=!showOwnIp;
+  persistShowOwnIpPrefs();
+  syncWlIpToggleUI();
+  if(lastWhitelistData)renderWhitelistBadge(lastWhitelistData);
+  else fetchWhitelistStatus();
+}
+function setupWlIpToggle(){
+  document.querySelectorAll('.wl-ip-toggle').forEach(btn=>{
+    btn.addEventListener('click',toggleShowOwnIp);
+  });
+}
+function renderWhitelistBadge(d){
   const dot=document.getElementById('wl-dot');
   const txt=document.getElementById('wl-text');
+  const mobDot=document.getElementById('mob-wl-dot');
+  const mobTxt=document.getElementById('mob-wl-text');
   if(!dot||!txt)return;
+  if(!d){
+    dot.style.background='rgba(160,255,216,0.15)';
+    txt.style.color='rgba(160,255,216,0.25)';
+    txt.textContent=t('wl_na');
+    txt.title='';
+    if(mobDot)mobDot.style.background='rgba(160,255,216,0.15)';
+    if(mobTxt){mobTxt.style.color='rgba(160,255,216,0.25)';mobTxt.textContent='🛡️ n/a';}
+    return;
+  }
+  const ip=d.ip||'';
+  const status=d.status||'unbekannt';
+  const check=d.last_check||'';
+  const changed=d.last_change||'';
+  const disp=displayOwnIp(ip);
+  let color,label,mobLabel;
+  if(!showOwnIp&&!ip){
+    color='rgba(160,255,216,0.3)';label=t('wl_ip_hidden');mobLabel=label;
+  }else if(status==='ok'){
+    color='var(--ok)';label=`🛡️ ${disp} ✓`;mobLabel=`🛡️ ${disp}`;
+  }else if(status==='aktualisiert'){
+    color='var(--accent)';
+    label=showOwnIp?t('wl_updated',ip):`🔄 ${disp} ${currentLang==='de'?'aktualisiert':'updated'}`;
+    mobLabel=`🛡️ ${disp}`;
+  }else if(status==='fehler'){
+    color='var(--danger)';label=t('wl_err');mobLabel='🛡️ !';
+  }else{
+    color='rgba(160,255,216,0.3)';label=`🛡️ ${disp}`;mobLabel=`🛡️ ${disp}`;
+  }
+  dot.style.background=color;
+  dot.style.boxShadow=status==='fehler'?`0 0 5px ${color}`:'none';
+  txt.style.color=color;
+  txt.textContent=label;
+  txt.title=showOwnIp?t('wl_check',check,changed):t('show_own_ip_title');
+  if(mobDot){mobDot.style.background=color;mobDot.style.boxShadow=status==='fehler'?`0 0 4px ${color}`:'none';}
+  if(mobTxt){mobTxt.style.color=color;mobTxt.textContent=mobLabel;mobTxt.title=txt.title;}
+}
+async function fetchWhitelistStatus(){
   try{
     const base=EXPORTER_URL.replace(/\/metrics.*$/,'');
     const res=await fetch(base+'/whitelist-status',{cache:'no-store'});
     if(!res.ok)throw new Error('HTTP '+res.status);
-    const d=await res.json();
-    const ip=d.ip||'—';
-    const status=d.status||'unbekannt';
-    const check=d.last_check||'';
-    const changed=d.last_change||'';
-
-    let color,label;
-    if(status==='ok'){
-      color='var(--ok)';label=`🛡️ ${ip} ✓`;
-    } else if(status==='aktualisiert'){
-      color='var(--accent)';label=`🔄 ${ip} aktualisiert`;
-    } else if(status==='fehler'){
-      color='var(--danger)';label='⚠️ Whitelist Fehler';
-    } else {
-      color='rgba(160,255,216,0.3)';label=`🛡️ ${ip||'—'}`;
-    }
-
-    dot.style.background=color;
-    dot.style.boxShadow=status==='fehler'?`0 0 5px ${color}`:'none';
-    txt.style.color=color;
-    txt.textContent=label;
-    txt.title=`Letzter Check: ${check}${changed?' | Geändert: '+changed:''}`;
-    // Mobile Badge
-    const mobDot=document.getElementById('mob-wl-dot');
-    const mobTxt=document.getElementById('mob-wl-text');
-    if(mobDot){mobDot.style.background=color;mobDot.style.boxShadow=status==='fehler'?`0 0 4px ${color}`:'none';}
-    if(mobTxt){mobTxt.style.color=color;mobTxt.textContent=`🛡️ ${ip||'—'}`;mobTxt.title=txt.title;}
+    lastWhitelistData=await res.json();
+    renderWhitelistBadge(lastWhitelistData);
   }catch(e){
-    if(dot)dot.style.background='rgba(160,255,216,0.15)';
-    if(txt){txt.style.color='rgba(160,255,216,0.25)';txt.textContent='Whitelist: n/a';}
-    const mobDot=document.getElementById('mob-wl-dot');
-    const mobTxt=document.getElementById('mob-wl-text');
-    if(mobDot)mobDot.style.background='rgba(160,255,216,0.15)';
-    if(mobTxt){mobTxt.style.color='rgba(160,255,216,0.25)';mobTxt.textContent='🛡️ n/a';}
+    lastWhitelistData=null;
+    renderWhitelistBadge(null);
   }
 }
 
@@ -1430,9 +2894,9 @@ function showCtx(ev,d){
 
 async function unbanIPDirect(ip, btn){
   if(!ip)return;
-  if(!confirm(`🔓 IP ${ip} wirklich entsperren?\n\nDiese IP wird aus allen aktiven CrowdSec-Bans entfernt.`))return;
+  if(!confirm(t('unban_confirm1',ip)))return;
   await new Promise(r=>setTimeout(r,100));
-  if(!confirm(`⚠️ Letzte Warnung!\n\nIP: ${ip}\n\nSicher entsperren? Diese Aktion kann nicht rückgängig gemacht werden.`))return;
+  if(!confirm(t('unban_confirm2',ip)))return;
 
   // Button direkt nutzen
   const targetBtn = btn || document.querySelector(`.feed-unban-btn[data-ip="${ip}"]`);
@@ -1470,11 +2934,11 @@ async function unbanIPDirect(ip, btn){
       },1500);
     } else {
       if(targetBtn){targetBtn.textContent='❌';targetBtn.style.color='var(--danger)';targetBtn.disabled=false;}
-      alert(`Fehler: ${data.message||'Unban fehlgeschlagen'}`);
+      alert(`${t('error_prefix')}${data.message||t('unban_fail')}`);
     }
   }catch(e){
     if(targetBtn){targetBtn.textContent='❌';targetBtn.style.color='var(--danger)';targetBtn.disabled=false;}
-    alert('Verbindungsfehler zum Exporter');
+    alert(t('unban_conn'));
   }
 }
 
@@ -1483,53 +2947,72 @@ async function unbanIP(){
 }
 function closeCtxOnce(e){
   const m=document.getElementById('ctx-menu');
-  if(!m.contains(e.target)) m.style.display='none';
+  const t=document.getElementById('tip');
+  if(m.style.display==='block'&&!m.contains(e.target))m.style.display='none';
+  if(tipPinned&&t.style.display==='block'&&!t.contains(e.target))closeTip();
 }
 // ctx-menu close button
 
 document.getElementById('ctx-close').onclick=()=>{document.getElementById('ctx-menu').style.display='none';};
 document.addEventListener('click', closeCtxOnce, true);
-document.addEventListener('keydown', e=>{ if(e.key==='Escape') document.getElementById('ctx-menu').style.display='none'; });
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'){
+    document.getElementById('ctx-menu').style.display='none';
+    closeTip();
+  }
+});
 // Click on map background = clear selection
 document.getElementById('base-svg').addEventListener('click',()=>{
   clearSelection();
 });
 
 const tipEl=document.getElementById('tip');
-function showTip(ev,d){
+const tipCloseBtn=document.getElementById('tip-close');
+let tipPinned=false;
+function closeTip(){tipPinned=false;tipEl.classList.remove('tip-pinned');tipEl.style.display='none';}
+function tipBodyHTML(d,pinned){
   const f=FLAG[d.country]||'🌐';
-  const asnStr  = d.asnumber ? `AS${d.asnumber}` : '';
-  const subnetStr= d.iprange && d.iprange!=='-' ? d.iprange : '';
-  const timeStr = d.time_de || d.time_iso || '';
-  const cityStr = d.city && d.city!=='-' ? translateCity(d.city) : '';
-  tipEl.innerHTML=`
+  const asnStr=d.asnumber?`AS${d.asnumber}`:'';
+  const subnetStr=d.iprange&&d.iprange!=='-'?d.iprange:'';
+  const timeStr=d.time_de||d.time_iso||'';
+  const cityStr=d.city&&d.city!=='-'?translateCity(d.city):'';
+  const foot=pinned?'':`<div style="color:rgba(0,255,200,0.25);font-size:8px;margin-top:5px;border-top:1px solid rgba(0,255,200,0.1);padding-top:4px;letter-spacing:1px;">${t('tip_click')}</div>`;
+  return `
     <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:4px;">
       <span style="color:#ff2244;font-size:12px;">${d.ip}</span>
-      <span style="color:rgba(255,34,68,0.5);font-size:10px;">${d.count}×</span>
+      <span style="color:rgba(255,34,68,0.5);font-size:10px;">${d.count||1}×</span>
     </div>
     ${subnetStr?`<div style="color:rgba(160,255,216,0.4);font-size:9px;margin-bottom:3px;">📡 ${subnetStr}</div>`:''}
     <div style="margin-bottom:3px;display:flex;align-items:center;gap:4px;flex-wrap:wrap;">
-      <span style="color:#ff8800;font-size:10px;">${f} ${COUNTRY_NAME[d.country]||d.country}</span>
-      ${cityStr?`<span style="color:rgba(0,255,200,0.2);">·</span><span style="color:rgba(255,200,100,0.95);font-size:10px;font-weight:500;">${cityStr}</span>`:''}
+      <span style="color:#ff8800;font-size:10px;">${f} ${countryDisplayName(d.country)}</span>
+      ${cityStr?`<span style="color:rgba(0,255,200,0.2);">·</span><span style="color:rgba(255,200,100,0.95);font-size:10px;">${cityStr}</span>`:''}
       ${asnStr?`<span style="color:rgba(0,255,200,0.2);">·</span><span style="color:rgba(0,255,200,0.5);font-size:9px;">${asnStr}</span>`:''}
     </div>
     ${d.asname?`<div style="color:rgba(160,255,216,0.55);font-size:9px;margin-bottom:3px;max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${d.asname}</div>`:''}
     <div style="color:rgba(160,255,216,0.6);font-size:9px;margin-bottom:${timeStr?'3px':'0'};">⚡ ${d.scenario}</div>
     ${timeStr?`<div style="color:rgba(0,255,200,0.35);font-size:9px;">🕐 ${timeStr}</div>`:''}
-    <div style="color:rgba(0,255,200,0.25);font-size:8px;margin-top:5px;border-top:1px solid rgba(0,255,200,0.1);padding-top:4px;letter-spacing:1px;">KLICK FÜR DETAILS</div>
-  `;
-  tipEl.style.display='block';
-  // Smart positioning
+    ${foot}`;
+}
+function positionTip(ev){
   const tw=tipEl.offsetWidth||220;
   const th=tipEl.offsetHeight||120;
-  let x=ev.clientX+14, y=ev.clientY-10;
-  if(x+tw>window.innerWidth-10) x=ev.clientX-tw-10;
-  if(y+th>window.innerHeight-10) y=ev.clientY-th-10;
-  if(y<60) y=60;
+  let x=ev.clientX+14,y=ev.clientY-10;
+  if(x+tw>window.innerWidth-10)x=ev.clientX-tw-10;
+  if(y+th>window.innerHeight-10)y=ev.clientY-th-10;
+  if(y<60)y=60;
   tipEl.style.left=x+'px';
   tipEl.style.top=y+'px';
 }
-function hideTip(){tipEl.style.display='none';}
+function showTip(ev,d,pinned=false){
+  tipPinned=pinned;
+  tipEl.classList.toggle('tip-pinned',pinned);
+  const body=document.getElementById('tip-content');
+  if(body)body.innerHTML=tipBodyHTML(d,pinned);
+  tipEl.style.display='block';
+  positionTip(ev);
+}
+function hideTip(){if(tipPinned)return;tipEl.style.display='none';}
+if(tipCloseBtn)tipCloseBtn.onclick=e=>{e.stopPropagation();closeTip();};
 
 // ── FEED & LISTS ──
 function feedItemHTML(d){
@@ -1543,29 +3026,25 @@ function feedItemHTML(d){
       <div class="feed-ip" style="flex:1;">${d.ip}</div>
       <button class="feed-action-btn feed-unban-btn" data-ip="${d.ip}"
         onclick="event.stopPropagation();unbanIPDirect('${d.ip}',this);"
-        title="${d.active_ban ? 'Aktiver Ban — klicken zum Entsperren (Decision + Alert wird gelöscht)' : 'Kein aktiver Ban — nur Alert/Historie vorhanden'}"
-        style="font-size:16px;opacity:${d.active_ban ? '1' : '0.3'};">🚫</button>
-      <button class="feed-action-btn feed-unban-btn" data-ip="${d.ip}"
-        onclick="event.stopPropagation();unbanIPDirect('${d.ip}',this);"
-        title="${d.active_ban ? 'Alert vorhanden' : 'Nur Alert/Historie — klicken zum Löschen'}"
-        style="font-size:16px;opacity:${d.active_ban ? '0.3' : '1'};">📋</button>
+        title="${d.active_ban ? t('unban_active') : t('unban_history')}"
+        style="font-size:16px;">${d.active_ban?'🚫':'📋'}</button>
       <button class="feed-action-btn feed-lookup-btn"
         onclick="event.stopPropagation();openCtxFeed('${d.ip}','${d.country}','${d.scenario}',1,event,'${d.iprange||''}');"
-        title="IP nachschlagen">🔍</button>
+        title="${t('lookup_title')}">🔍</button>
       <button class="feed-action-btn feed-map-btn"
         onclick="event.stopPropagation();jumpToPoint(${d.lat},${d.lon},'${d.ip}','${d.country}','${d.scenario}','${d.iprange||''}',event,'${(d.city||'').replace(/'/g,"\\'")}');"
-        title="Auf Karte zeigen">↗</button>
+        title="${t('map_title')}">↗</button>
     </div>
     <div style="font-size:clamp(7px,0.85vw,9px);color:rgba(160,255,216,0.35);margin-top:1px;">
       ${subnetStr?`${t('subnet_icon')} ${subnetStr}`:''}
     </div>
     <div class="feed-meta" style="margin-top:2px;display:flex;align-items:center;gap:4px;flex-wrap:wrap;">
-      <span class="feed-country">${f} ${COUNTRY_NAME[d.country]||d.country}</span>
+      <span class="feed-country">${f} ${countryDisplayName(d.country)}</span>
       ${cityStr?`<span style="color:rgba(0,255,200,0.2);">·</span><span style="color:rgba(255,200,100,0.95);font-size:clamp(8px,0.95vw,10px);font-weight:500;">${cityStr}</span>`:''}
       ${asnStr?`<span style="color:rgba(0,255,200,0.2);">·</span><span style="color:rgba(0,255,200,0.45);font-size:clamp(7px,0.8vw,9px);">${asnStr}</span>`:''}
     </div>
     <div style="font-size:clamp(7px,0.85vw,9px);color:rgba(160,255,216,0.5);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${d.asname}">${d.asname||''}</div>
-    <div class="feed-scenario" style="margin-top:2px;cursor:pointer;" onclick="event.stopPropagation();filterByScenario('${d.scenario.replace(/'/g,"\\'")}');" title="Klick: nach Szenario filtern">${t('scenario_icon')} ${d.scenario}</div>
+    <div class="feed-scenario" style="margin-top:2px;cursor:pointer;" onclick="event.stopPropagation();filterByScenario('${d.scenario.replace(/'/g,"\\'")}');" title="${t('filter_scenario')}">${t('scenario_icon')} ${d.scenario}</div>
     <div style="font-size:clamp(7px,0.8vw,9px);color:rgba(0,255,200,0.32);margin-top:3px;letter-spacing:0.5px;">${t('time_icon')} ${timeStr}</div>
   </div>`;
 }
@@ -1579,6 +3058,7 @@ function clearSelection(){
     selectedEl=null; selectedDot=null;
   }
   document.getElementById('ctx-menu').style.display='none';
+  closeTip();
 }
 
 function drawSelectionRing(px,py){
@@ -1601,27 +3081,26 @@ function drawSelectionRing(px,py){
 function selectDot(ev,el,d){
   const isSame = selectedEl===el;
 
-  // If same dot clicked again → just toggle menu
   if(isSame){
-    const m=document.getElementById('ctx-menu');
-    if(m.style.display==='block'){
-      m.style.display='none';
-    } else {
+    if(tipPinned||document.getElementById('ctx-menu').style.display==='block'){
+      clearSelection();
+    }else{
+      showTip(ev,d,true);
       showCtx(ev,d);
     }
     return;
   }
 
-  // New dot selected
-  clearSelection();
-  selectedEl=el; selectedDot=d;
+  selectedEl=el;
+  selectedDot=d;
+  document.getElementById('ctx-menu').style.display='none';
+  tipPinned=false;
 
-  // Get dot position
   const px=parseFloat(el.getAttribute('cx'));
   const py=parseFloat(el.getAttribute('cy'));
   drawSelectionRing(px,py);
 
-  // Open context menu
+  showTip(ev,d,true);
   showCtx(ev,d);
 }
 
@@ -1792,10 +3271,11 @@ function countryListHTML(items){
   return items.map((d,i)=>{
     const f=FLAG[d.country]||'🌐',pct=Math.round(d.count/max*100),col=countColor(d.count);
     const isActive=activeFilters.country===d.country;
-    return `<div class="top-item${isActive?' top-item-active':''}" onclick="filterByCountry('${d.country}')" title="Klick: nur ${d.country} anzeigen">
+    const cName=countryDisplayName(d.country);
+    return `<div class="top-item${isActive?' top-item-active':''}" onclick="filterByCountry('${d.country}')" title="${t('filter_country',cName)}">
       <div class="top-rank">#${i+1}</div><div class="top-flag">${f}</div>
       <div class="top-info">
-        <div class="top-country" style="${isActive?'color:var(--accent);':''}">${d.country}</div>
+        <div class="top-country" style="${isActive?'color:var(--accent);':''}">${cName}</div>
         <div class="top-bar-wrap"><div class="top-bar" style="width:${pct}%;background:${col}"></div></div>
       </div>
       <div class="top-count">${d.count}</div>
@@ -1804,31 +3284,32 @@ function countryListHTML(items){
 }
 
 function renderCountryLists(){
-  const byC={};
-  attackData.forEach(d=>{byC[d.country]=(byC[d.country]||0)+d.count;});
-  const sorted=Object.entries(byC).map(([c,n])=>({country:c,count:n})).sort((a,b)=>b.count-a.count);
-  const h10=countryListHTML(sorted.slice(0,10));
-  const hall=countryListHTML(sorted);
-  ['top10','topall','mob-top10','mob-topall'].forEach((id,i)=>{
-    document.getElementById(id).innerHTML=i<2?[h10,hall][i]:[h10,hall][i-2];
+  const sorted=getAlltimeCountryCounts();
+  const empty=`<div class="top-item" style="justify-content:center;padding:12px;color:rgba(160,255,216,0.35);font-size:9px;letter-spacing:0.5px;cursor:default;">${t('top_list_empty')}</div>`;
+  const h10=sorted.length?countryListHTML(sorted.slice(0,10)):empty;
+  const hall=sorted.length?countryListHTML(sorted):empty;
+  const htmlById={top10:h10,topall:hall,'mob-top10':h10,'mob-topall':hall};
+  Object.entries(htmlById).forEach(([id,html])=>{
+    const el=document.getElementById(id);
+    if(el)el.innerHTML=html;
   });
 }
 
 // ── FILTER FUNCTIONS ──
 function filterByCountry(cc){
   if(activeFilters.country===cc){activeFilters.country=null;}else{activeFilters.country=cc;}
-  feedPage=0;renderFeed();renderFilterBar();renderDots();buildArcPaths();drawStaticArcs();
+  feedPage=0;renderFeed();renderFilterBar();refreshMapFromData();
   renderCountryLists();
 }
 
 function filterByScenario(sc){
   if(activeFilters.scenario===sc){activeFilters.scenario=null;}else{activeFilters.scenario=sc;}
-  feedPage=0;renderFeed();renderFilterBar();renderDots();buildArcPaths();drawStaticArcs();
+  feedPage=0;renderFeed();renderFilterBar();refreshMapFromData();
 }
 
 function clearFilter(key){
   activeFilters[key]=null;
-  feedPage=0;renderFeed();renderFilterBar();renderDots();buildArcPaths();drawStaticArcs();
+  feedPage=0;renderFeed();renderFilterBar();refreshMapFromData();
   if(key==='country')renderCountryLists();
 }
 
@@ -1852,7 +3333,7 @@ function renderFilterBar(){
   const bar=document.getElementById('filter-bar');
   const mobBar=document.getElementById('mob-filter-bar');
   let html='';
-  if(activeFilters.country) html+=`<div class="filter-chip" onclick="clearFilter('country')"><span>🌍 ${activeFilters.country}</span><span class="filter-chip-x">✕</span></div>`;
+  if(activeFilters.country) html+=`<div class="filter-chip" onclick="clearFilter('country')"><span>🌍 ${countryDisplayName(activeFilters.country)}</span><span class="filter-chip-x">✕</span></div>`;
   if(activeFilters.scenario) html+=`<div class="filter-chip" onclick="clearFilter('scenario')"><span>⚡ ${activeFilters.scenario}</span><span class="filter-chip-x">✕</span></div>`;
   if(activeFilters.search) html+=`<div class="filter-chip" onclick="document.getElementById('feed-search').value='';document.getElementById('mob-feed-search')&&(document.getElementById('mob-feed-search').value='');onFeedSearch();"><span>🔍 ${activeFilters.search}</span><span class="filter-chip-x">✕</span></div>`;
   if(bar)bar.innerHTML=html;
@@ -1910,7 +3391,7 @@ function setTheme(name){
   });
   // Redraw map
   if(dotG){renderDots();drawServerDots();drawCountryLabels();}
-  if(!animOn)drawStaticArcs();
+  if(animOn&&linesOn)drawCrowdSecRockets();else clearArcCanvas();
   renderSparkline();
 }
 
@@ -1919,7 +3400,7 @@ function checkAlarms(){} // Stub — kein Sound mehr
 
 // ── CSV EXPORT ──
 function exportCSV(){
-  const rows=[['IP','Land','Stadt','ASN','ASName','Szenario','Anzahl','Zeit']];
+  const rows=[t('csv_headers')];
   feedData.forEach(d=>{
     rows.push([d.ip,d.country,d.city||'',d.asnumber||'',d.asname||'',d.scenario,d.count||1,d.time_de||d.time_iso||'']);
   });
@@ -1980,45 +3461,45 @@ const COUNTRY_NAMES={
   LY:'Libya',KH:'Cambodia',LU:'Luxembourg',SI:'Slovenia',MN:'Mongolia',
 };
 
+const CC_CENTER={
+  US:[37.09,-95.71],CA:[56.13,-106.35],GB:[54.37,-2.0],FR:[46.60,1.88],
+  DE:[51.17,10.45],IT:[41.87,12.57],ES:[40.46,-3.75],NL:[52.13,5.29],
+  CH:[46.82,8.23],AT:[47.52,14.55],PL:[51.92,19.15],SE:[60.13,18.64],
+  NO:[60.47,8.47],DK:[56.26,9.50],FI:[61.92,25.75],RU:[61.52,105.32],
+  CN:[35.86,104.19],JP:[36.20,138.25],KR:[35.91,127.77],IN:[20.59,78.96],
+  AU:[-25.27,133.78],BR:[-14.24,-51.93],MX:[23.63,-102.55],UA:[48.38,31.17],
+  RO:[45.94,24.97],BG:[42.73,25.49],IE:[53.41,-8.24],PT:[39.40,-8.22],
+  GR:[39.07,21.82],TR:[38.96,35.24],ZA:[-30.56,22.94],SG:[1.35,103.82],
+  HK:[22.32,114.17],TW:[23.70,120.96],TH:[15.87,100.99],MY:[4.21,101.98],
+  ID:[-0.79,113.92],IL:[31.05,34.85],SA:[23.89,45.08],MD:[47.41,28.37],
+  BE:[50.50,4.47],SK:[48.67,19.70],HR:[45.10,15.20],RS:[44.02,21.01],
+  HU:[47.16,19.50],CZ:[49.82,15.47]
+};
+const COUNTRY_NAMES_DE_MAP={'US':'USA','CA':'Kanada','GB':'UK','FR':'Frankreich','DE':'Deutschland','IT':'Italien','ES':'Spanien','NL':'Niederlande','CH':'Schweiz','AT':'Österreich','PL':'Polen','SE':'Schweden','NO':'Norwegen','DK':'Dänemark','FI':'Finnland','RU':'Russland','CN':'China','JP':'Japan','KR':'Südkorea','IN':'Indien','AU':'Australien','BR':'Brasilien','MX':'Mexiko','UA':'Ukraine','RO':'Rumänien','BG':'Bulgarien','IE':'Irland','PT':'Portugal','GR':'Griechenland','TR':'Türkei','ZA':'Südafrika','SG':'Singapur','TH':'Thailand','MY':'Malaysia','ID':'Indonesien','BE':'Belgien','CZ':'Tschechien','HU':'Ungarn','RS':'Serbien','HR':'Kroatien','SK':'Slowakei','MD':'Moldau','BA':'Bosnien','MK':'N.Mazedonien'};
+function countryDisplayName(cc){return currentLang==='de'?(COUNTRY_NAMES_DE_MAP[cc]||COUNTRY_NAME[cc]||cc):(COUNTRY_NAMES[cc]||cc);}
 function drawCountryLabels(){
   if(!mapG||!worldData)return;
   mapG.selectAll('.country-label').remove();
+  const px=countryLabelScreenPx();
+  if(!px)return;
   const accent=getComputedStyle(document.documentElement).getPropertyValue('--accent').trim()||'#00ffe0';
-  const shown=new Set();
-  attackData.forEach(d=>{
-    if(shown.has(d.country))return;
-    shown.add(d.country);
-    const pt=proj([d.lon,d.lat]);
-    if(!pt)return;
-    const ik=1/currentScale;
-    const COUNTRY_NAMES_DE_MAP={'US':'USA','CA':'Kanada','GB':'Vereinigtes Königreich','FR':'Frankreich','DE':'Deutschland','IT':'Italien','ES':'Spanien','NL':'Niederlande','CH':'Schweiz','AT':'Österreich','PL':'Polen','SE':'Schweden','NO':'Norwegen','DK':'Dänemark','FI':'Finnland','RU':'Russland','CN':'China','JP':'Japan','KR':'Südkorea','IN':'Indien','AU':'Australien','BR':'Brasilien','MX':'Mexiko','UA':'Ukraine','RO':'Rumänien','BG':'Bulgarien','IE':'Irland','PT':'Portugal','GR':'Griechenland','TR':'Türkei','ZA':'Südafrika','SG':'Singapur','TH':'Thailand','MY':'Malaysia','ID':'Indonesien','BE':'Belgien','CZ':'Tschechien','HU':'Ungarn','RS':'Serbien','HR':'Kroatien','SK':'Slowakei','MD':'Moldau','BA':'Bosnien','MK':'N.Mazedonien'};
-    const label = currentLang==='de' ? (COUNTRY_NAMES_DE_MAP[d.country]||COUNTRY_NAMES[d.country]||d.country) : (COUNTRY_NAMES[d.country]||d.country);
-    const CC_CENTER={
-      US:[37.09,-95.71],CA:[56.13,-106.35],GB:[54.37,-2.0],FR:[46.60,1.88],
-      DE:[51.17,10.45],IT:[41.87,12.57],ES:[40.46,-3.75],NL:[52.13,5.29],
-      CH:[46.82,8.23],AT:[47.52,14.55],PL:[51.92,19.15],SE:[60.13,18.64],
-      NO:[60.47,8.47],DK:[56.26,9.50],FI:[61.92,25.75],RU:[61.52,105.32],
-      CN:[35.86,104.19],JP:[36.20,138.25],KR:[35.91,127.77],IN:[20.59,78.96],
-      AU:[-25.27,133.78],BR:[-14.24,-51.93],MX:[23.63,-102.55],UA:[48.38,31.17],
-      RO:[45.94,24.97],BG:[42.73,25.49],IE:[53.41,-8.24],PT:[39.40,-8.22],
-      GR:[39.07,21.82],TR:[38.96,35.24],ZA:[-30.56,22.94],SG:[1.35,103.82],
-      HK:[22.32,114.17],TW:[23.70,120.96],TH:[15.87,100.99],MY:[4.21,101.98],
-      ID:[-0.79,113.92],IL:[31.05,34.85],SA:[23.89,45.08],MD:[47.41,28.37],
-      BE:[50.50,4.47],SK:[48.67,19.70],HR:[45.10,15.20],RS:[44.02,21.01],
-      HU:[47.16,19.50],CZ:[49.82,15.47]
-    };
-    const center=CC_CENTER[d.country];
-    const cpt=center ? proj([center[1],center[0]]) : pt;
+  const events=liveMode?feedData:getEventsInReplay();
+  const byCo={};
+  events.forEach(e=>{byCo[e.country]=(byCo[e.country]||0)+1;});
+  Object.keys(byCo).forEach(cc=>{
+    const center=CC_CENTER[cc];
+    if(!center)return;
+    const cpt=proj([center[1],center[0]]);
     if(!cpt)return;
     mapG.append('text').attr('class','country-label')
       .attr('x',cpt[0]).attr('y',cpt[1])
       .attr('text-anchor','middle')
       .attr('fill',accent)
-      .attr('opacity','0.5')
-      .attr('font-size',`${7.5*ik}px`)
+      .attr('opacity',0.78)
+      .attr('font-size',`${labelPxToSvg(px)}px`)
       .attr('font-family','Share Tech Mono,monospace')
       .attr('pointer-events','none')
-      .text(label);
+      .text(countryDisplayName(cc));
   });
 }
 
@@ -2048,8 +3529,11 @@ function getClusteredDots(data){
     const totalCount=cluster.reduce((s,d)=>s+d.count,0);
     const cx=cluster.reduce((s,d)=>s+d._px*d.count,0)/totalCount;
     const cy=cluster.reduce((s,d)=>s+d._py*d.count,0)/totalCount;
+    const scenCounts={};
+    cluster.forEach(c=>{scenCounts[c.scenario]=(scenCounts[c.scenario]||0)+(c.count||1);});
+    const topScenario=Object.entries(scenCounts).sort((a,b)=>b[1]-a[1])[0]?.[0]||cluster[0].scenario;
     clusters.push({
-      ...cluster[0],_px:cx,_py:cy,
+      ...cluster[0],scenario:topScenario,_px:cx,_py:cy,
       count:totalCount,_cluster:cluster.length,_clusterPts:cluster,
     });
   }
@@ -2065,12 +3549,18 @@ document.querySelectorAll('.tab').forEach(t=>{
     document.getElementById('tc-'+t.dataset.tab).classList.add('active');
   });
 });
-document.querySelectorAll('.mob-tab-btn').forEach(t=>{
-  t.addEventListener('click',()=>{
-    document.querySelectorAll('.mob-tab-btn').forEach(x=>x.classList.remove('active'));
-    t.classList.add('active');
-    ['feed','top10','topall'].forEach(id=>{document.getElementById('mob-'+id).style.display=t.dataset.mob===id?'block':'none';});
+function switchMobTab(tabId){
+  document.querySelectorAll('.mob-tab-btn').forEach(btn=>{
+    btn.classList.toggle('active',btn.dataset.mob===tabId);
   });
+  document.querySelectorAll('.mob-panel-view').forEach(v=>{
+    v.classList.toggle('active',v.id==='mob-view-'+tabId);
+  });
+  if(tabId==='top10'||tabId==='topall')renderCountryLists();
+  syncCompactLayout();
+}
+document.querySelectorAll('.mob-tab-btn').forEach(t=>{
+  t.addEventListener('click',()=>switchMobTab(t.dataset.mob));
 });
 
 // ── UTILS ──
@@ -2080,9 +3570,18 @@ function hideErr(){document.getElementById('err').style.display='none';}
 // Pause animation when tab hidden
 document.addEventListener('visibilitychange',()=>{
   if(document.hidden&&animRAF){cancelAnimationFrame(animRAF);animRAF=null;}
-  else if(!document.hidden&&animOn){startArcAnimation();}
+  else if(!document.hidden&&animOn&&linesOn)startAnimLoop();
 });
 
+normalizeLang();
+loadMapViewPrefs();
+loadShowOwnIpPrefs();
+setupWlIpToggle();
+autoZoomOn=false;
+ensureAutoZoomOff();
+syncMapToggleStates();
+applyLang();
+ensureAutoZoomOff();
 init();
 </script>
 </body>
