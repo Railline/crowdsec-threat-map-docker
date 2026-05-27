@@ -552,7 +552,7 @@
     #map-version-badge{font-size:6px;padding:1px 3px;}
     #mob-sheet{
       position:fixed;bottom:0;left:0;right:0;
-      height:min(58vh,460px);max-height:min(62vh,480px);min-height:260px;
+      height:min(52vh,420px);max-height:min(55vh,440px);min-height:240px;
     }
     #map-mob-controls{
       display:flex;align-items:center;justify-content:center;gap:6px;
@@ -570,44 +570,46 @@
     #mob-top10 .top-item,#mob-topall .top-item{padding:7px 10px;}
     .mob-tab-btn{font-size:9px;min-height:38px;padding:8px 4px;}
     #mob-panel{flex:1!important;min-height:0;max-height:none!important;}
-    #map-col{
-      flex:1;min-height:0;display:flex;flex-direction:column;
-      overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;
-    }
-    #map-wrap{flex:0 1 auto;min-height:min(36vh,280px);max-height:min(42vh,340px);}
+    #map-col{flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden;}
+    #map-wrap{flex:1 1 0;min-height:0;}
     #map-console-bar{
-      font-size:8px;flex:0 0 auto;
-      min-height:auto;max-height:none;overflow:visible;
-      padding-bottom:6px;
+      font-size:8px;flex:0 0 auto;overflow:hidden;
+      padding-bottom:4px;
     }
     #mob-sheet{z-index:320;}
-    #timeline-wrap{padding:4px 8px 2px;flex-shrink:0;}
+    #timeline-wrap{padding:3px 8px 2px;flex-shrink:0;}
     #timeline-labels{
-      font-size:6px;padding:0 8px 4px;line-height:1.35;
-      flex-direction:column;align-items:stretch;gap:2px;
+      font-size:5px;padding:0 8px 2px;line-height:1.2;
+      flex-direction:row;justify-content:space-between;gap:4px;
     }
-    #timeline-labels span{display:block;word-break:break-word;}
-    #tl-start,#tl-end{max-width:100%;}
+    #timeline-labels span{
+      display:block;min-width:0;flex:1;
+      overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+    }
+    #tl-end{text-align:right;}
+    #map-window-stats{padding:4px 8px 3px;}
+    #map-mob-controls{padding:4px 8px;}
     #console-controls{
-      gap:8px;padding:6px 8px 8px;flex-shrink:0;
+      display:flex;flex-direction:column;gap:5px;
+      padding:4px 8px 6px;flex-shrink:0;
     }
+    #console-controls .console-legend-row{display:none;}
+    #console-controls .console-range-row{order:1;}
+    #console-controls .console-speed-row{order:2;}
     #console-controls .console-row{
-      flex-direction:column;align-items:stretch;gap:4px;
+      flex-direction:column;align-items:stretch;gap:3px;
     }
     #console-controls .ctrl-group-lbl{
-      width:auto;font-size:7px;letter-spacing:0.6px;
-      color:rgba(160,255,216,0.55);padding-left:2px;
+      width:auto;font-size:7px;letter-spacing:0.5px;
+      color:var(--accent);padding-left:1px;
     }
     #console-controls .ctrl-chip-strip{
-      flex-wrap:wrap;overflow-x:visible;overflow-y:visible;
-      gap:4px;padding-bottom:2px;
+      display:flex;flex-wrap:wrap;gap:3px;overflow:visible;
     }
-    .console-range-row .ctrl-chip-strip,
-    .console-speed-row .ctrl-chip-strip{
-      justify-content:flex-start;
+    #console-controls .pill-btn{
+      padding:3px 6px;font-size:6px;min-height:20px;line-height:1.2;
     }
-    .pill-btn{padding:4px 7px;font-size:7px;min-height:22px;border-radius:3px;}
-    .console-legend-row .ctrl-chip-strip{flex-wrap:wrap;justify-content:flex-start;}
+    .console-range-row .ctrl-chip-strip{min-height:44px;align-content:flex-start;}
     .map-window-stats-grid{gap:2px;}
     .mws-val{font-size:9px;}
     .mws-lbl{font-size:4px;}
@@ -628,8 +630,8 @@
   }
   @media(max-width:480px){
     #mob-sheet{height:min(60vh,400px);max-height:min(64vh,420px);}
-    #map-wrap{min-height:min(34vh,240px);}
-    #map-console-bar{min-height:min(44vh,360px);}
+    #map-window-stats{padding:3px 6px 2px;}
+    .console-range-row .ctrl-chip-strip{min-height:40px;}
     #replay-bar{max-width:calc(100% - 12px);}
     #replay-clock{display:none;}
     #mode-live-btn{margin-left:auto;}
@@ -684,7 +686,7 @@
     <div id="map-wrap">
       <div id="map-title-overlay">
         <span id="h-title">CROWD<span>SEC</span> // THREAT MAP</span>
-        <span id="map-version-badge">v1.6.5</span>
+        <span id="map-version-badge">v1.6.6</span>
       </div>
       <svg id="base-svg" style="position:absolute;inset:0;width:100%;height:100%"></svg>
       <canvas id="arc-canvas"></canvas>
@@ -981,7 +983,7 @@ const SERVER_NAME_MAP = 'MEIN-SERVER';
 // Ab hier nichts mehr ändern
 // ============================================================
 
-const APP_VERSION  = 'v1.6.5';
+const APP_VERSION  = 'v1.6.6';
 const REFRESH_MS   = 30000;
 const localUnbanned = new Set();
 const ARC_FPS      = 30;
