@@ -420,7 +420,30 @@
   #mob-tab-btns{display:flex;border-bottom:1px solid var(--dim);align-items:center;background:rgba(0,5,15,0.95);}
   .mob-tab-btn{padding:10px 8px;text-align:center;font-size:10px;letter-spacing:1px;color:rgba(160,255,216,0.4);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;}
   .mob-tab-btn.active{color:var(--accent);border-bottom:2px solid var(--accent);}
-  #mob-stats-bar{display:flex;align-items:center;justify-content:space-between;padding:5px 10px;border-bottom:1px solid var(--dim);background:rgba(0,5,15,0.95);gap:6px;flex-shrink:0;}
+  #mob-stats-bar{
+    display:flex;flex-direction:column;gap:5px;
+    padding:6px 8px;border-bottom:1px solid var(--dim);
+    background:rgba(0,5,15,0.95);flex-shrink:0;
+  }
+  .mob-stats-grid{display:flex;flex-direction:column;gap:5px;}
+  .mob-stats-block{border:1px solid rgba(0,255,200,0.08);border-radius:4px;padding:4px 6px;background:rgba(0,12,24,0.5);}
+  .mob-stats-block-title{font-size:6px;letter-spacing:1px;color:rgba(160,255,216,0.35);margin-bottom:3px;}
+  .mob-stats-items{display:flex;justify-content:space-around;gap:4px;flex-wrap:wrap;}
+  .mob-stat-item{display:flex;flex-direction:column;align-items:center;min-width:42px;}
+  .mob-stat-val{font-family:'Orbitron',monospace;font-size:10px;font-weight:700;color:var(--accent);line-height:1.1;}
+  .mob-stat-lbl{font-size:5px;color:rgba(160,255,216,0.4);letter-spacing:0.5px;text-align:center;}
+  .mob-stat-dot{font-size:7px;line-height:1;margin-bottom:1px;}
+  .mob-stats-meta{display:flex;align-items:center;justify-content:space-between;gap:6px;flex-wrap:wrap;}
+  .mob-stats-meta-left{display:flex;align-items:center;gap:6px;flex-wrap:wrap;min-width:0;}
+  .mob-stats-meta-right{display:flex;align-items:center;gap:4px;flex-shrink:0;}
+  .mob-ctrl-pill{
+    display:flex;align-items:center;gap:3px;border-radius:3px;padding:2px 5px;cursor:pointer;
+    font-family:'Share Tech Mono',monospace;font-size:7px;white-space:nowrap;user-select:none;
+    border:1px solid rgba(0,255,200,0.2);color:rgba(160,255,216,0.45);background:transparent;
+  }
+  .mob-ctrl-pill.on{border-color:var(--ok);color:var(--ok);background:rgba(0,255,136,0.08);}
+  .mob-ctrl-pill-dot{width:5px;height:5px;border-radius:50%;background:rgba(160,255,216,0.3);flex-shrink:0;}
+  .mob-ctrl-pill.on .mob-ctrl-pill-dot{background:var(--ok);box-shadow:0 0 4px var(--ok);}
   .mob-theme-dot{transition:all 0.15s;}
   .mob-theme-dot.active{border-color:#fff !important;transform:scale(1.25);}
   #mob-panel{max-height:38vh;overflow-y:auto;}
@@ -459,12 +482,39 @@
     .leg-dot{width:6px;height:6px;}
     #leg-hint{display:none!important;}
     #leg-anim-hint{display:none;}
-    #s-scenarios-wrap{display:none;}
     #map-title-overlay{right:0;height:24px;}
     #map-version-badge{display:inline!important;font-size:7px;padding:1px 3px;}
     #mob-sheet{height:58vh;max-height:58vh;bottom:0;display:flex!important;flex-direction:column;}
     #mob-panel{flex:1!important;overflow-y:auto;min-height:0;max-height:none!important;}
     #map-col{flex:1;min-height:0;}
+    #map-console-bar{font-size:8px;}
+    #console-controls{flex-direction:column;align-items:stretch;gap:4px;}
+    .ctrl-group{justify-content:flex-start;}
+    .ctrl-range .range-btns{display:flex;flex-wrap:nowrap;overflow-x:auto;max-width:100%;-webkit-overflow-scrolling:touch;gap:3px;padding-bottom:2px;}
+    .ctrl-range .pill-btn{flex-shrink:0;}
+    #threat-legend{justify-content:center;}
+    #footer-stats{gap:8px;padding:4px 6px;}
+    .fstat{font-size:7px;}
+    .fstat-val{font-size:10px;}
+    #replay-bar{padding:4px 10px;gap:6px;max-width:calc(100vw - 16px);}
+    #replay-clock{font-size:8px;min-width:0;flex:1;}
+    #zoom-ctrl{bottom:auto;top:28px;}
+    #zoom-level{left:48px;top:28px;bottom:auto;}
+    #zoom-prefs-panel{bottom:auto;top:64px;max-width:calc(100vw - 16px);}
+  }
+  @media(min-width:681px) and (max-width:1024px){
+    #sidebar{width:clamp(160px,24vw,210px);}
+    #sidebar-stats{padding:4px 6px;}
+    .stat-val{font-size:clamp(9px,1.2vw,12px);}
+    .stat-lbl{font-size:6px;}
+    #toggle-row{gap:4px;padding:3px 6px;}
+    #anim-toggle,#lines-toggle,#autozoom-toggle{padding:3px 6px;font-size:7px;}
+    #map-console-bar{font-size:8px;}
+    .ctrl-speed .pill-btn,.ctrl-range .pill-btn{padding:2px 5px;font-size:6px;}
+    #footer-stats{gap:10px;padding:4px 8px;}
+    #replay-bar{padding:5px 12px;}
+    #map-panels-left{max-width:170px;}
+    .map-panel{min-width:120px;max-width:165px;font-size:8px;}
   }
   @media(max-height:500px) and (orientation:landscape){
     #mob-sheet{display:none!important;}
@@ -670,48 +720,64 @@
     <!-- Controls inline in tab bar -->
     <div style="display:flex;align-items:center;gap:4px;margin-left:auto;padding-right:6px;flex-shrink:0;">
 
-      <div id="mob-lines-toggle" onclick="toggleLines()" style="display:flex;align-items:center;gap:3px;background:rgba(0,255,200,0.08);border:1px solid rgba(0,255,200,0.35);border-radius:3px;padding:2px 4px;cursor:pointer;font-family:'Share Tech Mono',monospace;font-size:7px;color:rgba(0,255,200,0.8);white-space:nowrap;">
-        <div id="mob-lines-dot" style="width:5px;height:5px;border-radius:50%;background:var(--ok);box-shadow:0 0 5px var(--ok);flex-shrink:0;"></div>
+      <div id="mob-lines-toggle" class="mob-ctrl-pill on" onclick="toggleLines()">
+        <div id="mob-lines-dot" class="mob-ctrl-pill-dot"></div>
         <span id="mob-lines-label">ANGRIFFE</span>
       </div>
-      <div id="mob-anim-toggle" onclick="toggleAnim()" style="display:flex;align-items:center;gap:3px;background:transparent;border:1px solid rgba(0,255,200,0.2);border-radius:3px;padding:2px 4px;cursor:pointer;font-family:'Share Tech Mono',monospace;font-size:7px;color:rgba(160,255,216,0.45);white-space:nowrap;">
-        <div id="mob-anim-dot" style="width:5px;height:5px;border-radius:50%;background:rgba(160,255,216,0.3);flex-shrink:0;"></div>
+      <div id="mob-anim-toggle" class="mob-ctrl-pill on" onclick="toggleAnim()">
+        <div id="mob-anim-dot" class="mob-ctrl-pill-dot"></div>
         <span id="mob-anim-label">ANIMATION</span>
+      </div>
+      <div id="mob-autozoom-toggle" class="mob-ctrl-pill off" onclick="toggleAutoZoom()">
+        <div id="mob-autozoom-dot" class="mob-ctrl-pill-dot"></div>
+        <span id="mob-autozoom-label">AUTO-ZOOM</span>
       </div>
     </div>
   </div>
 
-  <!-- Mobile stats + controls bar -->
+  <!-- Mobile stats (wie Desktop: Gesamt + Zeitfenster) -->
   <div id="mob-stats-bar">
-    <div style="display:flex;gap:12px;align-items:center;">
-      <div style="display:flex;flex-direction:column;align-items:center;">
-        <span style="font-family:'Orbitron',monospace;font-size:11px;font-weight:700;color:var(--accent);line-height:1;" id="mob-s-total">—</span>
-        <span style="font-size:6px;color:rgba(160,255,216,0.4);letter-spacing:1px;" id="mob-attacks-lbl">ANGRIFFE</span>
+    <div class="mob-stats-grid">
+      <div class="mob-stats-block mob-stats-alltime">
+        <div class="mob-stats-block-title" id="mob-lbl-alltime">GESAMT</div>
+        <div class="mob-stats-items">
+          <div class="mob-stat-item"><span class="mob-stat-val" id="mob-s-total">—</span><span class="mob-stat-lbl" id="mob-attacks-lbl">ANGRIFFE</span></div>
+          <div class="mob-stat-item"><span class="mob-stat-val" id="mob-s-countries">—</span><span class="mob-stat-lbl" id="mob-countries-lbl">LÄNDER</span></div>
+          <div class="mob-stat-item"><span class="mob-stat-val" id="mob-s-scenarios">—</span><span class="mob-stat-lbl" id="mob-scenarios-lbl">SZENARIEN</span></div>
+        </div>
       </div>
-      <div style="display:flex;flex-direction:column;align-items:center;">
-        <span style="font-family:'Orbitron',monospace;font-size:11px;font-weight:700;color:var(--accent);line-height:1;" id="mob-s-countries">—</span>
-        <span style="font-size:6px;color:rgba(160,255,216,0.4);letter-spacing:1px;" id="mob-countries-lbl">LÄNDER</span>
+      <div class="mob-stats-block mob-stats-window">
+        <div class="mob-stats-block-title" id="mob-lbl-window">ZEITFENSTER</div>
+        <div class="mob-stats-items">
+          <div class="mob-stat-item"><span class="mob-stat-dot">🔴</span><span class="mob-stat-val" id="mob-fs-alerts">—</span><span class="mob-stat-lbl" id="mob-fs-alerts-lbl">MELDUNGEN</span></div>
+          <div class="mob-stat-item"><span class="mob-stat-dot">🟡</span><span class="mob-stat-val" id="mob-fs-ips">—</span><span class="mob-stat-lbl" id="mob-fs-ips-lbl">IPS</span></div>
+          <div class="mob-stat-item"><span class="mob-stat-dot">🔵</span><span class="mob-stat-val" id="mob-fs-scenarios">—</span><span class="mob-stat-lbl" id="mob-fs-scn-lbl">SZENARIEN</span></div>
+          <div class="mob-stat-item"><span class="mob-stat-dot">🟢</span><span class="mob-stat-val" id="mob-fs-countries">—</span><span class="mob-stat-lbl" id="mob-fs-ctry-lbl">LÄNDER</span></div>
+        </div>
       </div>
-      <span style="font-family:'Orbitron',monospace;font-size:11px;font-weight:700;color:var(--ok);" class="blink">●</span>
-      <span style="font-size:7px;color:rgba(160,255,216,0.3);letter-spacing:0.5px;"><span id="mob-lu">—</span></span>
-      <!-- Whitelist Badge Mobile -->
-      <div id="mob-wl-badge" style="display:flex;align-items:center;gap:3px;" title="Whitelist Status">
-        <span id="mob-wl-dot" style="width:6px;height:6px;border-radius:50%;background:rgba(160,255,216,0.2);flex-shrink:0;display:inline-block;"></span>
-        <span id="mob-wl-text" style="font-size:7px;color:rgba(160,255,216,0.3);letter-spacing:0.5px;white-space:nowrap;">🛡️ —</span>
-      </div>
-      <button type="button" id="mob-wl-ip-toggle" class="wl-ip-toggle on" aria-pressed="true" style="flex-shrink:0;">
-        <span class="wl-ip-toggle-dot"></span>
-        <span class="wl-ip-toggle-lbl">IP AN</span>
-      </button>
     </div>
-    <div style="display:flex;align-items:center;gap:4px;flex-shrink:0;">
-      <!-- Mobile theme dots -->
-      <div style="width:9px;height:9px;border-radius:50%;background:#00ffe0;cursor:pointer;border:1px solid transparent;" class="mob-theme-dot" onclick="setTheme('cyan')" id="mob-t-cyan"></div>
-      <div style="width:9px;height:9px;border-radius:50%;background:#ff2244;cursor:pointer;border:1px solid transparent;" class="mob-theme-dot" onclick="setTheme('red')" id="mob-t-red"></div>
-      <div style="width:9px;height:9px;border-radius:50%;background:#00ff88;cursor:pointer;border:1px solid transparent;" class="mob-theme-dot" onclick="setTheme('matrix')" id="mob-t-matrix"></div>
-      <div style="width:9px;height:9px;border-radius:50%;background:#ffaa00;cursor:pointer;border:1px solid transparent;" class="mob-theme-dot" onclick="setTheme('amber')" id="mob-t-amber"></div>
-      <button class="ctrl-btn csv-feed-btn" onclick="exportCSV()" style="padding:2px 5px;font-size:8px;">↓ CSV</button>
-      <a href="https://github.com/kabelsalatundklartext/crowdsec-threat-map-docker" target="_blank" style="color:rgba(0,255,200,0.4);font-size:8px;text-decoration:none;">⭐</a>
+    <div class="mob-stats-meta">
+      <div class="mob-stats-meta-left">
+        <span class="mob-stat-val blink" style="color:var(--ok);font-size:9px;">●</span>
+        <span class="mob-stat-lbl" id="mob-live-lbl">LIVE</span>
+        <span class="mob-stat-lbl"><span id="mob-lu">—</span></span>
+        <div id="mob-wl-badge" style="display:flex;align-items:center;gap:3px;" title="Whitelist Status">
+          <span id="mob-wl-dot" style="width:6px;height:6px;border-radius:50%;background:rgba(160,255,216,0.2);flex-shrink:0;"></span>
+          <span id="mob-wl-text" style="font-size:7px;color:rgba(160,255,216,0.3);white-space:nowrap;max-width:120px;overflow:hidden;text-overflow:ellipsis;">🛡️ —</span>
+        </div>
+        <button type="button" id="mob-wl-ip-toggle" class="wl-ip-toggle on" aria-pressed="true">
+          <span class="wl-ip-toggle-dot"></span>
+          <span class="wl-ip-toggle-lbl">IP AN</span>
+        </button>
+      </div>
+      <div class="mob-stats-meta-right">
+        <div class="mob-theme-dot" onclick="setTheme('cyan')" id="mob-t-cyan" style="width:9px;height:9px;border-radius:50%;background:#00ffe0;cursor:pointer;border:1px solid transparent;"></div>
+        <div class="mob-theme-dot" onclick="setTheme('red')" id="mob-t-red" style="width:9px;height:9px;border-radius:50%;background:#ff2244;cursor:pointer;border:1px solid transparent;"></div>
+        <div class="mob-theme-dot" onclick="setTheme('matrix')" id="mob-t-matrix" style="width:9px;height:9px;border-radius:50%;background:#00ff88;cursor:pointer;border:1px solid transparent;"></div>
+        <div class="mob-theme-dot" onclick="setTheme('amber')" id="mob-t-amber" style="width:9px;height:9px;border-radius:50%;background:#ffaa00;cursor:pointer;border:1px solid transparent;"></div>
+        <button class="ctrl-btn csv-feed-btn" onclick="exportCSV()" style="padding:2px 5px;font-size:8px;">↓ CSV</button>
+        <a href="https://github.com/kabelsalatundklartext/crowdsec-threat-map-docker" target="_blank" style="color:rgba(0,255,200,0.4);font-size:8px;text-decoration:none;">⭐</a>
+      </div>
     </div>
   </div>
 
@@ -719,6 +785,7 @@
   <div id="mob-panel">
     <!-- Sparkline mobile -->
     <div id="mob-sparkline-wrap" style="padding:4px 10px 3px;border-bottom:1px solid var(--dim);background:rgba(0,5,15,0.7);">
+      <div id="mob-sparkline-title" style="font-size:7px;color:rgba(160,255,216,0.35);letter-spacing:1px;margin-bottom:2px;">ANGRIFFE / STUNDE</div>
       <svg id="mob-sparkline-svg" style="width:100%;height:28px;display:block;"></svg>
     </div>
     <!-- Filter bar mobile -->
@@ -913,14 +980,23 @@ function updateSidebarStats(opts={}){
   set('s-scenarios',formatStatNumber(s.scenarios));
   set('mob-s-total',formatStatNumber(s.attacks));
   set('mob-s-countries',formatStatNumber(s.countries));
+  set('mob-s-scenarios',formatStatNumber(s.scenarios));
 }
 function updateFooterStats(){
   const w=getMapWindowStats();
   const set=(id,val)=>{const el=document.getElementById(id);if(el)el.textContent=val;};
-  set('fs-alerts',formatStatNumber(w.reports));
-  set('fs-ips',formatStatNumber(w.uniqueIps));
-  set('fs-scenarios',formatStatNumber(w.scenarios));
-  set('fs-countries',formatStatNumber(w.countries));
+  const reports=formatStatNumber(w.reports);
+  const ips=formatStatNumber(w.uniqueIps);
+  const scenarios=formatStatNumber(w.scenarios);
+  const countries=formatStatNumber(w.countries);
+  set('fs-alerts',reports);
+  set('fs-ips',ips);
+  set('fs-scenarios',scenarios);
+  set('fs-countries',countries);
+  set('mob-fs-alerts',reports);
+  set('mob-fs-ips',ips);
+  set('mob-fs-scenarios',scenarios);
+  set('mob-fs-countries',countries);
 }
 function renderMapPanels(){const events=liveMode?feedData:getEventsInReplay();const bySc={},byIp={},byCo={};events.forEach(e=>{bySc[e.scenario]=(bySc[e.scenario]||0)+1;byIp[e.ip]=(byIp[e.ip]||0)+1;byCo[e.country]=(byCo[e.country]||0)+1;});const row=(c,l,v)=>`<div class="map-panel-row"><span class="map-panel-dot" style="background:${c}"></span><span class="map-panel-label">${l}</span><span class="map-panel-val">${v}</span></div>`;document.getElementById('panel-scenarios-body').innerHTML=Object.entries(bySc).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([s,n])=>row(scenarioColor(s),s,n)).join('')||'—';document.getElementById('panel-ips-body').innerHTML=Object.entries(byIp).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([ip,n])=>{const c=events.find(e=>e.ip===ip)?.country||'??';return row(scenarioColor(events.find(e=>e.ip===ip)?.scenario),`${FLAG[c]||'🌐'} ${ip}`,n);}).join('')||'—';document.getElementById('panel-origins-body').innerHTML=Object.entries(byCo).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([cc,n],i)=>row('#888',`${i+1}. ${countryDisplayName(cc)}`,n)).join('')||'—';updateFooterStats();}
 function updateReplaySlider(){const sl=document.getElementById('replay-slider');if(!sl||replayWinEnd<=replayWinStart)return;sl.value=Math.round(1000*(replayCursor-replayWinStart)/(replayWinEnd-replayWinStart));document.getElementById('replay-clock').textContent=fmtReplayClock(replayCursor);document.getElementById('tl-start').textContent=fmtReplayClock(replayWinStart);document.getElementById('tl-end').textContent=fmtReplayClock(replayWinEnd);}
@@ -1319,6 +1395,8 @@ const LANG = {
     fs_countries:'LÄNDER',
     lbl_speed:'TEMPO',
     lbl_range:'ZEITRAUM',
+    mob_lbl_alltime:'GESAMT',
+    mob_lbl_window:'ZEITFENSTER KARTE',
     replay_play_title:'Wiedergabe starten',
     replay_stop_title:'Wiedergabe stoppen',
     live_lbl:'LIVE',
@@ -1417,6 +1495,8 @@ const LANG = {
     fs_countries:'COUNTRIES',
     lbl_speed:'SPEED',
     lbl_range:'RANGE',
+    mob_lbl_alltime:'TOTAL',
+    mob_lbl_window:'MAP WINDOW',
     replay_play_title:'Start replay',
     replay_stop_title:'Stop replay',
     live_lbl:'LIVE',
@@ -1612,6 +1692,24 @@ function applyLang(){
   if(mobAtLbl)mobAtLbl.textContent=l.attacks;
   const mobCoLbl=document.getElementById('mob-countries-lbl');
   if(mobCoLbl)mobCoLbl.textContent=l.countries;
+  const mobScLbl=document.getElementById('mob-scenarios-lbl');
+  if(mobScLbl)mobScLbl.textContent=l.scenarios;
+  const mobAlltimeLbl=document.getElementById('mob-lbl-alltime');
+  if(mobAlltimeLbl)mobAlltimeLbl.textContent=l.mob_lbl_alltime;
+  const mobWinLbl=document.getElementById('mob-lbl-window');
+  if(mobWinLbl)mobWinLbl.textContent=l.mob_lbl_window;
+  const mobFsAlerts=document.getElementById('mob-fs-alerts-lbl');
+  if(mobFsAlerts)mobFsAlerts.textContent=l.fs_alerts;
+  const mobFsIps=document.getElementById('mob-fs-ips-lbl');
+  if(mobFsIps)mobFsIps.textContent=l.fs_ips;
+  const mobFsScn=document.getElementById('mob-fs-scn-lbl');
+  if(mobFsScn)mobFsScn.textContent=l.fs_scenarios;
+  const mobFsCtry=document.getElementById('mob-fs-ctry-lbl');
+  if(mobFsCtry)mobFsCtry.textContent=l.fs_countries;
+  const mobLiveLbl=document.getElementById('mob-live-lbl');
+  if(mobLiveLbl)mobLiveLbl.textContent=l.live;
+  const mobSparkTitle=document.getElementById('mob-sparkline-title');
+  if(mobSparkTitle)mobSparkTitle.textContent=l.sparkline;
   updateSidebarStats();
   updateFooterStats();
   syncWlIpToggleUI();
@@ -1677,7 +1775,7 @@ function setToggleBtn(id,on,dotId){
   if(btn){
     btn.classList.toggle('on',on);
     btn.classList.toggle('off',!on);
-    if(id==='autozoom-toggle')btn.setAttribute('aria-pressed',on?'true':'false');
+    if(id==='autozoom-toggle'||id==='mob-autozoom-toggle')btn.setAttribute('aria-pressed',on?'true':'false');
   }
   if(dot){
     dot.style.background=on?'var(--ok)':'rgba(90,110,105,0.45)';
@@ -1686,17 +1784,21 @@ function setToggleBtn(id,on,dotId){
 }
 function ensureAutoZoomOff(){
   autoZoomOn=false;
-  const btn=document.getElementById('autozoom-toggle');
-  const dot=document.getElementById('autozoom-dot');
+  setToggleBtn('autozoom-toggle',false,'autozoom-dot');
+  setToggleBtn('mob-autozoom-toggle',false,'mob-autozoom-dot');
+  const l=LANG[currentLang]||LANG.de;
   const lbl=document.getElementById('autozoom-label');
-  if(btn){btn.classList.remove('on');btn.classList.add('off');btn.setAttribute('aria-pressed','false');}
-  if(dot){dot.style.background='rgba(90,110,105,0.45)';dot.style.boxShadow='none';}
-  if(lbl){const l=LANG[currentLang]||LANG.de;lbl.textContent=l.autozoom_off;}
+  const mobLbl=document.getElementById('mob-autozoom-label');
+  if(lbl)lbl.textContent=l.autozoom_off;
+  if(mobLbl)mobLbl.textContent=l.autozoom_off;
 }
 function syncMapToggleStates(){
   setToggleBtn('anim-toggle',animOn,'anim-dot');
   setToggleBtn('lines-toggle',linesOn,'lines-dot');
   setToggleBtn('autozoom-toggle',autoZoomOn,'autozoom-dot');
+  setToggleBtn('mob-anim-toggle',animOn,'mob-anim-dot');
+  setToggleBtn('mob-lines-toggle',linesOn,'mob-lines-dot');
+  setToggleBtn('mob-autozoom-toggle',autoZoomOn,'mob-autozoom-dot');
   const l=LANG[currentLang]||LANG.de;
   const animLbl=document.getElementById('anim-label');
   if(animLbl)animLbl.textContent=animOn?l.anim_on:l.anim_off;
@@ -1708,29 +1810,27 @@ function syncMapToggleStates(){
   if(mobAnimLbl)mobAnimLbl.textContent=animOn?l.anim_on:l.anim_off;
   const azLbl=document.getElementById('autozoom-label');
   if(azLbl)azLbl.textContent=autoZoomOn?l.autozoom_on:l.autozoom_off;
+  const mobAzLbl=document.getElementById('mob-autozoom-label');
+  if(mobAzLbl)mobAzLbl.textContent=autoZoomOn?l.autozoom_on:l.autozoom_off;
 }
 function toggleAutoZoom(){
   autoZoomOn=!autoZoomOn;
-  const lbl=document.getElementById('autozoom-label');
   setToggleBtn('autozoom-toggle',autoZoomOn,'autozoom-dot');
-  if(lbl)lbl.textContent=autoZoomOn?t('autozoom_on'):t('autozoom_off');
+  setToggleBtn('mob-autozoom-toggle',autoZoomOn,'mob-autozoom-dot');
+  const lbl=document.getElementById('autozoom-label');
+  const mobLbl=document.getElementById('mob-autozoom-label');
+  const txt=autoZoomOn?t('autozoom_on'):t('autozoom_off');
+  if(lbl)lbl.textContent=txt;
+  if(mobLbl)mobLbl.textContent=txt;
 }
 function toggleLines(){
   linesOn=!linesOn;
-  const btn=document.getElementById('lines-toggle');
   const lbl=document.getElementById('lines-label');
-  const mobDot=document.getElementById('mob-lines-dot');
   const mobLbl=document.getElementById('mob-lines-label');
-  const mobBtn=document.getElementById('mob-lines-toggle');
   setToggleBtn('lines-toggle',linesOn,'lines-dot');
+  setToggleBtn('mob-lines-toggle',linesOn,'mob-lines-dot');
   if(lbl)lbl.textContent=linesOn?(t('lines_on')||'ANGRIFFE'):(t('lines_off')||'ANGRIFFE');
-  if(mobDot){mobDot.style.background=linesOn?'var(--ok)':'rgba(160,255,216,0.3)';mobDot.style.boxShadow=linesOn?'0 0 5px var(--ok)':'none';}
-  if(mobLbl)mobLbl.textContent=t('lines_on')||'ANGRIFFE';
-  if(mobBtn){
-    mobBtn.style.borderColor=linesOn?'rgba(0,255,200,0.35)':'rgba(0,255,200,0.2)';
-    mobBtn.style.color=linesOn?'rgba(0,255,200,0.8)':'rgba(160,255,216,0.45)';
-    mobBtn.style.background=linesOn?'rgba(0,255,200,0.08)':'transparent';
-  }
+  if(mobLbl)mobLbl.textContent=linesOn?(t('lines_on')||'ANGRIFFE'):(t('lines_off')||'ANGRIFFE');
   if(linesOn)refreshMapFromData();
   else{activeRockets=[];if(animRAF){cancelAnimationFrame(animRAF);animRAF=null;}clearArcCanvas();clearFlightLabels();if(animOn)refreshMapFromData();else updateCountryFills();}
 }
@@ -1739,16 +1839,13 @@ function toggleLines(){
 function toggleAnim(){
   animOn=!animOn;
   if(!animOn){activeRockets=[];clearArcCanvas();clearFlightLabels();if(animRAF){cancelAnimationFrame(animRAF);animRAF=null;}}
-  const btn=document.getElementById('anim-toggle');
   const lbl=document.getElementById('anim-label');
-  const mobDot=document.getElementById('mob-anim-dot');
   const mobLbl=document.getElementById('mob-anim-label');
-  const mobBtn=document.getElementById('mob-anim-toggle');
   setToggleBtn('anim-toggle',animOn,'anim-dot');
-  if(lbl)lbl.textContent=animOn?(t('anim_on')||'ANIMATION'):(t('anim_off')||'ANIMATION');
-  if(mobDot){mobDot.style.background=animOn?'var(--ok)':'rgba(160,255,216,0.3)';mobDot.style.boxShadow=animOn?'0 0 5px var(--ok)':'none';}
-  if(mobLbl)mobLbl.textContent='ANIMATION';
-  if(mobBtn){mobBtn.style.borderColor=animOn?'var(--ok)':'rgba(0,255,200,0.2)';mobBtn.style.color=animOn?'var(--ok)':'rgba(160,255,216,0.45)';}
+  setToggleBtn('mob-anim-toggle',animOn,'mob-anim-dot');
+  const animTxt=animOn?(t('anim_on')||'ANIMATION'):(t('anim_off')||'ANIMATION');
+  if(lbl)lbl.textContent=animTxt;
+  if(mobLbl)mobLbl.textContent=animTxt;
   if(animOn){
     feedData.forEach(e=>lastLiveSeenKeys.add((e.ip||'')+'|'+(e.time_iso||'')));
     if(liveMode)startAnimLoop();else{replayPlaying=true;updateReplayControlsUI();startReplayLoop();}
