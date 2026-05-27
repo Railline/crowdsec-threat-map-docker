@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <!-- 
   CrowdSec Threat Map
-  © kabelsalatundklartext | https://github.com/kabelsalatundklartext/crowdsec-threat-map
+  © kabelsalatundklartext | https://github.com/kabelsalatundklartext/crowdsec-threat-map-docker
   Lizenz: CC BY-NC 4.0 — Nutzung & Änderung erlaubt, kein kommerzieller Einsatz
   https://creativecommons.org/licenses/by-nc/4.0/
 -->
@@ -56,14 +56,6 @@
     padding:5px 10px;justify-content:space-between;
   }
   .sb-stat{display:flex;flex-direction:column;align-items:center;min-width:0;}
-  .stat-max{
-    font-family:'Share Tech Mono',monospace;
-    font-size:clamp(6px,0.72vw,7px);
-    color:rgba(255,170,0,0.82);
-    letter-spacing:0.5px;
-    line-height:1.15;
-    white-space:nowrap;
-  }
   #sidebar-controls{display:none;} /* entfernt — aufgeteilt in toggle-row */
 
   /* LINIE + ANIMATION — eigene Zeile, volle Breite, zentriert */
@@ -492,7 +484,7 @@
     <div id="map-wrap">
       <div id="map-title-overlay">
         <span id="h-title">CROWD<span>SEC</span> // THREAT MAP</span>
-        <span id="map-version-badge">v1.5.4</span>
+        <span id="map-version-badge">v1.5.5</span>
       </div>
       <svg id="base-svg" style="position:absolute;inset:0;width:100%;height:100%"></svg>
       <canvas id="arc-canvas"></canvas>
@@ -571,17 +563,14 @@
       <div id="sidebar-stats">
         <div class="sb-stat">
           <span class="stat-val" id="s-total">—</span>
-          <span class="stat-max" id="s-total-max">MAX —</span>
           <span class="stat-lbl" id="s-attacks-lbl">ANGRIFFE</span>
         </div>
         <div class="sb-stat">
           <span class="stat-val" id="s-countries">—</span>
-          <span class="stat-max" id="s-countries-max">MAX —</span>
           <span class="stat-lbl" id="s-countries-lbl">LÄNDER</span>
         </div>
         <div class="sb-stat" id="s-scenarios-wrap">
           <span class="stat-val" id="s-scenarios">—</span>
-          <span class="stat-max" id="s-scenarios-max">MAX —</span>
           <span class="stat-lbl" id="s-scenarios-lbl">SZENARIEN</span>
         </div>
         <div class="sb-stat"><span class="stat-val blink" style="color:var(--ok)">●</span><span class="stat-lbl" id="s-live-lbl">LIVE</span></div>
@@ -653,7 +642,7 @@
           <span class="wl-ip-toggle-lbl">EIGENE IP AN</span>
         </button>
       </div>
-      <a href="https://github.com/kabelsalatundklartext/crowdsec-threat-map" target="_blank" style="color:rgba(0,255,200,0.35);font-size:8px;text-decoration:none;letter-spacing:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;max-width:100%;" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='rgba(0,255,200,0.35)'">⭐ GitHub: crowdsec-threat-map</a></div>
+      <a href="https://github.com/kabelsalatundklartext/crowdsec-threat-map-docker" target="_blank" style="color:rgba(0,255,200,0.35);font-size:8px;text-decoration:none;letter-spacing:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;max-width:100%;" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='rgba(0,255,200,0.35)'">⭐ GitHub: crowdsec-threat-map-docker</a></div>
   </aside>
 </div>
 
@@ -682,12 +671,10 @@
     <div style="display:flex;gap:12px;align-items:center;">
       <div style="display:flex;flex-direction:column;align-items:center;">
         <span style="font-family:'Orbitron',monospace;font-size:11px;font-weight:700;color:var(--accent);line-height:1;" id="mob-s-total">—</span>
-        <span class="stat-max" id="mob-s-total-max" style="font-size:6px;">MAX —</span>
         <span style="font-size:6px;color:rgba(160,255,216,0.4);letter-spacing:1px;" id="mob-attacks-lbl">ANGRIFFE</span>
       </div>
       <div style="display:flex;flex-direction:column;align-items:center;">
         <span style="font-family:'Orbitron',monospace;font-size:11px;font-weight:700;color:var(--accent);line-height:1;" id="mob-s-countries">—</span>
-        <span class="stat-max" id="mob-s-countries-max" style="font-size:6px;">MAX —</span>
         <span style="font-size:6px;color:rgba(160,255,216,0.4);letter-spacing:1px;" id="mob-countries-lbl">LÄNDER</span>
       </div>
       <span style="font-family:'Orbitron',monospace;font-size:11px;font-weight:700;color:var(--ok);" class="blink">●</span>
@@ -709,7 +696,7 @@
       <div style="width:9px;height:9px;border-radius:50%;background:#00ff88;cursor:pointer;border:1px solid transparent;" class="mob-theme-dot" onclick="setTheme('matrix')" id="mob-t-matrix"></div>
       <div style="width:9px;height:9px;border-radius:50%;background:#ffaa00;cursor:pointer;border:1px solid transparent;" class="mob-theme-dot" onclick="setTheme('amber')" id="mob-t-amber"></div>
       <button class="ctrl-btn csv-feed-btn" onclick="exportCSV()" style="padding:2px 5px;font-size:8px;">↓ CSV</button>
-      <a href="https://github.com/kabelsalatundklartext/crowdsec-threat-map" target="_blank" style="color:rgba(0,255,200,0.4);font-size:8px;text-decoration:none;">⭐</a>
+      <a href="https://github.com/kabelsalatundklartext/crowdsec-threat-map-docker" target="_blank" style="color:rgba(0,255,200,0.4);font-size:8px;text-decoration:none;">⭐</a>
     </div>
   </div>
 
@@ -769,7 +756,7 @@ const SERVER_NAME_MAP = 'MEIN-SERVER';
 // Ab hier nichts mehr ändern
 // ============================================================
 
-const APP_VERSION  = 'v1.5.4';
+const APP_VERSION  = 'v1.5.5';
 const REFRESH_MS   = 30000;
 const localUnbanned = new Set();
 const ARC_FPS      = 30;
@@ -785,11 +772,9 @@ const HOME_SCREEN_Y_FRAC = 0.28;  // Server höher → Weltkarte füllt Bereich 
 const HOME_PROJ_Y_SHIFT = 0.11;   // Projektion nach oben
 const HOME_TY_NUDGE_PX = 42;      // zusätzlich Karte nach oben schieben
 const MAP_VIEW_STORAGE_KEY = 'csThreatMapViewPrefs';
-const PEAK_STATS_STORAGE_KEY = 'csThreatMapPeakStats';
 const SHOW_OWN_IP_STORAGE_KEY = 'csThreatMapShowOwnIp';
 const ZOOM_STEP = 0.1;          // +/- Buttons
 let mapViewPrefs={useSavedOnLoad:false,homeK:null,savedView:null};
-let peakStats={attacks:0,countries:0,scenarios:0};
 let lastAlertsTotal=null;
 let showOwnIp=true;
 let lastWhitelistData=null;
@@ -869,7 +854,44 @@ function getEventsInReplay(){let list=allEvents.filter(e=>e.ts>=replayWinStart&&
 function aggregateFromEvents(events){const by={};events.forEach(e=>{if(!e.lat&&!e.lon)return;const k=`${e.lat.toFixed(2)},${e.lon.toFixed(2)},${e.scenario}`;if(!by[k])by[k]={...e,count:0};by[k].count++;});return Object.values(by);}
 function getDisplayAttackData(){return liveMode?getFilteredAttackData():aggregateFromEvents(getEventsInReplay());}
 function buildThreatLegend(){const el=document.getElementById('threat-legend');if(!el)return;el.innerHTML=Object.keys(THREAT_TYPES).map(k=>`<span class="threat-leg"><span class="threat-leg-dot" style="background:${THREAT_TYPES[k].color}"></span>${threatLabel(k)}</span>`).join('');}
-function renderMapPanels(){const events=liveMode?feedData:getEventsInReplay();const bySc={},byIp={},byCo={};events.forEach(e=>{bySc[e.scenario]=(bySc[e.scenario]||0)+1;byIp[e.ip]=(byIp[e.ip]||0)+1;byCo[e.country]=(byCo[e.country]||0)+1;});const row=(c,l,v)=>`<div class="map-panel-row"><span class="map-panel-dot" style="background:${c}"></span><span class="map-panel-label">${l}</span><span class="map-panel-val">${v}</span></div>`;document.getElementById('panel-scenarios-body').innerHTML=Object.entries(bySc).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([s,n])=>row(scenarioColor(s),s,n)).join('')||'—';document.getElementById('panel-ips-body').innerHTML=Object.entries(byIp).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([ip,n])=>{const c=events.find(e=>e.ip===ip)?.country||'??';return row(scenarioColor(events.find(e=>e.ip===ip)?.scenario),`${FLAG[c]||'🌐'} ${ip}`,n);}).join('')||'—';document.getElementById('panel-origins-body').innerHTML=Object.entries(byCo).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([cc,n],i)=>row('#888',`${i+1}. ${countryDisplayName(cc)}`,n)).join('')||'—';document.getElementById('fs-alerts').textContent=events.length;document.getElementById('fs-ips').textContent=new Set(events.map(e=>e.ip)).size;document.getElementById('fs-scenarios').textContent=new Set(events.map(e=>e.scenario)).size;document.getElementById('fs-countries').textContent=new Set(events.map(e=>e.country)).size;}
+function getAlltimeFeedEvents(){
+  return feedData.length?feedData:allEvents;
+}
+function getAlltimeStats(){
+  const events=getAlltimeFeedEvents();
+  let attacks=lastAlertsTotal??'—';
+  if(attacks==='—'&&events.length)attacks=String(events.length);
+  return{
+    attacks,
+    countries:new Set(events.map(e=>e.country).filter(Boolean)).size,
+    scenarios:new Set(events.map(e=>e.scenario).filter(Boolean)).size,
+    uniqueIps:new Set(events.map(e=>e.ip).filter(Boolean)).size,
+  };
+}
+function formatStatNumber(v){
+  const loc=currentLang==='de'?'de-DE':'en-US';
+  if(typeof v==='number')return v.toLocaleString(loc);
+  const n=parseInt(String(v).replace(/[^\d]/g,''),10);
+  return Number.isFinite(n)?n.toLocaleString(loc):v;
+}
+function updateSidebarStats(opts={}){
+  if(opts.totalAlerts!==undefined)lastAlertsTotal=opts.totalAlerts;
+  const s=getAlltimeStats();
+  const set=(id,val)=>{const el=document.getElementById(id);if(el)el.textContent=val;};
+  const attacksFmt=formatStatNumber(s.attacks);
+  const countriesFmt=formatStatNumber(s.countries);
+  const scenariosFmt=formatStatNumber(s.scenarios);
+  set('s-total',attacksFmt);
+  set('s-countries',countriesFmt);
+  set('s-scenarios',scenariosFmt);
+  set('mob-s-total',attacksFmt);
+  set('mob-s-countries',countriesFmt);
+  set('fs-alerts',attacksFmt);
+  set('fs-ips',formatStatNumber(s.uniqueIps));
+  set('fs-scenarios',scenariosFmt);
+  set('fs-countries',countriesFmt);
+}
+function renderMapPanels(){const events=liveMode?feedData:getEventsInReplay();const bySc={},byIp={},byCo={};events.forEach(e=>{bySc[e.scenario]=(bySc[e.scenario]||0)+1;byIp[e.ip]=(byIp[e.ip]||0)+1;byCo[e.country]=(byCo[e.country]||0)+1;});const row=(c,l,v)=>`<div class="map-panel-row"><span class="map-panel-dot" style="background:${c}"></span><span class="map-panel-label">${l}</span><span class="map-panel-val">${v}</span></div>`;document.getElementById('panel-scenarios-body').innerHTML=Object.entries(bySc).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([s,n])=>row(scenarioColor(s),s,n)).join('')||'—';document.getElementById('panel-ips-body').innerHTML=Object.entries(byIp).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([ip,n])=>{const c=events.find(e=>e.ip===ip)?.country||'??';return row(scenarioColor(events.find(e=>e.ip===ip)?.scenario),`${FLAG[c]||'🌐'} ${ip}`,n);}).join('')||'—';document.getElementById('panel-origins-body').innerHTML=Object.entries(byCo).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([cc,n],i)=>row('#888',`${i+1}. ${countryDisplayName(cc)}`,n)).join('')||'—';}
 function updateReplaySlider(){const sl=document.getElementById('replay-slider');if(!sl||replayWinEnd<=replayWinStart)return;sl.value=Math.round(1000*(replayCursor-replayWinStart)/(replayWinEnd-replayWinStart));document.getElementById('replay-clock').textContent=fmtReplayClock(replayCursor);document.getElementById('tl-start').textContent=fmtReplayClock(replayWinStart);document.getElementById('tl-end').textContent=fmtReplayClock(replayWinEnd);}
 function clearFlightLabels(){const layer=document.getElementById('flight-labels-layer');if(layer)layer.innerHTML='';}
 function escTag(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');}
@@ -1090,7 +1112,6 @@ function advanceReplay(ts){
   updateReplaySlider();
   attackData=aggregateFromEvents(getEventsInReplay());
   renderDots();renderMapPanels();updateCountryFills();
-  updateSidebarStats();
   if(animOn)drawReplayFrame(ts);else clearArcCanvas();
   if(replayCursor>=replayWinEnd){replayPlaying=false;updateReplayBtn();}
 }
@@ -1230,7 +1251,6 @@ const LANG = {
     zoom_prefs_saved:(k)=>`Gespeichert: ${k.toFixed(1)}×`,
     zoom_prefs_none:'Keine gespeicherte Ansicht',
     zoom_prefs_ok:'Ansicht gespeichert',
-    stat_max:(n)=>`MAX ${n}`,
     anim_title:  'Animierte Karte (Replay/Live) vs. statische Heatmap',
     lines_title: 'Angriffe auf der Karte ein/aus',
     autozoom_title:'Bei Angriff automatisch in die Region zoomen',
@@ -1330,7 +1350,6 @@ const LANG = {
     zoom_prefs_saved:(k)=>`Saved: ${k.toFixed(1)}×`,
     zoom_prefs_none:'No saved view',
     zoom_prefs_ok:'View saved',
-    stat_max:(n)=>`MAX ${n}`,
     anim_title:  'Animated map (replay/live) vs. static heatmap',
     lines_title: 'Attack flights (rockets) on/off',
     autozoom_title:'Auto-zoom to attack region',
@@ -1972,47 +1991,6 @@ function zoomByStep(delta){
   const k=Math.max(0.1,Math.min(25,zt.k+delta));
   baseSvg.transition().duration(180).call(zoomBeh.transform,d3.zoomIdentity.translate(zt.x,zt.y).scale(k))
     .on('end',()=>updateZoomLevel(d3.zoomTransform(baseSvg.node()).k));
-}
-function loadPeakStats(){
-  try{
-    const raw=localStorage.getItem(PEAK_STATS_STORAGE_KEY);
-    if(raw){
-      const p=JSON.parse(raw);
-      if(typeof p.attacks==='number'&&p.attacks>=0)peakStats.attacks=p.attacks;
-      if(typeof p.countries==='number'&&p.countries>=0)peakStats.countries=p.countries;
-      if(typeof p.scenarios==='number'&&p.scenarios>=0)peakStats.scenarios=p.scenarios;
-    }
-  }catch(e){}
-}
-function persistPeakStats(){
-  try{localStorage.setItem(PEAK_STATS_STORAGE_KEY,JSON.stringify(peakStats));}catch(e){}
-}
-function formatPeakStat(n){
-  if(!n)return 'MAX —';
-  const loc=currentLang==='de'?'de-DE':'en-US';
-  return t('stat_max',n.toLocaleString(loc));
-}
-function updateSidebarStats(opts={}){
-  if(opts.totalAlerts!==undefined)lastAlertsTotal=opts.totalAlerts;
-  const attacksDisplay=lastAlertsTotal??'—';
-  const countries=new Set(attackData.map(d=>d.country).filter(Boolean)).size;
-  const scenarios=new Set(attackData.map(d=>d.scenario).filter(Boolean)).size;
-  const attacksNum=parseInt(String(attacksDisplay).replace(/[^\d]/g,''),10);
-  if(Number.isFinite(attacksNum)&&attacksNum>0)peakStats.attacks=Math.max(peakStats.attacks,attacksNum);
-  if(countries>0)peakStats.countries=Math.max(peakStats.countries,countries);
-  if(scenarios>0)peakStats.scenarios=Math.max(peakStats.scenarios,scenarios);
-  persistPeakStats();
-  const set=(id,val)=>{const el=document.getElementById(id);if(el)el.textContent=val;};
-  set('s-total',attacksDisplay);
-  set('s-total-max',formatPeakStat(peakStats.attacks));
-  set('s-countries',countries);
-  set('s-countries-max',formatPeakStat(peakStats.countries));
-  set('s-scenarios',scenarios);
-  set('s-scenarios-max',formatPeakStat(peakStats.scenarios));
-  set('mob-s-total',attacksDisplay);
-  set('mob-s-total-max',formatPeakStat(peakStats.attacks));
-  set('mob-s-countries',countries);
-  set('mob-s-countries-max',formatPeakStat(peakStats.countries));
 }
 function loadMapViewPrefs(){
   try{
@@ -3143,7 +3121,6 @@ document.addEventListener('visibilitychange',()=>{
 
 normalizeLang();
 loadMapViewPrefs();
-loadPeakStats();
 loadShowOwnIpPrefs();
 setupWlIpToggle();
 autoZoomOn=false;
