@@ -187,12 +187,23 @@
     border-radius:20px;pointer-events:auto;box-shadow:0 4px 20px rgba(0,0,0,0.5);
   }
   @media(max-width:680px){#map-panels-left{display:none;}}
-  #replay-btn{display:flex;align-items:center;gap:5px;cursor:pointer;font-family:'Orbitron',monospace;font-size:9px;color:#ffcc00;border:none;background:transparent;}
-  #replay-btn .replay-dot{width:7px;height:7px;border-radius:50%;background:#ffcc00;box-shadow:0 0 8px #ffcc00;}
-  #replay-btn.paused .replay-dot{background:rgba(255,200,0,0.35);box-shadow:none;}
+  .replay-ctrl-btn{
+    width:28px;height:28px;display:flex;align-items:center;justify-content:center;
+    border:1px solid rgba(255,200,0,0.35);border-radius:50%;background:rgba(0,20,40,0.6);
+    color:#ffcc00;cursor:pointer;font-size:11px;line-height:1;padding:0;
+    font-family:'Share Tech Mono',monospace;transition:all 0.2s;flex-shrink:0;
+  }
+  .replay-ctrl-btn:hover{border-color:#ffcc00;background:rgba(255,200,0,0.12);}
+  .replay-ctrl-btn.active{background:rgba(255,200,0,0.2);border-color:#ffcc00;box-shadow:0 0 8px rgba(255,200,0,0.35);}
+  .replay-ctrl-btn:disabled{opacity:0.35;cursor:not-allowed;}
+  #replay-play-btn::before{content:'▶';margin-left:2px;}
+  #replay-stop-btn::before{content:'■';font-size:9px;}
+  #replay-bar.is-live{border-color:rgba(0,255,136,0.35);}
+  #replay-bar.is-live .replay-ctrl-btn{border-color:rgba(0,255,136,0.3);color:rgba(160,255,216,0.5);}
   #replay-clock{font-size:9px;color:rgba(160,255,216,0.7);white-space:nowrap;min-width:140px;text-align:center;}
-  #mode-live-btn{font-size:8px;padding:2px 8px;border:1px solid var(--dim);border-radius:3px;background:transparent;color:rgba(160,255,216,0.45);cursor:pointer;font-family:'Share Tech Mono',monospace;}
-  #mode-live-btn.active{border-color:var(--ok);color:var(--ok);}
+  #mode-live-btn{font-size:8px;padding:3px 10px;border:1px solid var(--dim);border-radius:12px;background:transparent;color:rgba(160,255,216,0.45);cursor:pointer;font-family:'Share Tech Mono',monospace;letter-spacing:1px;transition:all 0.2s;}
+  #mode-live-btn:hover{border-color:var(--ok);color:var(--ok);}
+  #mode-live-btn.active{border-color:var(--ok);color:var(--ok);background:rgba(0,255,136,0.12);box-shadow:0 0 8px rgba(0,255,136,0.25);}
   #map-console-bar{display:flex;flex-direction:column;background:rgba(2,8,16,0.98);border-top:1px solid var(--dim);flex-shrink:0;}
   #timeline-wrap{padding:6px 12px 4px;}
   #replay-slider{width:100%;height:4px;-webkit-appearance:none;background:rgba(0,255,200,0.12);border-radius:2px;cursor:pointer;}
@@ -494,10 +505,11 @@
         <div id="panel-ips" class="map-panel"><h4 id="lbl-malevolent-ips">MALEVOLENT IPS</h4><div id="panel-ips-body"></div></div>
         <div id="panel-origins" class="map-panel"><h4 id="lbl-top-origins">TOP ATTACK ORIGINS</h4><div id="panel-origins-body"></div></div>
       </div>
-      <div id="replay-bar">
-        <button type="button" id="replay-btn" title="Replay"><span class="replay-dot"></span><span id="replay-btn-lbl">REPLAY</span></button>
+      <div id="replay-bar" class="is-replay">
+        <button type="button" id="replay-play-btn" class="replay-ctrl-btn" title="Wiedergabe starten" aria-label="Play"></button>
+        <button type="button" id="replay-stop-btn" class="replay-ctrl-btn" title="Wiedergabe stoppen" aria-label="Stop"></button>
         <span id="replay-clock">—</span>
-        <button type="button" id="mode-live-btn" title="Live">LIVE</button>
+        <button type="button" id="mode-live-btn" title="Live-Feed (Echtzeit)">LIVE</button>
       </div>
       <div id="zoom-ctrl">
         <div class="zoom-btn" id="bzi">+</div>
@@ -1113,7 +1125,7 @@ function advanceReplay(ts){
   attackData=aggregateFromEvents(getEventsInReplay());
   renderDots();renderMapPanels();updateCountryFills();
   if(animOn)drawReplayFrame(ts);else clearArcCanvas();
-  if(replayCursor>=replayWinEnd){replayPlaying=false;updateReplayBtn();}
+  if(replayCursor>=replayWinEnd){replayPlaying=false;updateReplayControlsUI();}
 }
 function refreshMapFromData(){
   attackData=liveMode?parseMetrics(lastMetricsText):aggregateFromEvents(getEventsInReplay());
@@ -1127,7 +1139,55 @@ function refreshMapFromData(){
   if(animOn)startAnimLoop();
   else clearArcCanvas();
 }
-function updateReplayBtn(){document.getElementById('replay-btn')?.classList.toggle('paused',!replayPlaying);}
+function updateReplayControlsUI(){
+  const play=document.getElementById('replay-play-btn');
+  const stop=document.getElementById('replay-stop-btn');
+  const live=document.getElementById('mode-live-btn');
+  const bar=document.getElementById('replay-bar');
+  if(play)play.classList.toggle('active',replayPlaying&&!liveMode);
+  if(stop)stop.classList.toggle('active',replayPlaying&&!liveMode);
+  if(live)live.classList.toggle('active',!!liveMode);
+  if(bar){bar.classList.toggle('is-live',!!liveMode);bar.classList.toggle('is-replay',!liveMode);}
+}
+function playReplay(){
+  if(replayWinEnd<=replayWinStart&&!allEvents.length)return;
+  if(liveMode){
+    liveMode=false;
+    document.getElementById('mode-live-btn')?.classList.remove('active');
+    initReplayWindow();
+  }
+  if(replayCursor>=replayWinEnd){
+    replayCursor=replayWinStart;
+    lastReplaySpawnTs=replayWinStart;
+    activeRockets=[];
+    updateReplaySlider();
+  }
+  replayPlaying=true;
+  updateReplayControlsUI();
+  startReplayLoop();
+}
+function stopReplay(){
+  replayPlaying=false;
+  if(animRAF){cancelAnimationFrame(animRAF);animRAF=null;}
+  updateReplayControlsUI();
+  if(!liveMode){
+    refreshMapFromData();
+    if(animOn&&linesOn)drawReplayFrame(performance.now());
+  }
+}
+function enterLiveMode(){
+  if(liveMode)return;
+  liveMode=true;
+  replayPlaying=false;
+  if(animRAF){cancelAnimationFrame(animRAF);animRAF=null;}
+  document.getElementById('mode-live-btn')?.classList.add('active');
+  feedData.forEach(e=>lastLiveSeenKeys.add((e.ip||'')+'|'+(e.time_iso||'')));
+  const clk=document.getElementById('replay-clock');
+  if(clk)clk.textContent=t('live_clock');
+  updateReplayControlsUI();
+  refreshMapFromData();
+  if(animOn&&linesOn)startAnimLoop();
+}
 function startAnimLoop(){
   if(animRAF)cancelAnimationFrame(animRAF);
   replayLastFrame=0;lastRocketDrawTs=0;
@@ -1147,8 +1207,31 @@ function startAnimLoop(){
   }
   animRAF=requestAnimationFrame(loop);
 }
-function startReplayLoop(){replayPlaying=true;updateReplayBtn();startAnimLoop();}
-function setupReplayControls(){buildThreatLegend();document.getElementById('replay-btn')?.addEventListener('click',()=>{if(liveMode){liveMode=false;document.getElementById('mode-live-btn')?.classList.remove('active');initReplayWindow();}replayPlaying=!replayPlaying;updateReplayBtn();if(replayPlaying)startReplayLoop();else drawReplayFrame();});document.getElementById('mode-live-btn')?.addEventListener('click',()=>{liveMode=!liveMode;document.getElementById('mode-live-btn')?.classList.toggle('active',liveMode);replayPlaying=false;updateReplayBtn();if(animRAF){cancelAnimationFrame(animRAF);animRAF=null;}if(liveMode){feedData.forEach(e=>lastLiveSeenKeys.add((e.ip||'')+'|'+(e.time_iso||'')));}refreshMapFromData();});document.querySelectorAll('[data-speed]').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('[data-speed]').forEach(x=>x.classList.remove('active'));b.classList.add('active');replaySpeed=parseFloat(b.dataset.speed);}));document.querySelectorAll('[data-range]').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('[data-range]').forEach(x=>x.classList.remove('active'));b.classList.add('active');replayRangeH=parseInt(b.dataset.range,10);initReplayWindow();refreshMapFromData();}));document.getElementById('replay-slider')?.addEventListener('input',e=>{if(replayWinEnd<=replayWinStart)return;replayCursor=replayWinStart+(parseInt(e.target.value,10)/1000)*(replayWinEnd-replayWinStart);lastReplaySpawnTs=replayWinStart;activeRockets=[];document.getElementById('replay-clock').textContent=fmtReplayClock(replayCursor);refreshMapFromData();});}
+function startReplayLoop(){replayPlaying=true;updateReplayControlsUI();startAnimLoop();}
+function setupReplayControls(){
+  buildThreatLegend();
+  document.getElementById('replay-play-btn')?.addEventListener('click',playReplay);
+  document.getElementById('replay-stop-btn')?.addEventListener('click',stopReplay);
+  document.getElementById('mode-live-btn')?.addEventListener('click',enterLiveMode);
+  document.querySelectorAll('[data-speed]').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('[data-speed]').forEach(x=>x.classList.remove('active'));b.classList.add('active');replaySpeed=parseFloat(b.dataset.speed);}));
+  document.querySelectorAll('[data-range]').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('[data-range]').forEach(x=>x.classList.remove('active'));b.classList.add('active');replayRangeH=parseInt(b.dataset.range,10);initReplayWindow();refreshMapFromData();}));
+  updateReplayControlsUI();
+  document.getElementById('replay-slider')?.addEventListener('input',e=>{
+    if(replayWinEnd<=replayWinStart)return;
+    if(liveMode){
+      liveMode=false;
+      document.getElementById('mode-live-btn')?.classList.remove('active');
+      updateReplayControlsUI();
+    }
+    replayPlaying=false;
+    updateReplayControlsUI();
+    replayCursor=replayWinStart+(parseInt(e.target.value,10)/1000)*(replayWinEnd-replayWinStart);
+    lastReplaySpawnTs=replayWinStart;
+    activeRockets=[];
+    document.getElementById('replay-clock').textContent=fmtReplayClock(replayCursor);
+    refreshMapFromData();
+  });
+}
 
 // ── MOBILE LAYOUT SYNC ──
 // Run immediately: set layout bottom = mob-sheet height in exact pixels, no gap
@@ -1216,8 +1299,10 @@ const LANG = {
     fs_countries:'LÄNDER',
     lbl_speed:'TEMPO',
     lbl_range:'ZEITRAUM',
-    replay_lbl:'WIEDERGABE',
+    replay_play_title:'Wiedergabe starten',
+    replay_stop_title:'Wiedergabe stoppen',
     live_lbl:'LIVE',
+    live_clock:'● LIVE',
     entries:     (s,e,t) => `${s}–${e} von ${t} Einträgen`,
     prev:        '◀',
     next:        '▶',
@@ -1240,8 +1325,7 @@ const LANG = {
     csv_title:   'Feed als CSV exportieren',
     tip_close:   'Schließen',
     tip_click:   'KLICK FÜR DETAILS',
-    replay_title:'Wiedergabe',
-    live_title:  'Live-Modus',
+    live_title:  'Live-Feed — aktuelle Angriffe in Echtzeit',
     home_zoom:   'Zum Server-Standort',
     zoom_prefs_title:'Karten-Zoom speichern',
     zoom_prefs_use:'Beim Laden gespeicherte Ansicht',
@@ -1313,8 +1397,10 @@ const LANG = {
     fs_countries:'COUNTRIES',
     lbl_speed:'SPEED',
     lbl_range:'RANGE',
-    replay_lbl:'REPLAY',
+    replay_play_title:'Start replay',
+    replay_stop_title:'Stop replay',
     live_lbl:'LIVE',
+    live_clock:'● LIVE',
     autozoom_on: 'AUTO-ZOOM ON',
     autozoom_off:'AUTO-ZOOM OFF',
     entries:     (s,e,t) => `${s}–${e} of ${t} entries`,
@@ -1339,8 +1425,7 @@ const LANG = {
     csv_title:   'Export feed as CSV',
     tip_close:   'Close',
     tip_click:   'CLICK FOR DETAILS',
-    replay_title:'Replay',
-    live_title:  'Live mode',
+    live_title:  'Live feed — current attacks in real time',
     home_zoom:   'Go to server',
     zoom_prefs_title:'Save map zoom',
     zoom_prefs_use:'Use saved view on load',
@@ -1445,11 +1530,14 @@ function applyLang(){
   legs.forEach((el,i)=>{if(legKeys[i])el.textContent=l[legKeys[i]];});
   const legHint=document.getElementById('leg-hint');
   if(legHint)legHint.textContent=l.leg_click;
-  [['lbl-top-scenarios','top_scenarios'],['lbl-malevolent-ips','malevolent_ips'],['lbl-top-origins','top_origins'],['fs-alerts-lbl','fs_alerts'],['fs-ips-lbl','fs_ips'],['fs-scn-lbl','fs_scenarios'],['fs-ctry-lbl','fs_countries'],['lbl-speed','lbl_speed'],['lbl-range','lbl_range'],['replay-btn-lbl','replay_lbl']].forEach(([id,k])=>{const el=document.getElementById(id);if(el&&l[k])el.textContent=l[k];});
+  [['lbl-top-scenarios','top_scenarios'],['lbl-malevolent-ips','malevolent_ips'],['lbl-top-origins','top_origins'],['fs-alerts-lbl','fs_alerts'],['fs-ips-lbl','fs_ips'],['fs-scn-lbl','fs_scenarios'],['fs-ctry-lbl','fs_countries'],['lbl-speed','lbl_speed'],['lbl-range','lbl_range']].forEach(([id,k])=>{const el=document.getElementById(id);if(el&&l[k])el.textContent=l[k];});
   const liveBtn=document.getElementById('mode-live-btn');
   if(liveBtn){liveBtn.textContent=l.live_lbl;liveBtn.title=l.live_title;}
-  const replayBtn=document.getElementById('replay-btn');
-  if(replayBtn)replayBtn.title=l.replay_title;
+  const playBtn=document.getElementById('replay-play-btn');
+  if(playBtn)playBtn.title=l.replay_play_title;
+  const stopBtn=document.getElementById('replay-stop-btn');
+  if(stopBtn)stopBtn.title=l.replay_stop_title;
+  if(liveMode){const clk=document.getElementById('replay-clock');if(clk)clk.textContent=l.live_clock;}
   const bzr=document.getElementById('bzr');
   if(bzr)bzr.title=l.home_zoom;
   const bzp=document.getElementById('bzp');
@@ -1642,9 +1730,9 @@ function toggleAnim(){
   if(mobBtn){mobBtn.style.borderColor=animOn?'var(--ok)':'rgba(0,255,200,0.2)';mobBtn.style.color=animOn?'var(--ok)':'rgba(160,255,216,0.45)';}
   if(animOn){
     feedData.forEach(e=>lastLiveSeenKeys.add((e.ip||'')+'|'+(e.time_iso||'')));
-    if(liveMode)startAnimLoop();else{replayPlaying=true;updateReplayBtn();startReplayLoop();}
+    if(liveMode)startAnimLoop();else{replayPlaying=true;updateReplayControlsUI();startReplayLoop();}
   }else{
-    replayPlaying=false;updateReplayBtn();
+    replayPlaying=false;updateReplayControlsUI();
     refreshMapFromData();
   }
   drawCountryLabels();
@@ -1655,7 +1743,7 @@ function startMapOnLoad(){
   if(!userHasZoomed)applyInitialMapView();
   if(animOn){
     if(liveMode)startAnimLoop();
-    else if(allEvents.length){replayPlaying=true;updateReplayBtn();startReplayLoop();}
+    else if(allEvents.length){replayPlaying=true;updateReplayControlsUI();startReplayLoop();}
   }
 }
 
@@ -2298,6 +2386,10 @@ async function fetchAndRender(){
     enrichAttackData();
     const total=(text.match(/cs_exporter_total_alerts (\d+)/)||[])[1]||'—';
     updateSidebarStats({totalAlerts:total});
+    if(liveMode){
+      const clk=document.getElementById('replay-clock');
+      if(clk)clk.textContent=t('live_clock');
+    }
     const timeStr=new Date().toLocaleTimeString(currentLang==='de'?'de-DE':'en-GB');
     document.getElementById('lu').textContent=timeStr;
     const mobLu=document.getElementById('mob-lu');
