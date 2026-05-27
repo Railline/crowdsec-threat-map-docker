@@ -55,7 +55,15 @@
     display:flex;gap:0;border-bottom:1px solid rgba(0,255,200,0.05);
     padding:5px 10px;justify-content:space-between;
   }
-  .sb-stat{display:flex;flex-direction:column;align-items:center;}
+  .sb-stat{display:flex;flex-direction:column;align-items:center;min-width:0;}
+  .stat-max{
+    font-family:'Share Tech Mono',monospace;
+    font-size:clamp(6px,0.72vw,7px);
+    color:rgba(255,170,0,0.82);
+    letter-spacing:0.5px;
+    line-height:1.15;
+    white-space:nowrap;
+  }
   #sidebar-controls{display:none;} /* entfernt — aufgeteilt in toggle-row */
 
   /* LINIE + ANIMATION — eigene Zeile, volle Breite, zentriert */
@@ -319,6 +327,19 @@
   .top-bar{height:2px;border-radius:1px;}
   .top-count{font-family:'Orbitron',monospace;font-size:clamp(9px,1vw,10px);color:var(--accent);flex-shrink:0;}
   #sidebar-bottom{padding:6px 10px;border-top:1px solid var(--dim);font-size:clamp(7px,0.8vw,8px);color:rgba(160,255,216,0.3);letter-spacing:1px;}
+  .wl-ip-privacy{margin:2px 0 4px;}
+  .wl-ip-toggle{
+    display:inline-flex;align-items:center;gap:5px;
+    background:rgba(0,20,40,0.85);border:1px solid var(--dim);
+    border-radius:4px;padding:2px 7px;cursor:pointer;
+    font-family:'Share Tech Mono',monospace;font-size:7px;
+    letter-spacing:0.5px;color:rgba(160,255,216,0.45);
+    transition:all 0.2s;user-select:none;
+  }
+  .wl-ip-toggle:hover{border-color:var(--accent);color:var(--accent);}
+  .wl-ip-toggle.on{border-color:var(--ok);color:var(--ok);background:rgba(0,255,136,0.08);}
+  .wl-ip-toggle-dot{width:6px;height:6px;border-radius:50%;background:rgba(160,255,216,0.3);flex-shrink:0;transition:background 0.2s;}
+  .wl-ip-toggle.on .wl-ip-toggle-dot{background:var(--ok);box-shadow:0 0 4px var(--ok);}
 
   /* FILTER ACTIVE INDICATOR */
   #filter-bar{display:flex;flex-wrap:wrap;gap:3px;padding:4px 8px;border-bottom:1px solid var(--dim);background:rgba(0,5,15,0.7);min-height:0;flex-shrink:0;}
@@ -471,7 +492,7 @@
     <div id="map-wrap">
       <div id="map-title-overlay">
         <span id="h-title">CROWD<span>SEC</span> // THREAT MAP</span>
-        <span id="map-version-badge">v1.5.2</span>
+        <span id="map-version-badge">v1.5.4</span>
       </div>
       <svg id="base-svg" style="position:absolute;inset:0;width:100%;height:100%"></svg>
       <canvas id="arc-canvas"></canvas>
@@ -548,9 +569,21 @@
     <!-- Sidebar top toolbar: stats + controls -->
     <div id="sidebar-toolbar">
       <div id="sidebar-stats">
-        <div class="sb-stat"><span class="stat-val" id="s-total">—</span><span class="stat-lbl" id="s-attacks-lbl">ANGRIFFE</span></div>
-        <div class="sb-stat"><span class="stat-val" id="s-countries">—</span><span class="stat-lbl" id="s-countries-lbl">LÄNDER</span></div>
-        <div class="sb-stat" id="s-scenarios-wrap"><span class="stat-val" id="s-scenarios">—</span><span class="stat-lbl" id="s-scenarios-lbl">SZENARIEN</span></div>
+        <div class="sb-stat">
+          <span class="stat-val" id="s-total">—</span>
+          <span class="stat-max" id="s-total-max">MAX —</span>
+          <span class="stat-lbl" id="s-attacks-lbl">ANGRIFFE</span>
+        </div>
+        <div class="sb-stat">
+          <span class="stat-val" id="s-countries">—</span>
+          <span class="stat-max" id="s-countries-max">MAX —</span>
+          <span class="stat-lbl" id="s-countries-lbl">LÄNDER</span>
+        </div>
+        <div class="sb-stat" id="s-scenarios-wrap">
+          <span class="stat-val" id="s-scenarios">—</span>
+          <span class="stat-max" id="s-scenarios-max">MAX —</span>
+          <span class="stat-lbl" id="s-scenarios-lbl">SZENARIEN</span>
+        </div>
         <div class="sb-stat"><span class="stat-val blink" style="color:var(--ok)">●</span><span class="stat-lbl" id="s-live-lbl">LIVE</span></div>
       </div>
       <div id="toggle-row">
@@ -614,6 +647,12 @@
         <span id="wl-dot" style="width:6px;height:6px;border-radius:50%;background:rgba(160,255,216,0.2);flex-shrink:0;display:inline-block;"></span>
         <span id="wl-text" style="color:rgba(160,255,216,0.3);">Whitelist: —</span>
       </div>
+      <div class="wl-ip-privacy">
+        <button type="button" id="wl-ip-toggle" class="wl-ip-toggle on" aria-pressed="true" title="Eigene IP in der Ecke ein-/ausblenden">
+          <span class="wl-ip-toggle-dot"></span>
+          <span class="wl-ip-toggle-lbl">EIGENE IP AN</span>
+        </button>
+      </div>
       <a href="https://github.com/kabelsalatundklartext/crowdsec-threat-map" target="_blank" style="color:rgba(0,255,200,0.35);font-size:8px;text-decoration:none;letter-spacing:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;max-width:100%;" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='rgba(0,255,200,0.35)'">⭐ GitHub: crowdsec-threat-map</a></div>
   </aside>
 </div>
@@ -643,10 +682,12 @@
     <div style="display:flex;gap:12px;align-items:center;">
       <div style="display:flex;flex-direction:column;align-items:center;">
         <span style="font-family:'Orbitron',monospace;font-size:11px;font-weight:700;color:var(--accent);line-height:1;" id="mob-s-total">—</span>
+        <span class="stat-max" id="mob-s-total-max" style="font-size:6px;">MAX —</span>
         <span style="font-size:6px;color:rgba(160,255,216,0.4);letter-spacing:1px;" id="mob-attacks-lbl">ANGRIFFE</span>
       </div>
       <div style="display:flex;flex-direction:column;align-items:center;">
         <span style="font-family:'Orbitron',monospace;font-size:11px;font-weight:700;color:var(--accent);line-height:1;" id="mob-s-countries">—</span>
+        <span class="stat-max" id="mob-s-countries-max" style="font-size:6px;">MAX —</span>
         <span style="font-size:6px;color:rgba(160,255,216,0.4);letter-spacing:1px;" id="mob-countries-lbl">LÄNDER</span>
       </div>
       <span style="font-family:'Orbitron',monospace;font-size:11px;font-weight:700;color:var(--ok);" class="blink">●</span>
@@ -656,6 +697,10 @@
         <span id="mob-wl-dot" style="width:6px;height:6px;border-radius:50%;background:rgba(160,255,216,0.2);flex-shrink:0;display:inline-block;"></span>
         <span id="mob-wl-text" style="font-size:7px;color:rgba(160,255,216,0.3);letter-spacing:0.5px;white-space:nowrap;">🛡️ —</span>
       </div>
+      <button type="button" id="mob-wl-ip-toggle" class="wl-ip-toggle on" aria-pressed="true" style="flex-shrink:0;">
+        <span class="wl-ip-toggle-dot"></span>
+        <span class="wl-ip-toggle-lbl">IP AN</span>
+      </button>
     </div>
     <div style="display:flex;align-items:center;gap:4px;flex-shrink:0;">
       <!-- Mobile theme dots -->
@@ -724,7 +769,7 @@ const SERVER_NAME_MAP = 'MEIN-SERVER';
 // Ab hier nichts mehr ändern
 // ============================================================
 
-const APP_VERSION  = 'v1.5.2';
+const APP_VERSION  = 'v1.5.4';
 const REFRESH_MS   = 30000;
 const localUnbanned = new Set();
 const ARC_FPS      = 30;
@@ -740,8 +785,14 @@ const HOME_SCREEN_Y_FRAC = 0.28;  // Server höher → Weltkarte füllt Bereich 
 const HOME_PROJ_Y_SHIFT = 0.11;   // Projektion nach oben
 const HOME_TY_NUDGE_PX = 42;      // zusätzlich Karte nach oben schieben
 const MAP_VIEW_STORAGE_KEY = 'csThreatMapViewPrefs';
+const PEAK_STATS_STORAGE_KEY = 'csThreatMapPeakStats';
+const SHOW_OWN_IP_STORAGE_KEY = 'csThreatMapShowOwnIp';
 const ZOOM_STEP = 0.1;          // +/- Buttons
 let mapViewPrefs={useSavedOnLoad:false,homeK:null,savedView:null};
+let peakStats={attacks:0,countries:0,scenarios:0};
+let lastAlertsTotal=null;
+let showOwnIp=true;
+let lastWhitelistData=null;
 const AUTO_ZOOM_MIN_MS = 2800;    // Abstand zwischen Auto-Zooms
 const AUTO_ZOOM_MAX_K = 5.5;      // Max. Zoom bei Einzelangriff
 
@@ -1039,6 +1090,7 @@ function advanceReplay(ts){
   updateReplaySlider();
   attackData=aggregateFromEvents(getEventsInReplay());
   renderDots();renderMapPanels();updateCountryFills();
+  updateSidebarStats();
   if(animOn)drawReplayFrame(ts);else clearArcCanvas();
   if(replayCursor>=replayWinEnd){replayPlaying=false;updateReplayBtn();}
 }
@@ -1178,6 +1230,7 @@ const LANG = {
     zoom_prefs_saved:(k)=>`Gespeichert: ${k.toFixed(1)}×`,
     zoom_prefs_none:'Keine gespeicherte Ansicht',
     zoom_prefs_ok:'Ansicht gespeichert',
+    stat_max:(n)=>`MAX ${n}`,
     anim_title:  'Animierte Karte (Replay/Live) vs. statische Heatmap',
     lines_title: 'Angriffe auf der Karte ein/aus',
     autozoom_title:'Bei Angriff automatisch in die Region zoomen',
@@ -1186,6 +1239,10 @@ const LANG = {
     wl_err:      '⚠️ Whitelist-Fehler',
     wl_updated:  (ip) => `🔄 ${ip} aktualisiert`,
     wl_check:    (c,ch) => `Letzter Check: ${c}${ch ? ' | Geändert: '+ch : ''}`,
+    show_own_ip_on:'EIGENE IP AN',
+    show_own_ip_off:'EIGENE IP AUS',
+    show_own_ip_title:'Eigene IP in der Ecke ein-/ausblenden',
+    wl_ip_hidden:'🛡️ IP ausgeblendet',
     filter_country: (cc) => `Klick: nur ${cc} anzeigen`,
     filter_scenario:'Klick: nach Szenario filtern',
     unban_active:  'Aktiver Ban — entsperren',
@@ -1273,6 +1330,7 @@ const LANG = {
     zoom_prefs_saved:(k)=>`Saved: ${k.toFixed(1)}×`,
     zoom_prefs_none:'No saved view',
     zoom_prefs_ok:'View saved',
+    stat_max:(n)=>`MAX ${n}`,
     anim_title:  'Animated map (replay/live) vs. static heatmap',
     lines_title: 'Attack flights (rockets) on/off',
     autozoom_title:'Auto-zoom to attack region',
@@ -1281,6 +1339,10 @@ const LANG = {
     wl_err:      '⚠️ Whitelist error',
     wl_updated:  (ip) => `🔄 ${ip} updated`,
     wl_check:    (c,ch) => `Last check: ${c}${ch ? ' | Changed: '+ch : ''}`,
+    show_own_ip_on:'SHOW OWN IP',
+    show_own_ip_off:'HIDE OWN IP',
+    show_own_ip_title:'Show or hide your IP in the footer',
+    wl_ip_hidden:'🛡️ IP hidden',
     filter_country: (cc) => `Click: show only ${cc}`,
     filter_scenario:'Click: filter by scenario',
     unban_active:  'Active ban — unban',
@@ -1423,6 +1485,8 @@ function applyLang(){
   if(mobAtLbl)mobAtLbl.textContent=l.attacks;
   const mobCoLbl=document.getElementById('mob-countries-lbl');
   if(mobCoLbl)mobCoLbl.textContent=l.countries;
+  updateSidebarStats();
+  syncWlIpToggleUI();
 }
 
 // toggleLang entfernt — Sprache wird über LANGUAGE Docker-Variable gesetzt
@@ -1909,6 +1973,47 @@ function zoomByStep(delta){
   baseSvg.transition().duration(180).call(zoomBeh.transform,d3.zoomIdentity.translate(zt.x,zt.y).scale(k))
     .on('end',()=>updateZoomLevel(d3.zoomTransform(baseSvg.node()).k));
 }
+function loadPeakStats(){
+  try{
+    const raw=localStorage.getItem(PEAK_STATS_STORAGE_KEY);
+    if(raw){
+      const p=JSON.parse(raw);
+      if(typeof p.attacks==='number'&&p.attacks>=0)peakStats.attacks=p.attacks;
+      if(typeof p.countries==='number'&&p.countries>=0)peakStats.countries=p.countries;
+      if(typeof p.scenarios==='number'&&p.scenarios>=0)peakStats.scenarios=p.scenarios;
+    }
+  }catch(e){}
+}
+function persistPeakStats(){
+  try{localStorage.setItem(PEAK_STATS_STORAGE_KEY,JSON.stringify(peakStats));}catch(e){}
+}
+function formatPeakStat(n){
+  if(!n)return 'MAX —';
+  const loc=currentLang==='de'?'de-DE':'en-US';
+  return t('stat_max',n.toLocaleString(loc));
+}
+function updateSidebarStats(opts={}){
+  if(opts.totalAlerts!==undefined)lastAlertsTotal=opts.totalAlerts;
+  const attacksDisplay=lastAlertsTotal??'—';
+  const countries=new Set(attackData.map(d=>d.country).filter(Boolean)).size;
+  const scenarios=new Set(attackData.map(d=>d.scenario).filter(Boolean)).size;
+  const attacksNum=parseInt(String(attacksDisplay).replace(/[^\d]/g,''),10);
+  if(Number.isFinite(attacksNum)&&attacksNum>0)peakStats.attacks=Math.max(peakStats.attacks,attacksNum);
+  if(countries>0)peakStats.countries=Math.max(peakStats.countries,countries);
+  if(scenarios>0)peakStats.scenarios=Math.max(peakStats.scenarios,scenarios);
+  persistPeakStats();
+  const set=(id,val)=>{const el=document.getElementById(id);if(el)el.textContent=val;};
+  set('s-total',attacksDisplay);
+  set('s-total-max',formatPeakStat(peakStats.attacks));
+  set('s-countries',countries);
+  set('s-countries-max',formatPeakStat(peakStats.countries));
+  set('s-scenarios',scenarios);
+  set('s-scenarios-max',formatPeakStat(peakStats.scenarios));
+  set('mob-s-total',attacksDisplay);
+  set('mob-s-total-max',formatPeakStat(peakStats.attacks));
+  set('mob-s-countries',countries);
+  set('mob-s-countries-max',formatPeakStat(peakStats.countries));
+}
 function loadMapViewPrefs(){
   try{
     const raw=localStorage.getItem(MAP_VIEW_STORAGE_KEY);
@@ -2214,14 +2319,7 @@ async function fetchAndRender(){
     feedData=parseFeedData(text).filter(d=>!localUnbanned.has(d.ip));
     enrichAttackData();
     const total=(text.match(/cs_exporter_total_alerts (\d+)/)||[])[1]||'—';
-    document.getElementById('s-total').textContent=total;
-    const mobTotal=document.getElementById('mob-s-total');
-    if(mobTotal)mobTotal.textContent=total;
-    const ccSize=new Set(attackData.map(d=>d.country)).size;
-    document.getElementById('s-countries').textContent=ccSize;
-    const mobCC=document.getElementById('mob-s-countries');
-    if(mobCC)mobCC.textContent=ccSize;
-    document.getElementById('s-scenarios').textContent=new Set(attackData.map(d=>d.scenario)).size;
+    updateSidebarStats({totalAlerts:total});
     const timeStr=new Date().toLocaleTimeString(currentLang==='de'?'de-DE':'en-GB');
     document.getElementById('lu').textContent=timeStr;
     const mobLu=document.getElementById('mob-lu');
@@ -2244,48 +2342,95 @@ async function fetchAndRender(){
 function countColor(n){if(n>=20)return'#ff2244';if(n>=10)return'#ff8800';if(n>=5)return'#ffff00';return'#00ff88';}
 
 // ── WHITELIST STATUS BADGE ──
-async function fetchWhitelistStatus(){
+function loadShowOwnIpPrefs(){
+  try{
+    const raw=localStorage.getItem(SHOW_OWN_IP_STORAGE_KEY);
+    if(raw===null)return;
+    showOwnIp=raw!=='0'&&raw!=='false';
+  }catch(e){}
+  syncWlIpToggleUI();
+}
+function persistShowOwnIpPrefs(){
+  try{localStorage.setItem(SHOW_OWN_IP_STORAGE_KEY,showOwnIp?'1':'0');}catch(e){}
+}
+function displayOwnIp(ip){
+  if(showOwnIp)return ip||'—';
+  return '••••••••';
+}
+function syncWlIpToggleUI(){
+  document.querySelectorAll('.wl-ip-toggle').forEach(btn=>{
+    btn.classList.toggle('on',showOwnIp);
+    btn.setAttribute('aria-pressed',showOwnIp?'true':'false');
+    btn.title=t('show_own_ip_title');
+  });
+  document.querySelectorAll('.wl-ip-toggle-lbl').forEach(el=>{
+    el.textContent=showOwnIp?t('show_own_ip_on'):t('show_own_ip_off');
+  });
+}
+function toggleShowOwnIp(){
+  showOwnIp=!showOwnIp;
+  persistShowOwnIpPrefs();
+  syncWlIpToggleUI();
+  if(lastWhitelistData)renderWhitelistBadge(lastWhitelistData);
+  else fetchWhitelistStatus();
+}
+function setupWlIpToggle(){
+  document.querySelectorAll('.wl-ip-toggle').forEach(btn=>{
+    btn.addEventListener('click',toggleShowOwnIp);
+  });
+}
+function renderWhitelistBadge(d){
   const dot=document.getElementById('wl-dot');
   const txt=document.getElementById('wl-text');
+  const mobDot=document.getElementById('mob-wl-dot');
+  const mobTxt=document.getElementById('mob-wl-text');
   if(!dot||!txt)return;
+  if(!d){
+    dot.style.background='rgba(160,255,216,0.15)';
+    txt.style.color='rgba(160,255,216,0.25)';
+    txt.textContent=t('wl_na');
+    txt.title='';
+    if(mobDot)mobDot.style.background='rgba(160,255,216,0.15)';
+    if(mobTxt){mobTxt.style.color='rgba(160,255,216,0.25)';mobTxt.textContent='🛡️ n/a';}
+    return;
+  }
+  const ip=d.ip||'';
+  const status=d.status||'unbekannt';
+  const check=d.last_check||'';
+  const changed=d.last_change||'';
+  const disp=displayOwnIp(ip);
+  let color,label,mobLabel;
+  if(!showOwnIp&&!ip){
+    color='rgba(160,255,216,0.3)';label=t('wl_ip_hidden');mobLabel=label;
+  }else if(status==='ok'){
+    color='var(--ok)';label=`🛡️ ${disp} ✓`;mobLabel=`🛡️ ${disp}`;
+  }else if(status==='aktualisiert'){
+    color='var(--accent)';
+    label=showOwnIp?t('wl_updated',ip):`🔄 ${disp} ${currentLang==='de'?'aktualisiert':'updated'}`;
+    mobLabel=`🛡️ ${disp}`;
+  }else if(status==='fehler'){
+    color='var(--danger)';label=t('wl_err');mobLabel='🛡️ !';
+  }else{
+    color='rgba(160,255,216,0.3)';label=`🛡️ ${disp}`;mobLabel=`🛡️ ${disp}`;
+  }
+  dot.style.background=color;
+  dot.style.boxShadow=status==='fehler'?`0 0 5px ${color}`:'none';
+  txt.style.color=color;
+  txt.textContent=label;
+  txt.title=showOwnIp?t('wl_check',check,changed):t('show_own_ip_title');
+  if(mobDot){mobDot.style.background=color;mobDot.style.boxShadow=status==='fehler'?`0 0 4px ${color}`:'none';}
+  if(mobTxt){mobTxt.style.color=color;mobTxt.textContent=mobLabel;mobTxt.title=txt.title;}
+}
+async function fetchWhitelistStatus(){
   try{
     const base=EXPORTER_URL.replace(/\/metrics.*$/,'');
     const res=await fetch(base+'/whitelist-status',{cache:'no-store'});
     if(!res.ok)throw new Error('HTTP '+res.status);
-    const d=await res.json();
-    const ip=d.ip||'—';
-    const status=d.status||'unbekannt';
-    const check=d.last_check||'';
-    const changed=d.last_change||'';
-
-    let color,label;
-    if(status==='ok'){
-      color='var(--ok)';label=`🛡️ ${ip} ✓`;
-    } else if(status==='aktualisiert'){
-      color='var(--accent)';label=t('wl_updated',ip);
-    } else if(status==='fehler'){
-      color='var(--danger)';label=t('wl_err');
-    } else {
-      color='rgba(160,255,216,0.3)';label=`🛡️ ${ip||'—'}`;
-    }
-
-    dot.style.background=color;
-    dot.style.boxShadow=status==='fehler'?`0 0 5px ${color}`:'none';
-    txt.style.color=color;
-    txt.textContent=label;
-    txt.title=t('wl_check',check,changed);
-    // Mobile Badge
-    const mobDot=document.getElementById('mob-wl-dot');
-    const mobTxt=document.getElementById('mob-wl-text');
-    if(mobDot){mobDot.style.background=color;mobDot.style.boxShadow=status==='fehler'?`0 0 4px ${color}`:'none';}
-    if(mobTxt){mobTxt.style.color=color;mobTxt.textContent=`🛡️ ${ip||'—'}`;mobTxt.title=txt.title;}
+    lastWhitelistData=await res.json();
+    renderWhitelistBadge(lastWhitelistData);
   }catch(e){
-    if(dot)dot.style.background='rgba(160,255,216,0.15)';
-    if(txt){txt.style.color='rgba(160,255,216,0.25)';txt.textContent=t('wl_na');}
-    const mobDot=document.getElementById('mob-wl-dot');
-    const mobTxt=document.getElementById('mob-wl-text');
-    if(mobDot)mobDot.style.background='rgba(160,255,216,0.15)';
-    if(mobTxt){mobTxt.style.color='rgba(160,255,216,0.25)';mobTxt.textContent='🛡️ n/a';}
+    lastWhitelistData=null;
+    renderWhitelistBadge(null);
   }
 }
 
@@ -2998,6 +3143,9 @@ document.addEventListener('visibilitychange',()=>{
 
 normalizeLang();
 loadMapViewPrefs();
+loadPeakStats();
+loadShowOwnIpPrefs();
+setupWlIpToggle();
 autoZoomOn=false;
 ensureAutoZoomOff();
 syncMapToggleStates();
