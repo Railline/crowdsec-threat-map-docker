@@ -198,6 +198,9 @@
   .replay-ctrl-btn:disabled{opacity:0.35;cursor:not-allowed;}
   #replay-play-btn::before{content:'▶';margin-left:2px;}
   #replay-stop-btn::before{content:'■';font-size:9px;}
+  #replay-bar:not(.is-playing) #replay-stop-btn{display:none;}
+  #replay-bar.is-playing #replay-play-btn{display:none;}
+  #replay-bar.is-playing #replay-stop-btn{display:flex;}
   #replay-bar.is-live{border-color:rgba(0,255,136,0.35);}
   #replay-bar.is-live .replay-ctrl-btn{border-color:rgba(0,255,136,0.3);color:rgba(160,255,216,0.5);}
   #replay-clock{font-size:9px;color:rgba(160,255,216,0.7);white-space:nowrap;min-width:140px;text-align:center;}
@@ -880,6 +883,21 @@ function getAlltimeStats(){
     uniqueIps:new Set(events.map(e=>e.ip).filter(Boolean)).size,
   };
 }
+/** Events im gewählten Karten-Zeitfenster (ZEITRAUM + Replay-Position, ohne Feed-Filter). */
+function getMapWindowEvents(){
+  if(liveMode)return feedData.length?feedData:allEvents;
+  if(replayWinEnd<=replayWinStart)return [];
+  return allEvents.filter(e=>e.ts>=replayWinStart&&e.ts<=replayCursor);
+}
+function getMapWindowStats(){
+  const events=getMapWindowEvents();
+  return{
+    reports:events.length,
+    uniqueIps:new Set(events.map(e=>e.ip).filter(Boolean)).size,
+    scenarios:new Set(events.map(e=>e.scenario).filter(Boolean)).size,
+    countries:new Set(events.map(e=>e.country).filter(Boolean)).size,
+  };
+}
 function formatStatNumber(v){
   const loc=currentLang==='de'?'de-DE':'en-US';
   if(typeof v==='number')return v.toLocaleString(loc);
@@ -890,20 +908,21 @@ function updateSidebarStats(opts={}){
   if(opts.totalAlerts!==undefined)lastAlertsTotal=opts.totalAlerts;
   const s=getAlltimeStats();
   const set=(id,val)=>{const el=document.getElementById(id);if(el)el.textContent=val;};
-  const attacksFmt=formatStatNumber(s.attacks);
-  const countriesFmt=formatStatNumber(s.countries);
-  const scenariosFmt=formatStatNumber(s.scenarios);
-  set('s-total',attacksFmt);
-  set('s-countries',countriesFmt);
-  set('s-scenarios',scenariosFmt);
-  set('mob-s-total',attacksFmt);
-  set('mob-s-countries',countriesFmt);
-  set('fs-alerts',attacksFmt);
-  set('fs-ips',formatStatNumber(s.uniqueIps));
-  set('fs-scenarios',scenariosFmt);
-  set('fs-countries',countriesFmt);
+  set('s-total',formatStatNumber(s.attacks));
+  set('s-countries',formatStatNumber(s.countries));
+  set('s-scenarios',formatStatNumber(s.scenarios));
+  set('mob-s-total',formatStatNumber(s.attacks));
+  set('mob-s-countries',formatStatNumber(s.countries));
 }
-function renderMapPanels(){const events=liveMode?feedData:getEventsInReplay();const bySc={},byIp={},byCo={};events.forEach(e=>{bySc[e.scenario]=(bySc[e.scenario]||0)+1;byIp[e.ip]=(byIp[e.ip]||0)+1;byCo[e.country]=(byCo[e.country]||0)+1;});const row=(c,l,v)=>`<div class="map-panel-row"><span class="map-panel-dot" style="background:${c}"></span><span class="map-panel-label">${l}</span><span class="map-panel-val">${v}</span></div>`;document.getElementById('panel-scenarios-body').innerHTML=Object.entries(bySc).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([s,n])=>row(scenarioColor(s),s,n)).join('')||'—';document.getElementById('panel-ips-body').innerHTML=Object.entries(byIp).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([ip,n])=>{const c=events.find(e=>e.ip===ip)?.country||'??';return row(scenarioColor(events.find(e=>e.ip===ip)?.scenario),`${FLAG[c]||'🌐'} ${ip}`,n);}).join('')||'—';document.getElementById('panel-origins-body').innerHTML=Object.entries(byCo).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([cc,n],i)=>row('#888',`${i+1}. ${countryDisplayName(cc)}`,n)).join('')||'—';}
+function updateFooterStats(){
+  const w=getMapWindowStats();
+  const set=(id,val)=>{const el=document.getElementById(id);if(el)el.textContent=val;};
+  set('fs-alerts',formatStatNumber(w.reports));
+  set('fs-ips',formatStatNumber(w.uniqueIps));
+  set('fs-scenarios',formatStatNumber(w.scenarios));
+  set('fs-countries',formatStatNumber(w.countries));
+}
+function renderMapPanels(){const events=liveMode?feedData:getEventsInReplay();const bySc={},byIp={},byCo={};events.forEach(e=>{bySc[e.scenario]=(bySc[e.scenario]||0)+1;byIp[e.ip]=(byIp[e.ip]||0)+1;byCo[e.country]=(byCo[e.country]||0)+1;});const row=(c,l,v)=>`<div class="map-panel-row"><span class="map-panel-dot" style="background:${c}"></span><span class="map-panel-label">${l}</span><span class="map-panel-val">${v}</span></div>`;document.getElementById('panel-scenarios-body').innerHTML=Object.entries(bySc).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([s,n])=>row(scenarioColor(s),s,n)).join('')||'—';document.getElementById('panel-ips-body').innerHTML=Object.entries(byIp).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([ip,n])=>{const c=events.find(e=>e.ip===ip)?.country||'??';return row(scenarioColor(events.find(e=>e.ip===ip)?.scenario),`${FLAG[c]||'🌐'} ${ip}`,n);}).join('')||'—';document.getElementById('panel-origins-body').innerHTML=Object.entries(byCo).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([cc,n],i)=>row('#888',`${i+1}. ${countryDisplayName(cc)}`,n)).join('')||'—';updateFooterStats();}
 function updateReplaySlider(){const sl=document.getElementById('replay-slider');if(!sl||replayWinEnd<=replayWinStart)return;sl.value=Math.round(1000*(replayCursor-replayWinStart)/(replayWinEnd-replayWinStart));document.getElementById('replay-clock').textContent=fmtReplayClock(replayCursor);document.getElementById('tl-start').textContent=fmtReplayClock(replayWinStart);document.getElementById('tl-end').textContent=fmtReplayClock(replayWinEnd);}
 function clearFlightLabels(){const layer=document.getElementById('flight-labels-layer');if(layer)layer.innerHTML='';}
 function escTag(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');}
@@ -1140,14 +1159,15 @@ function refreshMapFromData(){
   else clearArcCanvas();
 }
 function updateReplayControlsUI(){
-  const play=document.getElementById('replay-play-btn');
-  const stop=document.getElementById('replay-stop-btn');
   const live=document.getElementById('mode-live-btn');
   const bar=document.getElementById('replay-bar');
-  if(play)play.classList.toggle('active',replayPlaying&&!liveMode);
-  if(stop)stop.classList.toggle('active',replayPlaying&&!liveMode);
+  const playing=replayPlaying&&!liveMode;
   if(live)live.classList.toggle('active',!!liveMode);
-  if(bar){bar.classList.toggle('is-live',!!liveMode);bar.classList.toggle('is-replay',!liveMode);}
+  if(bar){
+    bar.classList.toggle('is-live',!!liveMode);
+    bar.classList.toggle('is-replay',!liveMode);
+    bar.classList.toggle('is-playing',playing);
+  }
 }
 function playReplay(){
   if(replayWinEnd<=replayWinStart&&!allEvents.length)return;
@@ -1593,6 +1613,7 @@ function applyLang(){
   const mobCoLbl=document.getElementById('mob-countries-lbl');
   if(mobCoLbl)mobCoLbl.textContent=l.countries;
   updateSidebarStats();
+  updateFooterStats();
   syncWlIpToggleUI();
 }
 
@@ -2386,6 +2407,7 @@ async function fetchAndRender(){
     enrichAttackData();
     const total=(text.match(/cs_exporter_total_alerts (\d+)/)||[])[1]||'—';
     updateSidebarStats({totalAlerts:total});
+    updateFooterStats();
     if(liveMode){
       const clk=document.getElementById('replay-clock');
       if(clk)clk.textContent=t('live_clock');
