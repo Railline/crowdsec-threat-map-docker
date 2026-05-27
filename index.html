@@ -186,7 +186,7 @@
     background:rgba(4,12,28,0.94);border:1px solid rgba(255,200,0,0.3);
     border-radius:20px;pointer-events:auto;box-shadow:0 4px 20px rgba(0,0,0,0.5);
   }
-  @media(max-width:680px){#map-panels-left{display:none;}}
+  @media(max-width:900px){#map-panels-left{display:none;}}
   .replay-ctrl-btn{
     width:28px;height:28px;display:flex;align-items:center;justify-content:center;
     border:1px solid rgba(255,200,0,0.35);border-radius:50%;background:rgba(0,20,40,0.6);
@@ -458,68 +458,87 @@
   @keyframes spin{to{transform:rotate(360deg)}}
   #err{display:none;position:fixed;top:60px;left:50%;transform:translateX(-50%);background:rgba(255,34,68,0.1);border:1px solid var(--danger);color:var(--danger);padding:7px 14px;font-size:10px;z-index:400;letter-spacing:1px;border-radius:2px;max-width:90vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 
-  /* Responsive */
-  @media(max-width:680px){
+  /* Responsive — Handy + Tablet Hochformat (≤900px): Bottom-Sheet statt Sidebar */
+  @media(max-width:900px){
     #sidebar{display:none!important;}
-    #mob-sheet{display:flex!important;}
-    /* JS sets exact pixel values — CSS fallback only */
-    #layout{top:0 !important;bottom:58vh;}
+    #mob-sheet{display:flex!important;flex-direction:column;}
+    #layout{top:0!important;}
     html,body{background:var(--bg)!important;}
     #grid-bg{display:block;}
-    /* Legend: compact centered, no gap */
-    #legend{
-      height:22px;
-      flex-wrap:nowrap;
-      gap:0 6px;
-      padding:0 6px;
-      justify-content:center;
-      align-items:center;
-      overflow:hidden;
-      flex-shrink:0;
+    #map-title-overlay{right:0;left:0;height:22px;padding:0 8px;}
+    #map-title-overlay #h-title{font-size:8px;letter-spacing:1px;}
+    #map-version-badge{font-size:6px;padding:1px 3px;}
+    #mob-sheet{
+      position:fixed;bottom:0;left:0;right:0;
+      max-height:min(52vh,420px);min-height:240px;
+      height:auto;
     }
-    .leg-label{display:inline!important;font-size:7px;letter-spacing:0;}
-    .leg-item{font-size:7px;gap:2px;white-space:nowrap;}
-    .leg-dot{width:6px;height:6px;}
-    #leg-hint{display:none!important;}
-    #leg-anim-hint{display:none;}
-    #map-title-overlay{right:0;height:24px;}
-    #map-version-badge{display:inline!important;font-size:7px;padding:1px 3px;}
-    #mob-sheet{height:58vh;max-height:58vh;bottom:0;display:flex!important;flex-direction:column;}
+    #mob-tab-btns{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;}
+    .mob-tab-btn{flex-shrink:0;padding:8px 10px;font-size:9px;}
     #mob-panel{flex:1!important;overflow-y:auto;min-height:0;max-height:none!important;}
-    #map-col{flex:1;min-height:0;}
-    #map-console-bar{font-size:8px;}
-    #console-controls{flex-direction:column;align-items:stretch;gap:4px;}
-    .ctrl-group{justify-content:flex-start;}
-    .ctrl-range .range-btns{display:flex;flex-wrap:nowrap;overflow-x:auto;max-width:100%;-webkit-overflow-scrolling:touch;gap:3px;padding-bottom:2px;}
-    .ctrl-range .pill-btn{flex-shrink:0;}
-    #threat-legend{justify-content:center;}
-    #footer-stats{gap:8px;padding:4px 6px;}
-    .fstat{font-size:7px;}
-    .fstat-val{font-size:10px;}
-    #replay-bar{padding:4px 10px;gap:6px;max-width:calc(100vw - 16px);}
-    #replay-clock{font-size:8px;min-width:0;flex:1;}
-    #zoom-ctrl{bottom:auto;top:28px;}
-    #zoom-level{left:48px;top:28px;bottom:auto;}
-    #zoom-prefs-panel{bottom:auto;top:64px;max-width:calc(100vw - 16px);}
+    #map-col{flex:1;min-height:0;display:flex;flex-direction:column;}
+    #map-wrap{flex:1 1 auto;min-height:min(38vh,280px);}
+    #map-console-bar{
+      font-size:8px;flex-shrink:0;
+      max-height:min(36vh,320px);overflow-y:auto;-webkit-overflow-scrolling:touch;
+    }
+    #footer-stats{display:none!important;}
+    #timeline-wrap{padding:4px 8px 2px;}
+    #timeline-labels{font-size:6px;padding:0 8px;}
+    #console-controls{flex-direction:column;align-items:stretch;gap:5px;padding:4px 8px 6px;}
+    .ctrl-group{width:100%;align-items:center;}
+    .ctrl-group-lbl{min-width:42px;}
+    .ctrl-speed,.ctrl-range{display:flex;flex-wrap:nowrap;align-items:center;gap:4px;}
+    .ctrl-speed .pill-btn,.ctrl-range .pill-btn{flex-shrink:0;padding:4px 7px;font-size:7px;min-height:28px;}
+    .ctrl-range .range-btns{display:flex;flex-wrap:nowrap;overflow-x:auto;flex:1;-webkit-overflow-scrolling:touch;gap:3px;padding-bottom:2px;}
+    #threat-legend{justify-content:flex-start;overflow-x:auto;flex-wrap:nowrap;width:100%;-webkit-overflow-scrolling:touch;padding-bottom:2px;}
+    .threat-leg{flex-shrink:0;}
+    #replay-bar{
+      padding:4px 10px;gap:5px;
+      max-width:min(calc(100% - 16px),340px);
+      bottom:10px;
+    }
+    .replay-ctrl-btn{width:26px;height:26px;}
+    #replay-clock{font-size:7px;min-width:0;flex:1;max-width:200px;overflow:hidden;text-overflow:ellipsis;}
+    #mode-live-btn{font-size:7px;padding:2px 8px;}
+    #zoom-ctrl{bottom:auto;top:26px;left:6px;}
+    #zoom-level{left:44px;top:26px;bottom:auto;font-size:7px;}
+    #zoom-prefs-panel{bottom:auto;top:60px;left:6px;max-width:calc(100vw - 12px);}
+    .zoom-btn{width:28px;height:28px;font-size:14px;}
+    #mob-stats-bar{padding:5px 6px;}
+    .mob-stat-val{font-size:9px;}
+    .mob-stats-block-title{font-size:5px;}
   }
-  @media(min-width:681px) and (max-width:1024px){
-    #sidebar{width:clamp(160px,24vw,210px);}
-    #sidebar-stats{padding:4px 6px;}
-    .stat-val{font-size:clamp(9px,1.2vw,12px);}
-    .stat-lbl{font-size:6px;}
-    #toggle-row{gap:4px;padding:3px 6px;}
-    #anim-toggle,#lines-toggle,#autozoom-toggle{padding:3px 6px;font-size:7px;}
+  @media(max-width:480px){
+    #mob-sheet{max-height:min(55vh,380px);}
+    #map-wrap{min-height:min(32vh,220px);}
+    #map-console-bar{max-height:min(40vh,300px);}
+    #replay-bar{max-width:calc(100% - 12px);}
+    #replay-clock{display:none;}
+    #mode-live-btn{margin-left:auto;}
+  }
+  /* Tablet Querformat / kleines Desktop-Fenster */
+  @media(min-width:901px) and (max-width:1200px){
+    #sidebar{width:clamp(170px,22vw,220px);}
+    #sidebar-stats{padding:4px 8px;}
+    .stat-val{font-size:clamp(9px,1.1vw,12px);}
+    #toggle-row{flex-wrap:wrap;gap:4px;}
+    #theme-row{flex-wrap:wrap;}
     #map-console-bar{font-size:8px;}
     .ctrl-speed .pill-btn,.ctrl-range .pill-btn{padding:2px 5px;font-size:6px;}
-    #footer-stats{gap:10px;padding:4px 8px;}
-    #replay-bar{padding:5px 12px;}
-    #map-panels-left{max-width:170px;}
-    .map-panel{min-width:120px;max-width:165px;font-size:8px;}
+    #footer-stats{gap:8px;padding:4px 8px;flex-wrap:wrap;}
+    .fstat{font-size:8px;}
+    #map-panels-left{max-width:175px;}
+    .map-panel{min-width:118px;max-width:168px;font-size:8px;padding:6px 8px;}
+    #feed-search{font-size:9px;}
+    .feed-item{padding:6px 8px;}
   }
   @media(max-height:500px) and (orientation:landscape){
     #mob-sheet{display:none!important;}
     #sidebar{display:flex!important;}
-    #layout{bottom:0;}
+    #layout{bottom:0!important;}
+    #map-panels-left{display:none;}
+    #footer-stats{display:flex!important;}
   }
 </style>
 </head>
@@ -548,7 +567,7 @@
     <div id="map-wrap">
       <div id="map-title-overlay">
         <span id="h-title">CROWD<span>SEC</span> // THREAT MAP</span>
-        <span id="map-version-badge">v1.5.5</span>
+        <span id="map-version-badge">v1.5.6</span>
       </div>
       <svg id="base-svg" style="position:absolute;inset:0;width:100%;height:100%"></svg>
       <canvas id="arc-canvas"></canvas>
@@ -838,7 +857,7 @@ const SERVER_NAME_MAP = 'MEIN-SERVER';
 // Ab hier nichts mehr ändern
 // ============================================================
 
-const APP_VERSION  = 'v1.5.5';
+const APP_VERSION  = 'v1.5.6';
 const REFRESH_MS   = 30000;
 const localUnbanned = new Set();
 const ARC_FPS      = 30;
@@ -1329,29 +1348,38 @@ function setupReplayControls(){
   });
 }
 
-// ── MOBILE LAYOUT SYNC ──
-// Run immediately: set layout bottom = mob-sheet height in exact pixels, no gap
-(function syncMobileLayout(){
-  if(window.innerWidth>680)return;
-  function doSync(){
-    const sh=document.getElementById('mob-sheet');
-    const lay=document.getElementById('layout');
-    if(!sh||!lay)return;
-    const h=sh.offsetHeight;
-    if(h>30){
-      lay.style.bottom=h+'px';
-    }else{
-      // mob-sheet not rendered yet — use pixel equivalent of 58vh
-      const px=Math.round(window.innerHeight*0.58);
-      sh.style.height=px+'px';
-      lay.style.bottom=px+'px';
-    }
+// ── COMPACT LAYOUT (Handy + Tablet ≤900px) ──
+const COMPACT_MAX_W=900;
+function isCompactLayout(){return window.innerWidth<=COMPACT_MAX_W;}
+function syncCompactLayout(){
+  const sh=document.getElementById('mob-sheet');
+  const lay=document.getElementById('layout');
+  if(!lay)return;
+  if(!isCompactLayout()){
+    lay.style.bottom='';
+    if(sh)sh.style.height='';
+    return;
   }
-  doSync();
-  // Also sync after fonts/styles load
-  window.addEventListener('load',doSync);
-  setTimeout(doSync,100);
-  setTimeout(doSync,400);
+  if(!sh)return;
+  const h=sh.offsetHeight;
+  if(h>80){
+    lay.style.bottom=h+'px';
+  }else{
+    const px=Math.round(window.innerHeight*0.48);
+    sh.style.height=px+'px';
+    lay.style.bottom=px+'px';
+  }
+}
+(function initCompactLayoutSync(){
+  syncCompactLayout();
+  window.addEventListener('load',syncCompactLayout);
+  window.addEventListener('resize',syncCompactLayout);
+  setTimeout(syncCompactLayout,100);
+  setTimeout(syncCompactLayout,500);
+  const sh=document.getElementById('mob-sheet');
+  if(sh&&window.ResizeObserver){
+    new ResizeObserver(syncCompactLayout).observe(sh);
+  }
 })();
 
 // ── TRANSLATIONS ──
@@ -1963,12 +1991,7 @@ function loadScript(src){
 
 // ── MOBILE LAYOUT + FIT ──
 function mobileAdjustAndFit(){
-  const isMobile=window.innerWidth<=680;
-  if(isMobile){
-    const sheet=document.getElementById('mob-sheet');
-    const sheetH=sheet?sheet.offsetHeight:0;
-    if(sheetH>30) document.getElementById('layout').style.bottom=sheetH+'px';
-  }
+  syncCompactLayout();
   requestAnimationFrame(()=>{
     requestAnimationFrame(()=>{
       setupProj();
@@ -2043,6 +2066,7 @@ async function init(){
 }
 
 function onResize(){
+  syncCompactLayout();
   setupProj();
   baseSvg.selectAll('*').remove();
   drawBaseMap();
