@@ -172,6 +172,55 @@
   #mob-rocket-style-toggle.classic .mob-ctrl-pill-dot{background:var(--ok);box-shadow:0 0 4px var(--ok);}
   #mob-rocket-style-toggle.legacy .mob-ctrl-pill-dot{background:#ffaa44;box-shadow:0 0 4px #ffaa44;}
 
+  .settings-open-btn{
+    margin-left:auto;padding:3px 8px;font-size:7px;letter-spacing:0.3px;
+    font-family:'Share Tech Mono',monospace;background:rgba(0,20,40,0.85);
+    border:1px solid var(--dim);border-radius:3px;color:rgba(160,255,216,0.55);
+    cursor:pointer;white-space:nowrap;transition:all 0.2s;
+  }
+  .settings-open-btn:hover{border-color:var(--accent);color:var(--accent);}
+  #map-mob-controls .settings-open-btn{margin-left:0;padding:1px 6px;font-size:6px;}
+
+  .settings-modal{position:fixed;inset:0;z-index:12000;display:flex;align-items:center;justify-content:center;padding:12px;}
+  .settings-modal.hidden{display:none!important;}
+  .settings-backdrop{position:absolute;inset:0;background:rgba(0,4,12,0.82);backdrop-filter:blur(3px);}
+  .settings-panel{
+    position:relative;z-index:1;width:min(460px,96vw);max-height:min(90vh,780px);
+    display:flex;flex-direction:column;background:rgba(4,14,28,0.98);
+    border:1px solid rgba(0,255,200,0.22);border-radius:6px;
+    box-shadow:0 12px 40px rgba(0,0,0,0.55);overflow:hidden;
+  }
+  .settings-panel header{
+    display:flex;align-items:center;justify-content:space-between;padding:10px 14px;
+    border-bottom:1px solid rgba(0,255,200,0.12);
+  }
+  .settings-panel header h3{margin:0;font-family:Orbitron,monospace;font-size:11px;color:var(--accent);letter-spacing:1px;}
+  #settings-close-btn{background:none;border:none;color:rgba(160,255,216,0.5);cursor:pointer;font-size:14px;padding:2px 6px;}
+  #settings-close-btn:hover{color:var(--accent);}
+  .settings-body{padding:12px 14px;overflow-y:auto;flex:1;}
+  .settings-body section{margin-bottom:14px;}
+  .settings-body section h4{margin:0 0 8px;font-size:8px;letter-spacing:0.8px;color:rgba(160,255,216,0.45);text-transform:uppercase;}
+  .settings-field{display:grid;grid-template-columns:1fr 88px;gap:6px 10px;align-items:center;margin-bottom:7px;font-size:9px;color:rgba(200,230,220,0.75);}
+  .settings-field input[type=number],.settings-field input[type=text],.settings-field select{
+    width:100%;padding:4px 6px;background:rgba(0,12,24,0.9);border:1px solid rgba(0,255,200,0.15);
+    border-radius:3px;color:var(--accent);font-family:'Share Tech Mono',monospace;font-size:10px;
+  }
+  .settings-field select{cursor:pointer;}
+  .settings-field input:disabled{opacity:0.45;}
+  .settings-check{display:flex;align-items:center;gap:8px;margin:8px 0;font-size:9px;color:rgba(200,230,220,0.8);}
+  .settings-hint{font-size:8px;color:rgba(140,170,160,0.5);line-height:1.35;margin:4px 0 0;}
+  .settings-panel footer{
+    display:flex;gap:8px;justify-content:flex-end;padding:10px 14px;
+    border-top:1px solid rgba(0,255,200,0.12);flex-wrap:wrap;
+  }
+  .settings-panel footer button{
+    padding:5px 10px;font-size:8px;font-family:'Share Tech Mono',monospace;
+    border:1px solid rgba(0,255,200,0.2);border-radius:3px;background:rgba(0,20,40,0.9);
+    color:rgba(160,255,216,0.7);cursor:pointer;
+  }
+  .settings-panel footer button:hover{border-color:var(--accent);color:var(--accent);}
+  .settings-panel footer button.primary{border-color:var(--ok);color:var(--ok);background:rgba(0,255,136,0.1);}
+
   /* LAYOUT */
   #layout{position:fixed;top:0;left:0;right:0;bottom:0;display:flex;}
   #map-col{flex:1;display:flex;flex-direction:column;overflow:hidden;position:relative;background:var(--bg);}
@@ -700,6 +749,68 @@
 <div id="loading"><div class="loader"></div><h2 id="load-title">INITIALIZING</h2><p id="ls">CONNECTING...</p></div>
 <div id="err"></div>
 
+<div id="settings-modal" class="settings-modal hidden" aria-hidden="true">
+  <div class="settings-backdrop" onclick="closeSettingsModal()"></div>
+  <div class="settings-panel" role="dialog" aria-labelledby="settings-title">
+    <header>
+      <h3 id="settings-title">Einstellungen</h3>
+      <button type="button" id="settings-close-btn" onclick="closeSettingsModal()" aria-label="Schließen">✕</button>
+    </header>
+    <div class="settings-body">
+      <section>
+        <h4 id="settings-sec-perf">Leistung &amp; Daten</h4>
+        <label class="settings-field"><span id="set-lbl-refresh">Feed aktualisieren (Sek.)</span><input type="number" id="set-refresh-sec" min="5" max="120" step="1"></label>
+        <label class="settings-field"><span id="set-lbl-max-active">Max. Raketen gleichzeitig</span><input type="number" id="set-max-active" min="5" max="80" step="1"></label>
+        <label class="settings-field"><span id="set-lbl-max-pending">Max. Warteschlange</span><input type="number" id="set-max-pending" min="10" max="300" step="1"></label>
+        <label class="settings-field"><span id="set-lbl-max-batch">Raketen pro Schwung</span><input type="number" id="set-max-batch" min="3" max="50" step="1"></label>
+      </section>
+      <section>
+        <h4 id="settings-sec-anim">Animation</h4>
+        <label class="settings-field"><span id="set-lbl-duration">Flugdauer (Sek.)</span><input type="number" id="set-duration-sec" min="2" max="12" step="0.5"></label>
+        <label class="settings-field"><span id="set-lbl-stagger">Abstand gleiche IP (ms)</span><input type="number" id="set-stagger-ms" min="100" max="3000" step="50"></label>
+        <label class="settings-field"><span id="set-lbl-ui-throttle">Karten-Update Replay (ms)</span><input type="number" id="set-ui-throttle" min="80" max="1000" step="20"></label>
+        <label class="settings-field"><span id="set-lbl-label-throttle">Flight-Labels (ms)</span><input type="number" id="set-label-throttle" min="50" max="500" step="10"></label>
+        <label class="settings-field"><span id="set-lbl-replay-min">Replay-Dauer bei 1× (Min.)</span><input type="number" id="set-replay-min" min="1" max="15" step="0.5"></label>
+      </section>
+      <section>
+        <h4 id="settings-sec-rockets">Raketen-Logik</h4>
+        <label class="settings-field"><span id="set-lbl-spawn-mode">Rakete auslösen pro</span>
+          <select id="set-spawn-mode">
+            <option value="per_attack">Angriff (IP + Szenario + Zeit)</option>
+            <option value="per_ip_time">IP + Zeitstempel</option>
+            <option value="per_ip">nur IP (ein Flug pro IP)</option>
+          </select>
+        </label>
+        <p class="settings-hint" id="settings-spawn-hint">Jeder Feed-Eintrag = eigene Rakete (Standard).</p>
+        <label class="settings-field"><span id="set-lbl-queue-ip">Max. Warteschlange pro IP</span><input type="number" id="set-queue-ip" min="1" max="50" step="1"></label>
+        <label class="settings-field"><span id="set-lbl-rocket-style">Raketen-Stil</span>
+          <select id="set-rocket-style">
+            <option value="classic">Neu (Schweif + Farbe)</option>
+            <option value="legacy">Alt (kurzer Strich)</option>
+          </select>
+        </label>
+        <label class="settings-field"><span id="set-lbl-tail">Schweif-Länge Neu (%)</span><input type="number" id="set-tail-classic" min="4" max="25" step="1"></label>
+        <label class="settings-field"><span id="set-lbl-lane">Bahn-Abstand (px)</span><input type="number" id="set-lane-spread" min="0" max="30" step="1"></label>
+        <label class="settings-check"><input type="checkbox" id="set-show-labels"> <span id="set-lbl-show-labels">Flight-Labels anzeigen</span></label>
+        <label class="settings-field"><span id="set-lbl-max-labels">Max. Flight-Labels</span><input type="number" id="set-max-labels" min="0" max="15" step="1"></label>
+      </section>
+      <section>
+        <h4 id="settings-sec-map">Karte / Server</h4>
+        <label class="settings-check"><input type="checkbox" id="set-override-coords"> <span id="set-lbl-override">Eigene Koordinaten (überschreibt Docker)</span></label>
+        <label class="settings-field"><span id="set-lbl-lat">Breitengrad (LAT)</span><input type="text" id="set-server-lat" inputmode="decimal" placeholder="53.55"></label>
+        <label class="settings-field"><span id="set-lbl-lon">Längengrad (LON)</span><input type="text" id="set-server-lon" inputmode="decimal" placeholder="10.00"></label>
+        <label class="settings-field"><span id="set-lbl-name">Anzeigename</span><input type="text" id="set-server-name" maxlength="32" placeholder="Home"></label>
+        <p class="settings-hint" id="settings-coords-hint">Docker-Werte werden beim Start von /config geladen.</p>
+      </section>
+    </div>
+    <footer>
+      <button type="button" id="settings-reset-btn" onclick="resetMapSettings()">Standard</button>
+      <button type="button" id="settings-cancel-btn" onclick="closeSettingsModal()">Abbrechen</button>
+      <button type="button" id="settings-save-btn" class="primary" onclick="saveSettingsFromForm()">Speichern</button>
+    </footer>
+  </div>
+</div>
+
 <div id="ctx-menu">
   <div id="ctx-title">IP</div>
   <a class="ctx-item" id="c-cti"    target="_blank"><span class="ctx-icon">🛡</span>CrowdSec CTI</a>
@@ -786,6 +897,7 @@
           <div id="mob-rocket-style-dot" class="mob-ctrl-pill-dot"></div>
           <span id="mob-rocket-style-label">RAKETE NEU</span>
         </div>
+        <button type="button" id="settings-open-btn-mob" class="settings-open-btn" onclick="openSettingsModal()" title="Einstellungen">⚙</button>
       </div>
       <div id="mob-legend-bar" class="mob-legend-bar" aria-label="Legende">
         <div id="threat-legend-mob" class="mob-legend-strip"></div>
@@ -875,6 +987,7 @@
         <div class="theme-btn" id="theme-red" onclick="setTheme('red')"><div class="theme-swatch" style="background:#ff2244;"></div><span>ALARM</span></div>
         <div class="theme-btn" id="theme-matrix" onclick="setTheme('matrix')"><div class="theme-swatch" style="background:#00ff88;"></div><span>MATRIX</span></div>
         <div class="theme-btn" id="theme-amber" onclick="setTheme('amber')"><div class="theme-swatch" style="background:#ffaa00;"></div><span>AMBER</span></div>
+        <button type="button" id="settings-open-btn" class="settings-open-btn" onclick="openSettingsModal()" title="Einstellungen">⚙ <span id="settings-open-lbl">EINST.</span></button>
       </div>
     </div>
     <div id="tabs">
@@ -1029,16 +1142,34 @@ let SERVER_NAME_MAP = 'MEIN-SERVER';
 // ============================================================
 
 const APP_VERSION  = 'v1.6.8';
-const REFRESH_MS   = 30000;
+let REFRESH_MS   = 30000;
 const localUnbanned = new Set();
 const ARC_FPS      = 30;
-const REPLAY_PLAY_MS = 180000;      // Replay-Zeitraum bei 1× (~3 Min für 48h)
-const ROCKET_DURATION_MS = 4500;  // Dauer eines Raketenflugs bis Einschlag (langsamer, Console-nah)
-const ROCKET_STAGGER_MS = 420;    // Startabstand bei gleicher IP (nacheinander, nicht übereinander)
-const ROCKET_TAIL_T = 0.13;       // Schweiflänge entlang der Bahn (Classic-Stil)
-const ROCKET_TAIL_LEGACY_T = 0.06; // kurzer Schweif (Legacy-Stil)
+let ROCKET_DURATION_MS = 4500;
+let ROCKET_STAGGER_MS = 420;
+let ROCKET_TAIL_T = 0.13;
+let ROCKET_TAIL_LEGACY_T = 0.06;
 const ROCKET_STYLE_STORAGE_KEY = 'csThreatMapRocketStyle';
-const ROCKET_LANE_SPREAD = 12;    // leichter Seitenversatz pro Rakete (gleiche Route)
+const MAP_SETTINGS_STORAGE_KEY = 'csThreatMapSettings';
+let ROCKET_LANE_SPREAD = 12;
+let REPLAY_PLAY_MS = 180000;
+let MAX_ACTIVE_ROCKETS = 28;
+let MAX_PENDING_ROCKETS = 64;
+let MAX_ROCKET_SPAWN_BATCH = 14;
+let REPLAY_UI_THROTTLE_MS = 220;
+let FLIGHT_LABEL_THROTTLE_MS = 150;
+const MAP_SETTINGS_DEFAULTS={
+  refreshMs:30000,maxActiveRockets:28,maxPendingRockets:64,maxSpawnBatch:14,
+  rocketDurationMs:4500,rocketStaggerMs:420,replayUiThrottleMs:220,flightLabelThrottleMs:150,
+  rocketSpawnMode:'per_attack',maxQueuePerIp:12,
+  rocketTailClassic:0.13,rocketTailLegacy:0.06,rocketLaneSpread:12,
+  showFlightLabels:true,maxFlightLabels:8,replayDurationMin:3,
+  rocketStyle:'classic',
+  overrideCoords:false,serverLat:'',serverLon:'',serverName:'',
+};
+let mapSettings={...MAP_SETTINGS_DEFAULTS};
+let fetchIntervalId=null;
+let dockerServerCoords={lat:null,lon:null,name:''};
 const CROWDSEC_ARC_COLOR = '#ff9a3c'; // Orange wie CrowdSec Console
 const FIT_ZOOM_BOOST = 1.55;      // für fitMapToPoints (alle Angriffe)
 const FIT_MIN_SCALE = 1.35;
@@ -1075,11 +1206,37 @@ let replayCursor=0,replayWinStart=0,replayWinEnd=0,replayLastFrame=0,activeRocke
 let lastMetricsText='',replayInitialized=false,replayAutoStarted=false;
 let countriesGeo=null;
 let lastRocketDrawTs=0;
+let lastFlightLabelTs=0;
+let lastReplayUiTs=0;
 let rocketIdSeq=0;
 const pendingRocketsByIp=new Map();
 const rocketLaunchAtByIp=new Map();
 const spawnedRocketKeys=new Set();
-function eventRocketKey(e){return(e.ip||'')+'|'+(e.scenario||'')+'|'+(e.time_iso||'');}
+function eventRocketKey(e){
+  const mode=mapSettings.rocketSpawnMode||'per_attack';
+  const ip=e.ip||'?';
+  if(mode==='per_ip')return ip;
+  if(mode==='per_ip_time')return ip+'|'+(e.time_iso||'');
+  return ip+'|'+(e.scenario||'')+'|'+(e.time_iso||'');
+}
+function filterEventsForSpawnMode(events){
+  const mode=mapSettings.rocketSpawnMode||'per_attack';
+  if(mode==='per_attack')return events;
+  const pick={};
+  events.forEach(e=>{
+    const k=eventRocketKey(e);
+    if(!pick[k]||(e.ts||0)>(pick[k].ts||0))pick[k]=e;
+  });
+  return Object.values(pick);
+}
+function updateSpawnModeHint(){
+  const el=document.getElementById('settings-spawn-hint');
+  if(!el)return;
+  const l=LANG[currentLang]||LANG.de;
+  const mode=document.getElementById('set-spawn-mode')?.value||mapSettings.rocketSpawnMode;
+  const key=mode==='per_ip'?'spawn_hint_ip':mode==='per_ip_time'?'spawn_hint_ip_time':'spawn_hint_attack';
+  el.textContent=l[key]||'';
+}
 let autoZoomOn=false;
 let lastAutoZoomTs=0;
 
@@ -1132,7 +1289,11 @@ function clearArcCanvas(){ctx2d.clearRect(0,0,canvas.width,canvas.height);}
 function parseEventTime(iso){if(!iso)return 0;const s=iso.trim().replace(' ','T');const t=Date.parse(/[zZ]$/.test(s)?s:s+'Z');return isNaN(t)?0:t;}
 function fmtReplayClock(ts){return ts?new Date(ts).toLocaleString(currentLang==='de'?'de-DE':'en-GB',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit',second:'2-digit'}):'—';}
 function clearRocketQueues(){pendingRocketsByIp.clear();rocketLaunchAtByIp.clear();}
-function resetRockets(){activeRockets=[];clearRocketQueues();}
+function resetRockets(){activeRockets=[];clearRocketQueues();lastFlightLabelTs=0;}
+function totalPendingRockets(){let n=0;pendingRocketsByIp.forEach(q=>{n+=q.length;});return n;}
+function trimActiveRockets(){
+  while(activeRockets.length>MAX_ACTIVE_ROCKETS)activeRockets.shift();
+}
 function clearSpawnedRocketKeys(){spawnedRocketKeys.clear();}
 function rocketQueueKey(ev){return ev.ip||'?';}
 function canLaunchRocketNow(ip){return performance.now()>=(rocketLaunchAtByIp.get(ip)||0);}
@@ -1236,8 +1397,11 @@ function flightTagText(r){
 }
 const FLIGHT_LABEL_OFFSETS=[[0,-10],[0,-22],[0,-34],[14,-14],[-14,-14],[22,-26],[-22,-26],[0,-44],[28,-18],[-28,-18],[36,-32],[-36,-32]];
 function layoutFlightLabels(rockets,z){
+  if(mapSettings.showFlightLabels===false)return [];
   const minDist=currentScale<1.5?44:32;
-  const maxN=currentScale<1.2?3:currentScale<2?5:8;
+  let maxN=mapSettings.maxFlightLabels??8;
+  if(currentScale<1.2)maxN=Math.min(maxN,3);
+  else if(currentScale<2)maxN=Math.min(maxN,5);
   const ins=getMapChromeInsets();
   const minX=ins.l+12;
   const maxX=W-ins.r-72;
@@ -1281,6 +1445,7 @@ function updateFlightLabels(rockets){
   const layer=document.getElementById('flight-labels-layer');
   if(!layer||!baseSvg)return;
   layer.innerHTML='';
+  if(mapSettings.showFlightLabels===false)return;
   const z=d3.zoomTransform(baseSvg.node());
   layoutFlightLabels(rockets,z).forEach(({r,x,y})=>{
     const cc=r.country||'??';
@@ -1312,6 +1477,7 @@ function launchRocketFromEvent(ev){
     cpx:(px+sx)/2+nx*lane,cpy:(py+sy)/2-arcLift+ny*lane,
     col:scenarioColor(ev.scenario),t:0,
   });
+  trimActiveRockets();
   if(!animRAF)startAnimLoop();
   if(autoZoomOn&&animOn&&!userHasZoomed){
     const tsBefore=lastAutoZoomTs;
@@ -1335,9 +1501,14 @@ function spawnRocketForEvent(ev){
   if(!animOn||!linesOn)return;
   const evKey=eventRocketKey(ev);
   if(spawnedRocketKeys.has(evKey))return;
+  if(activeRockets.length>=MAX_ACTIVE_ROCKETS&&totalPendingRockets()>=MAX_PENDING_ROCKETS)return;
   spawnedRocketKeys.add(evKey);
   const ip=rocketQueueKey(ev);
   if(!canLaunchRocketNow(ip)){
+    if(totalPendingRockets()>=MAX_PENDING_ROCKETS)return;
+    const q=pendingRocketsByIp.get(ip);
+    const maxIp=mapSettings.maxQueuePerIp??12;
+    if(q&&q.length>=maxIp)return;
     if(!pendingRocketsByIp.has(ip))pendingRocketsByIp.set(ip,[]);
     pendingRocketsByIp.get(ip).push(ev);
     if(!animRAF)startAnimLoop();
@@ -1412,7 +1583,14 @@ function zoomToAttackPoint(lon,lat,opts={}){
 }
 function spawnRocketsFromFeed(){
   if(!animOn||!linesOn)return;
-  feedData.slice().sort((a,b)=>(a.ts||0)-(b.ts||0)).forEach(e=>spawnRocketForEvent(e));
+  const list=filterEventsForSpawnMode(feedData.slice().sort((a,b)=>(a.ts||0)-(b.ts||0)));
+  let n=0;
+  for(const e of list){
+    if(n>=MAX_ROCKET_SPAWN_BATCH)break;
+    if(spawnedRocketKeys.has(eventRocketKey(e)))continue;
+    spawnRocketForEvent(e);
+    n++;
+  }
   if(spawnedRocketKeys.size>8000){
     const keep=new Set(feedData.slice(0,500).map(eventRocketKey));
     spawnedRocketKeys.clear();
@@ -1439,7 +1617,7 @@ function drawRocketLegacy(ctx,pt,pTail,col,ik){
   ctx.arc(pt.x,pt.y,2.2*ik,0,Math.PI*2);
   ctx.fill();
 }
-function drawRocketClassic(ctx,pt,pTail,col,ik){
+function drawRocketClassic(ctx,pt,pTail,col,ik,lite){
   const grad=ctx.createLinearGradient(pTail.x,pTail.y,pt.x,pt.y);
   grad.addColorStop(0,hexToRgba(col,0));
   grad.addColorStop(0.3,hexToRgba(col,0.22));
@@ -1468,8 +1646,10 @@ function drawRocketClassic(ctx,pt,pTail,col,ik){
   ctx.fill();
   ctx.beginPath();
   ctx.fillStyle='#fffefb';
-  ctx.shadowColor=hexToRgba(col,0.9);
-  ctx.shadowBlur=5*ik;
+  if(!lite){
+    ctx.shadowColor=hexToRgba(col,0.9);
+    ctx.shadowBlur=5*ik;
+  }
   ctx.arc(pt.x,pt.y,2.35*ik,0,Math.PI*2);
   ctx.fill();
   ctx.shadowBlur=0;
@@ -1486,6 +1666,7 @@ function drawCrowdSecRockets(ts){
   const rocketStep=(dt/ROCKET_DURATION_MS)*(liveMode?1:replaySpeed);
   ctx2d.save();ctx2d.translate(currentTx,currentTy);ctx2d.scale(currentScale,currentScale);
   const ik=1/currentScale;
+  const rocketLite=activeRockets.length>12;
   activeRockets=activeRockets.filter(r=>{
     r.t=Math.min(1,r.t+rocketStep);
     const pt=quadPoint(r,r.t);
@@ -1495,7 +1676,7 @@ function drawCrowdSecRockets(ts){
       const tTail=Math.max(0,r.t-tailT);
       const pTail=quadPoint(r,tTail);
       if(rocketStyle==='legacy')drawRocketLegacy(ctx2d,pt,pTail,col,ik);
-      else drawRocketClassic(ctx2d,pt,pTail,col,ik);
+      else drawRocketClassic(ctx2d,pt,pTail,col,ik,rocketLite);
     }
     if(r.t>=0.92){
       const flash=Math.min(1,(r.t-0.92)/0.08);
@@ -1505,15 +1686,20 @@ function drawCrowdSecRockets(ts){
     return r.t<1.02;
   });
   drainAllRocketQueues();
-  updateFlightLabels(activeRockets);
+  if(now-lastFlightLabelTs>=FLIGHT_LABEL_THROTTLE_MS){
+    lastFlightLabelTs=now;
+    updateFlightLabels(activeRockets);
+  }
   ctx2d.globalAlpha=1;ctx2d.restore();
 }
 function drawReplayFrame(ts){drawCrowdSecRockets(ts);}
 function spawnRocketsForNewEvents(){
   const filt=e=>{if(e.ts<=lastReplaySpawnTs||e.ts>replayCursor)return false;if(activeFilters.country&&e.country!==activeFilters.country)return false;if(activeFilters.scenario&&e.scenario!==activeFilters.scenario)return false;return true;};
   const newEvts=allEvents.filter(filt).sort((a,b)=>a.ts-b.ts);
-  newEvts.forEach(e=>spawnRocketForEvent(e));
-  lastReplaySpawnTs=replayCursor;
+  if(!newEvts.length)return;
+  const batch=filterEventsForSpawnMode(newEvts).slice(0,MAX_ROCKET_SPAWN_BATCH);
+  batch.forEach(e=>spawnRocketForEvent(e));
+  lastReplaySpawnTs=batch[batch.length-1].ts;
 }
 function advanceReplay(ts){
   if(!replayLastFrame)replayLastFrame=ts;
@@ -1522,8 +1708,12 @@ function advanceReplay(ts){
   replayCursor=Math.min(replayWinEnd,replayCursor+dt*(replayWinEnd-replayWinStart)/(REPLAY_PLAY_MS/replaySpeed));
   if(animOn)spawnRocketsForNewEvents();
   updateReplaySlider();
-  attackData=aggregateFromEvents(getEventsInReplay());
-  renderDots();renderMapPanels();updateCountryFills();
+  const uiDue=!lastReplayUiTs||ts-lastReplayUiTs>=REPLAY_UI_THROTTLE_MS||replayCursor>=replayWinEnd;
+  if(uiDue){
+    lastReplayUiTs=ts;
+    attackData=aggregateFromEvents(getEventsInReplay());
+    renderDots();renderMapPanels();updateCountryFills();
+  }
   if(animOn)drawReplayFrame(ts);else clearArcCanvas();
   if(replayCursor>=replayWinEnd){replayPlaying=false;updateReplayControlsUI();}
 }
@@ -1752,6 +1942,42 @@ const LANG = {
     autozoom_off:'ZOOM AUTO',
     rocket_style_new:'RAKETE NEU',
     rocket_style_old:'RAKETE ALT',
+    settings_btn:'EINST.',
+    settings_title:'Einstellungen',
+    settings_sec_perf:'Leistung & Daten',
+    settings_sec_anim:'Animation',
+    settings_sec_map:'Karte / Server',
+    set_refresh:'Feed aktualisieren (Sek.)',
+    set_max_active:'Max. Raketen gleichzeitig',
+    set_max_pending:'Max. Warteschlange',
+    set_max_batch:'Raketen pro Schwung',
+    set_duration:'Flugdauer (Sek.)',
+    set_stagger:'Abstand gleiche IP (ms)',
+    set_ui_throttle:'Karten-Update Replay (ms)',
+    set_label_throttle:'Flight-Labels (ms)',
+    set_override:'Eigene Koordinaten (überschreibt Docker)',
+    set_lat:'Breitengrad (LAT)',
+    set_lon:'Längengrad (LON)',
+    set_name:'Anzeigename',
+    settings_coords_hint:'Docker: {lat}, {lon} — nur bei deaktivierter Überschreibung aktiv.',
+    settings_reset:'Standard',
+    settings_cancel:'Abbrechen',
+    settings_save:'Speichern',
+    settings_sec_rockets:'Raketen-Logik',
+    set_spawn_mode:'Rakete auslösen pro',
+    spawn_hint_attack:'Jeder Angriff im Feed (IP + Szenario + Zeit) = eigene Rakete.',
+    spawn_hint_ip_time:'Gleiche IP zur gleichen Zeit = eine Rakete (mehrere Szenarien zusammen).',
+    spawn_hint_ip:'Pro IP nur eine Rakete — viele Angriffe derselben IP = ein Flug, Rest in Warteschlange.',
+    set_queue_ip:'Max. Warteschlange pro IP',
+    set_rocket_style_sel:'Raketen-Stil',
+    spawn_mode_attack:'Angriff (IP + Szenario + Zeit)',
+    spawn_mode_ip_time:'IP + Zeitstempel',
+    spawn_mode_ip:'nur IP',
+    set_tail:'Schweif-Länge Neu (%)',
+    set_lane:'Bahn-Abstand (px)',
+    set_show_labels:'Flight-Labels anzeigen',
+    set_max_labels:'Max. Flight-Labels',
+    set_replay_min:'Replay-Dauer bei 1× (Min.)',
     server_lbl:  SERVER_NAME_MAP,
     zoom_lbl:    'ZOOM',
     lookup:      'IP NACHSCHLAGEN',
@@ -1858,6 +2084,42 @@ const LANG = {
     autozoom_off:'ZOOM AUTO',
     rocket_style_new:'ROCKET NEW',
     rocket_style_old:'ROCKET OLD',
+    settings_btn:'SETTINGS',
+    settings_title:'Settings',
+    settings_sec_perf:'Performance & data',
+    settings_sec_anim:'Animation',
+    settings_sec_map:'Map / server',
+    set_refresh:'Refresh feed (sec)',
+    set_max_active:'Max simultaneous rockets',
+    set_max_pending:'Max queue size',
+    set_max_batch:'Rockets per batch',
+    set_duration:'Flight duration (sec)',
+    set_stagger:'Gap same IP (ms)',
+    set_ui_throttle:'Map refresh replay (ms)',
+    set_label_throttle:'Flight labels (ms)',
+    set_override:'Custom coordinates (overrides Docker)',
+    set_lat:'Latitude (LAT)',
+    set_lon:'Longitude (LON)',
+    set_name:'Display name',
+    settings_coords_hint:'Docker: {lat}, {lon} — used when override is off.',
+    settings_reset:'Defaults',
+    settings_cancel:'Cancel',
+    settings_save:'Save',
+    settings_sec_rockets:'Rocket logic',
+    set_spawn_mode:'Trigger rocket per',
+    spawn_hint_attack:'Each feed entry (IP + scenario + time) = one rocket.',
+    spawn_hint_ip_time:'Same IP at same time = one rocket (multiple scenarios merged).',
+    spawn_hint_ip:'One rocket per IP — repeated attacks queue behind the first.',
+    set_queue_ip:'Max queue per IP',
+    set_rocket_style_sel:'Rocket style',
+    spawn_mode_attack:'Attack (IP + scenario + time)',
+    spawn_mode_ip_time:'IP + timestamp',
+    spawn_mode_ip:'IP only',
+    set_tail:'Tail length new (%)',
+    set_lane:'Path offset (px)',
+    set_show_labels:'Show flight labels',
+    set_max_labels:'Max flight labels',
+    set_replay_min:'Replay duration at 1× (min)',
     server_lbl:  SERVER_NAME_MAP,
     zoom_lbl:    'ZOOM',
     lookup:      'LOOKUP IP',
@@ -2002,6 +2264,7 @@ function applyLang(){
   document.getElementById('s-scenarios-lbl').textContent=l.scenarios;
   document.getElementById('s-live-lbl').textContent=l.live;
   syncMapToggleStates();
+  syncSettingsModalLang();
   document.querySelectorAll('[data-tab="feed"]').forEach(e=>e.textContent=l.feed);
   document.querySelectorAll('[data-tab="top10"]').forEach(e=>e.textContent=l.top10);
   document.querySelectorAll('[data-tab="topall"]').forEach(e=>e.textContent=l.all);
@@ -2171,11 +2434,229 @@ function setToggleBtn(id,on,dotId){
 function loadRocketStylePrefs(){
   try{
     const v=localStorage.getItem(ROCKET_STYLE_STORAGE_KEY);
-    if(v==='legacy'||v==='classic')rocketStyle=v;
+    if(v==='legacy'||v==='classic'){
+      rocketStyle=v;
+      if(!localStorage.getItem(MAP_SETTINGS_STORAGE_KEY))mapSettings.rocketStyle=v;
+    }
   }catch(e){}
 }
 function persistRocketStylePrefs(){
   try{localStorage.setItem(ROCKET_STYLE_STORAGE_KEY,rocketStyle);}catch(e){}
+  mapSettings.rocketStyle=rocketStyle;
+  persistMapSettings();
+}
+function clampNum(v,min,max,fallback){const n=Number(v);return Number.isFinite(n)?Math.min(max,Math.max(min,n)):fallback;}
+function syncSettingsToGlobals(){
+  REFRESH_MS=mapSettings.refreshMs;
+  ROCKET_DURATION_MS=mapSettings.rocketDurationMs;
+  ROCKET_STAGGER_MS=mapSettings.rocketStaggerMs;
+  MAX_ACTIVE_ROCKETS=mapSettings.maxActiveRockets;
+  MAX_PENDING_ROCKETS=mapSettings.maxPendingRockets;
+  MAX_ROCKET_SPAWN_BATCH=mapSettings.maxSpawnBatch;
+  REPLAY_UI_THROTTLE_MS=mapSettings.replayUiThrottleMs;
+  FLIGHT_LABEL_THROTTLE_MS=mapSettings.flightLabelThrottleMs;
+  ROCKET_TAIL_T=mapSettings.rocketTailClassic??0.13;
+  ROCKET_TAIL_LEGACY_T=mapSettings.rocketTailLegacy??0.06;
+  ROCKET_LANE_SPREAD=mapSettings.rocketLaneSpread??12;
+  REPLAY_PLAY_MS=Math.round((mapSettings.replayDurationMin??3)*60000);
+  if(mapSettings.rocketStyle==='legacy'||mapSettings.rocketStyle==='classic')rocketStyle=mapSettings.rocketStyle;
+}
+function loadMapSettings(){
+  try{
+    const raw=localStorage.getItem(MAP_SETTINGS_STORAGE_KEY);
+    if(raw)mapSettings={...MAP_SETTINGS_DEFAULTS,...JSON.parse(raw)};
+  }catch(e){mapSettings={...MAP_SETTINGS_DEFAULTS};}
+  const modes=['per_attack','per_ip_time','per_ip'];
+  if(!modes.includes(mapSettings.rocketSpawnMode))mapSettings.rocketSpawnMode='per_attack';
+  syncSettingsToGlobals();
+}
+function persistMapSettings(){
+  try{localStorage.setItem(MAP_SETTINGS_STORAGE_KEY,JSON.stringify(mapSettings));}catch(e){}
+}
+function applyCoordOverrides(){
+  if(mapSettings.overrideCoords){
+    const lat=parseFloat(String(mapSettings.serverLat).replace(',','.'));
+    const lon=parseFloat(String(mapSettings.serverLon).replace(',','.'));
+    if(Number.isFinite(lat)&&Number.isFinite(lon)){SERVER_LAT=lat;SERVER_LON=lon;}
+    if(mapSettings.serverName)SERVER_NAME_MAP=String(mapSettings.serverName);
+  }else if(dockerServerCoords.lat!=null&&dockerServerCoords.lon!=null){
+    SERVER_LAT=dockerServerCoords.lat;
+    SERVER_LON=dockerServerCoords.lon;
+    if(dockerServerCoords.name)SERVER_NAME_MAP=dockerServerCoords.name;
+  }
+}
+function restartFetchLoop(){
+  if(fetchIntervalId)clearInterval(fetchIntervalId);
+  fetchIntervalId=setInterval(fetchAndRender,REFRESH_MS);
+}
+function updateSettingsCoordsHint(){
+  const el=document.getElementById('settings-coords-hint');
+  if(!el)return;
+  const l=LANG[currentLang]||LANG.de;
+  const lat=dockerServerCoords.lat!=null?dockerServerCoords.lat:'—';
+  const lon=dockerServerCoords.lon!=null?dockerServerCoords.lon:'—';
+  const tpl=l.settings_coords_hint||'Docker: {lat}, {lon}';
+  el.textContent=tpl.replace('{lat}',lat).replace('{lon}',lon);
+}
+function syncSettingsFormDisabled(){
+  const on=!!document.getElementById('set-override-coords')?.checked;
+  ['set-server-lat','set-server-lon','set-server-name'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el)el.disabled=!on;
+  });
+}
+function fillSettingsForm(){
+  const s=mapSettings;
+  const set=(id,v)=>{const el=document.getElementById(id);if(el!=null)el.value=v;};
+  set('set-refresh-sec',Math.round(s.refreshMs/1000));
+  set('set-max-active',s.maxActiveRockets);
+  set('set-max-pending',s.maxPendingRockets);
+  set('set-max-batch',s.maxSpawnBatch);
+  set('set-duration-sec',s.rocketDurationMs/1000);
+  set('set-stagger-ms',s.rocketStaggerMs);
+  set('set-ui-throttle',s.replayUiThrottleMs);
+  set('set-label-throttle',s.flightLabelThrottleMs);
+  set('set-replay-min',s.replayDurationMin??3);
+  const sm=document.getElementById('set-spawn-mode');
+  if(sm)sm.value=s.rocketSpawnMode||'per_attack';
+  set('set-queue-ip',s.maxQueuePerIp??12);
+  const rs=document.getElementById('set-rocket-style');
+  if(rs)rs.value=s.rocketStyle||rocketStyle||'classic';
+  set('set-tail-classic',Math.round((s.rocketTailClassic??0.13)*100));
+  set('set-lane-spread',s.rocketLaneSpread??12);
+  const sl=document.getElementById('set-show-labels');
+  if(sl)sl.checked=s.showFlightLabels!==false;
+  set('set-max-labels',s.maxFlightLabels??8);
+  const oc=document.getElementById('set-override-coords');
+  if(oc)oc.checked=!!s.overrideCoords;
+  set('set-server-lat',s.serverLat!==''?s.serverLat:SERVER_LAT);
+  set('set-server-lon',s.serverLon!==''?s.serverLon:SERVER_LON);
+  set('set-server-name',s.serverName||SERVER_NAME_MAP);
+  syncSettingsFormDisabled();
+  updateSettingsCoordsHint();
+  updateSpawnModeHint();
+}
+function readSettingsForm(){
+  const set=(id)=>document.getElementById(id);
+  const refreshSec=clampNum(set('set-refresh-sec')?.value,5,120,30);
+  return{
+    refreshMs:refreshSec*1000,
+    maxActiveRockets:clampNum(set('set-max-active')?.value,5,80,28),
+    maxPendingRockets:clampNum(set('set-max-pending')?.value,10,300,64),
+    maxSpawnBatch:clampNum(set('set-max-batch')?.value,3,50,14),
+    rocketDurationMs:clampNum(set('set-duration-sec')?.value,2,12,4.5)*1000,
+    rocketStaggerMs:clampNum(set('set-stagger-ms')?.value,100,3000,420),
+    replayUiThrottleMs:clampNum(set('set-ui-throttle')?.value,80,1000,220),
+    flightLabelThrottleMs:clampNum(set('set-label-throttle')?.value,50,500,150),
+    replayDurationMin:clampNum(set('set-replay-min')?.value,1,15,3),
+    rocketSpawnMode:['per_attack','per_ip_time','per_ip'].includes(set('set-spawn-mode')?.value)?set('set-spawn-mode').value:'per_attack',
+    maxQueuePerIp:clampNum(set('set-queue-ip')?.value,1,50,12),
+    rocketStyle:['classic','legacy'].includes(set('set-rocket-style')?.value)?set('set-rocket-style').value:'classic',
+    rocketTailClassic:clampNum(set('set-tail-classic')?.value,4,25,13)/100,
+    rocketTailLegacy:mapSettings.rocketTailLegacy??0.06,
+    rocketLaneSpread:clampNum(set('set-lane-spread')?.value,0,30,12),
+    showFlightLabels:!!set('set-show-labels')?.checked,
+    maxFlightLabels:clampNum(set('set-max-labels')?.value,0,15,8),
+    overrideCoords:!!set('set-override-coords')?.checked,
+    serverLat:String(set('set-server-lat')?.value||'').trim(),
+    serverLon:String(set('set-server-lon')?.value||'').trim(),
+    serverName:String(set('set-server-name')?.value||'').trim(),
+  };
+}
+function openSettingsModal(){
+  fillSettingsForm();
+  const m=document.getElementById('settings-modal');
+  if(!m)return;
+  m.classList.remove('hidden');
+  m.setAttribute('aria-hidden','false');
+  document.getElementById('set-refresh-sec')?.focus();
+}
+function closeSettingsModal(){
+  const m=document.getElementById('settings-modal');
+  if(!m)return;
+  m.classList.add('hidden');
+  m.setAttribute('aria-hidden','true');
+}
+function saveSettingsFromForm(){
+  mapSettings=readSettingsForm();
+  rocketStyle=mapSettings.rocketStyle||'classic';
+  persistMapSettings();
+  persistRocketStylePrefs();
+  syncSettingsToGlobals();
+  syncRocketStyleUI();
+  applyCoordOverrides();
+  restartFetchLoop();
+  if(dotG){
+    drawServerDots();
+    renderDots();
+    drawCountryLabels();
+    if(!userHasZoomed)scheduleHomeFit();
+  }
+  if(animOn&&linesOn)drawCrowdSecRockets(performance.now());
+  closeSettingsModal();
+}
+function resetMapSettings(){
+  mapSettings={...MAP_SETTINGS_DEFAULTS};
+  rocketStyle=mapSettings.rocketStyle;
+  persistMapSettings();
+  persistRocketStylePrefs();
+  syncSettingsToGlobals();
+  syncRocketStyleUI();
+  applyCoordOverrides();
+  restartFetchLoop();
+  fillSettingsForm();
+  if(dotG){drawServerDots();renderDots();drawCountryLabels();}
+}
+function syncSettingsModalLang(){
+  const l=LANG[currentLang]||LANG.de;
+  const set=(id,key)=>{const el=document.getElementById(id);if(el)el.textContent=l[key]||'';};
+  set('settings-title','settings_title');
+  set('settings-sec-perf','settings_sec_perf');
+  set('settings-sec-anim','settings_sec_anim');
+  set('settings-sec-map','settings_sec_map');
+  set('settings-sec-rockets','settings_sec_rockets');
+  set('set-lbl-spawn-mode','set_spawn_mode');
+  set('set-lbl-queue-ip','set_queue_ip');
+  set('set-lbl-rocket-style','set_rocket_style_sel');
+  set('set-lbl-tail','set_tail');
+  set('set-lbl-lane','set_lane');
+  set('set-lbl-show-labels','set_show_labels');
+  set('set-lbl-max-labels','set_max_labels');
+  set('set-lbl-replay-min','set_replay_min');
+  const sm=document.getElementById('set-spawn-mode');
+  if(sm&&l.spawn_mode_attack){
+    sm.options[0].text=l.spawn_mode_attack;
+    sm.options[1].text=l.spawn_mode_ip_time;
+    sm.options[2].text=l.spawn_mode_ip;
+  }
+  const rs=document.getElementById('set-rocket-style');
+  if(rs&&l.rocket_style_new){
+    rs.options[0].text=l.rocket_style_new;
+    rs.options[1].text=l.rocket_style_old||'Alt';
+  }
+  updateSpawnModeHint();
+  set('set-lbl-refresh','set_refresh');
+  set('set-lbl-max-active','set_max_active');
+  set('set-lbl-max-pending','set_max_pending');
+  set('set-lbl-max-batch','set_max_batch');
+  set('set-lbl-duration','set_duration');
+  set('set-lbl-stagger','set_stagger');
+  set('set-lbl-ui-throttle','set_ui_throttle');
+  set('set-lbl-label-throttle','set_label_throttle');
+  set('set-lbl-override','set_override');
+  set('set-lbl-lat','set_lat');
+  set('set-lbl-lon','set_lon');
+  set('set-lbl-name','set_name');
+  set('settings-reset-btn','settings_reset');
+  set('settings-cancel-btn','settings_cancel');
+  set('settings-save-btn','settings_save');
+  const openLbl=document.getElementById('settings-open-lbl');
+  if(openLbl)openLbl.textContent=l.settings_btn||'EINST.';
+  const mobBtn=document.getElementById('settings-open-btn-mob');
+  if(mobBtn)mobBtn.title=l.settings_title||'';
+  const deskBtn=document.getElementById('settings-open-btn');
+  if(deskBtn)deskBtn.title=l.settings_title||'';
+  updateSettingsCoordsHint();
 }
 function syncRocketStyleUI(){
   const l=LANG[currentLang]||LANG.de;
@@ -2403,10 +2884,18 @@ async function loadServerConfig(){
     const lat=parseFloat(c.server_lat);
     const lon=parseFloat(c.server_lon);
     if(Number.isFinite(lat)&&Number.isFinite(lon)&&!(lat===0&&lon===0)){
-      SERVER_LAT=lat;
-      SERVER_LON=lon;
+      dockerServerCoords={lat,lon,name:c.server_name?String(c.server_name):''};
+      if(!mapSettings.overrideCoords){
+        SERVER_LAT=lat;
+        SERVER_LON=lon;
+      }
     }
-    if(c.server_name)SERVER_NAME_MAP=String(c.server_name);
+    if(c.server_name){
+      dockerServerCoords.name=String(c.server_name);
+      if(!mapSettings.overrideCoords)SERVER_NAME_MAP=dockerServerCoords.name;
+    }
+    applyCoordOverrides();
+    updateSettingsCoordsHint();
   }catch(e){}
 }
 // ── INIT ──
@@ -2456,7 +2945,7 @@ async function init(){
     setTimeout(tryFit,200);
     setTimeout(scheduleHomeFit,700);
     setupReplayControls();
-    setInterval(fetchAndRender,REFRESH_MS);
+    restartFetchLoop();
     setInterval(fetchWhitelistStatus, 60000);
     fetchWhitelistStatus();
 
@@ -3785,9 +4274,15 @@ loadShowOwnIpPrefs();
 setupWlIpToggle();
 autoZoomOn=false;
 ensureAutoZoomOff();
+loadMapSettings();
 loadRocketStylePrefs();
 syncMapToggleStates();
 applyLang();
+document.getElementById('set-override-coords')?.addEventListener('change',syncSettingsFormDisabled);
+document.getElementById('set-spawn-mode')?.addEventListener('change',updateSpawnModeHint);
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'&&!document.getElementById('settings-modal')?.classList.contains('hidden'))closeSettingsModal();
+});
 ensureAutoZoomOff();
 init();
 </script>
