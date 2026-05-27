@@ -446,10 +446,35 @@
   .city-map-label{pointer-events:none;opacity:0.85;}
 
   /* MOBILE BOTTOM SHEET */
-  #mob-sheet{display:none;position:fixed;bottom:0;left:0;right:0;background:var(--bg);border-top:1px solid var(--dim);z-index:300;flex-direction:column;}
-  #mob-tab-btns{display:flex;border-bottom:1px solid var(--dim);align-items:center;background:rgba(0,5,15,0.95);}
-  .mob-tab-btn{padding:10px 8px;text-align:center;font-size:10px;letter-spacing:1px;color:rgba(160,255,216,0.4);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;}
-  .mob-tab-btn.active{color:var(--accent);border-bottom:2px solid var(--accent);}
+  #mob-sheet{
+    display:none;position:fixed;bottom:0;left:0;right:0;
+    background:var(--bg);border-top:2px solid rgba(0,255,200,0.25);
+    z-index:320;flex-direction:column;
+    box-shadow:0 -8px 24px rgba(0,0,0,0.55);
+  }
+  #mob-sheet-head{flex-shrink:0;background:rgba(0,5,15,0.98);border-bottom:1px solid var(--dim);}
+  #mob-tab-btns{
+    display:flex;align-items:stretch;min-height:42px;
+    background:rgba(0,5,15,0.95);
+  }
+  .mob-tab-btn{
+    flex:1;min-width:72px;max-width:33%;
+    display:flex;align-items:center;justify-content:center;
+    padding:10px 6px;text-align:center;
+    font-size:10px;letter-spacing:0.8px;line-height:1.2;
+    color:rgba(160,255,216,0.45);cursor:pointer;
+    border:none;border-bottom:3px solid transparent;
+    background:transparent;white-space:nowrap;
+    font-family:'Share Tech Mono',monospace;
+  }
+  .mob-tab-btn.active{color:var(--accent);border-bottom-color:var(--accent);background:rgba(0,255,200,0.06);}
+  #mob-toolbar{
+    display:flex;align-items:center;gap:5px;padding:5px 8px;
+    overflow-x:auto;-webkit-overflow-scrolling:touch;
+    border-top:1px solid rgba(0,255,200,0.08);
+    flex-wrap:nowrap;
+  }
+  #mob-toolbar .mob-ctrl-pill{flex-shrink:0;}
   #mob-stats-bar{
     display:flex;flex-direction:column;gap:5px;
     padding:6px 8px;border-bottom:1px solid var(--dim);
@@ -477,9 +502,14 @@
   .mob-ctrl-pill.on .mob-ctrl-pill-dot{background:var(--ok);box-shadow:0 0 4px var(--ok);}
   .mob-theme-dot{transition:all 0.15s;}
   .mob-theme-dot.active{border-color:#fff !important;transform:scale(1.25);}
-  #mob-panel{max-height:38vh;overflow-y:auto;}
-  #mob-panel::-webkit-scrollbar{width:2px;}
-  #mob-panel::-webkit-scrollbar-thumb{background:var(--dim);}
+  #mob-panel{flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden;}
+  .mob-panel-view{display:none;flex:1;min-height:0;flex-direction:column;overflow:hidden;}
+  .mob-panel-view.active{display:flex;}
+  .mob-panel-scroll{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;}
+  .mob-panel-scroll::-webkit-scrollbar{width:3px;}
+  .mob-panel-scroll::-webkit-scrollbar-thumb{background:var(--dim);}
+  #mob-feed,#mob-top10,#mob-topall{padding:2px 0;}
+  #mob-top10 .top-item,#mob-topall .top-item{padding:8px 10px;}
 
   /* LOADING */
   #loading{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:500;gap:14px;font-family:'Orbitron',monospace;}
@@ -504,15 +534,17 @@
       max-height:min(52vh,420px);min-height:240px;
       height:auto;
     }
-    #mob-tab-btns{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;}
-    .mob-tab-btn{flex-shrink:0;padding:8px 10px;font-size:9px;}
-    #mob-panel{flex:1!important;overflow-y:auto;min-height:0;max-height:none!important;}
+    .mob-tab-btn{font-size:9px;min-height:40px;padding:8px 4px;}
+    #mob-toolbar{padding:4px 6px;}
+    #mob-panel{flex:1!important;min-height:0;max-height:none!important;}
     #map-col{flex:1;min-height:0;display:flex;flex-direction:column;}
-    #map-wrap{flex:1 1 auto;min-height:min(38vh,280px);}
+    #map-wrap{flex:1 1 0;min-height:min(48vh,360px);max-height:none;}
+    #map-console-bar{max-height:min(32vh,260px);overflow-y:auto;-webkit-overflow-scrolling:touch;}
     #map-console-bar{
       font-size:8px;flex-shrink:0;
-      max-height:min(36vh,320px);overflow-y:auto;-webkit-overflow-scrolling:touch;
+      max-height:min(30vh,260px);overflow-y:auto;-webkit-overflow-scrolling:touch;
     }
+    #mob-sheet{z-index:320;}
     #footer-stats{display:none!important;}
     #timeline-wrap{padding:4px 8px 2px;}
     #timeline-labels{font-size:6px;padding:0 8px;}
@@ -540,9 +572,9 @@
     .mob-stats-block-title{font-size:5px;}
   }
   @media(max-width:480px){
-    #mob-sheet{max-height:min(55vh,380px);}
-    #map-wrap{min-height:min(32vh,220px);}
-    #map-console-bar{max-height:min(40vh,300px);}
+    #mob-sheet{max-height:min(52vh,360px);}
+    #map-wrap{min-height:min(44vh,280px);}
+    #map-console-bar{max-height:min(30vh,220px);}
     #replay-bar{max-width:calc(100% - 12px);}
     #replay-clock{display:none;}
     #mode-live-btn{margin-left:auto;}
@@ -597,7 +629,7 @@
     <div id="map-wrap">
       <div id="map-title-overlay">
         <span id="h-title">CROWD<span>SEC</span> // THREAT MAP</span>
-        <span id="map-version-badge">v1.5.7</span>
+        <span id="map-version-badge">v1.5.9</span>
       </div>
       <svg id="base-svg" style="position:absolute;inset:0;width:100%;height:100%"></svg>
       <canvas id="arc-canvas"></canvas>
@@ -778,14 +810,13 @@
 </div>
 
 <div id="mob-sheet">
-  <!-- Mobile tab bar -->
-  <div id="mob-tab-btns">
-    <div class="mob-tab-btn active" data-mob="feed">▶ FEED</div>
-    <div class="mob-tab-btn" data-mob="top10">🏆 TOP 10</div>
-    <div class="mob-tab-btn" data-mob="topall">🌍 ALLE</div>
-    <!-- Controls inline in tab bar -->
-    <div style="display:flex;align-items:center;gap:4px;margin-left:auto;padding-right:6px;flex-shrink:0;">
-
+  <div id="mob-sheet-head">
+    <nav id="mob-tab-btns" aria-label="Feed navigation">
+      <button type="button" class="mob-tab-btn active" data-mob="feed">▶ FEED</button>
+      <button type="button" class="mob-tab-btn" data-mob="top10">🏆 TOP 10</button>
+      <button type="button" class="mob-tab-btn" data-mob="topall">🌍 ALLE</button>
+    </nav>
+    <div id="mob-toolbar">
       <div id="mob-lines-toggle" class="mob-ctrl-pill on" onclick="toggleLines()">
         <div id="mob-lines-dot" class="mob-ctrl-pill-dot"></div>
         <span id="mob-lines-label">ANGRIFFE</span>
@@ -836,32 +867,35 @@
     </div>
   </div>
 
-  <!-- Mobile panel content -->
   <div id="mob-panel">
-    <!-- Sparkline mobile -->
-    <div id="mob-sparkline-wrap" style="padding:4px 10px 3px;border-bottom:1px solid var(--dim);background:rgba(0,5,15,0.7);">
-      <div id="mob-sparkline-title" style="font-size:7px;color:rgba(160,255,216,0.35);letter-spacing:1px;margin-bottom:2px;">ANGRIFFE / STUNDE</div>
-      <svg id="mob-sparkline-svg" style="width:100%;height:28px;display:block;"></svg>
-    </div>
-    <!-- Filter bar mobile -->
-    <div id="mob-filter-bar" style="display:flex;flex-wrap:wrap;gap:3px;padding:3px 8px;background:rgba(0,5,15,0.7);min-height:0;"></div>
-    <!-- Search mobile -->
-    <div style="padding:4px 8px;border-bottom:1px solid var(--dim);background:rgba(0,5,15,0.8);">
-      <input id="mob-feed-search" type="text" placeholder="🔍  IP, LAND, SZENARIO..." oninput="onMobFeedSearch()" style="width:100%;background:rgba(0,20,40,0.8);border:1px solid var(--dim);border-radius:3px;color:var(--text);font-family:'Share Tech Mono',monospace;font-size:10px;padding:5px 8px;letter-spacing:0.5px;outline:none;">
-    </div>
-    <!-- Sort -->
-    <div id="mob-feed-filter" style="display:flex;align-items:center;justify-content:space-between;padding:5px 10px;border-bottom:1px solid var(--dim);background:rgba(0,5,15,0.8);gap:6px;">
-      <span class="sort-lbl" style="font-size:8px;color:rgba(160,255,216,0.4);letter-spacing:1px;">SORTIERUNG:</span>
-      <div style="display:flex;gap:4px;">
-        <button class="fsort-btn active" id="mob-fsort-new" onclick="setFeedSort('newest')">▼ NEU</button>
-        <button class="fsort-btn" id="mob-fsort-old" onclick="setFeedSort('oldest')">▲ ALT</button>
+    <div id="mob-view-feed" class="mob-panel-view active">
+      <div id="mob-sparkline-wrap" style="padding:4px 10px 3px;border-bottom:1px solid var(--dim);background:rgba(0,5,15,0.7);flex-shrink:0;">
+        <div id="mob-sparkline-title" style="font-size:7px;color:rgba(160,255,216,0.35);letter-spacing:1px;margin-bottom:2px;">ANGRIFFE / STUNDE</div>
+        <svg id="mob-sparkline-svg" style="width:100%;height:28px;display:block;"></svg>
       </div>
+      <div id="mob-filter-bar" style="display:flex;flex-wrap:wrap;gap:3px;padding:3px 8px;background:rgba(0,5,15,0.7);flex-shrink:0;"></div>
+      <div style="padding:4px 8px;border-bottom:1px solid var(--dim);background:rgba(0,5,15,0.8);flex-shrink:0;">
+        <input id="mob-feed-search" type="text" placeholder="🔍  IP, LAND, SZENARIO..." oninput="onMobFeedSearch()" style="width:100%;background:rgba(0,20,40,0.8);border:1px solid var(--dim);border-radius:3px;color:var(--text);font-family:'Share Tech Mono',monospace;font-size:10px;padding:5px 8px;letter-spacing:0.5px;outline:none;">
+      </div>
+      <div id="mob-feed-filter" style="display:flex;align-items:center;justify-content:space-between;padding:5px 10px;border-bottom:1px solid var(--dim);background:rgba(0,5,15,0.8);gap:6px;flex-shrink:0;">
+        <span class="sort-lbl" style="font-size:8px;color:rgba(160,255,216,0.4);letter-spacing:1px;">SORTIERUNG:</span>
+        <div style="display:flex;gap:4px;">
+          <button class="fsort-btn active" id="mob-fsort-new" onclick="setFeedSort('newest')">▼ NEU</button>
+          <button class="fsort-btn" id="mob-fsort-old" onclick="setFeedSort('oldest')">▲ ALT</button>
+        </div>
+      </div>
+      <div id="mob-feed-info" style="font-size:8px;color:rgba(160,255,216,0.3);letter-spacing:1px;text-align:center;padding:3px 8px 0;flex-shrink:0;"></div>
+      <div class="mob-panel-scroll">
+        <div id="mob-feed"></div>
+      </div>
+      <div id="mob-feed-pages" style="display:flex;align-items:center;justify-content:center;gap:4px;padding:6px 8px;border-top:1px solid var(--dim);background:rgba(0,5,15,0.9);flex-wrap:wrap;flex-shrink:0;"></div>
     </div>
-    <div id="mob-feed-info" style="font-size:8px;color:rgba(160,255,216,0.3);letter-spacing:1px;text-align:center;padding:3px 8px 0;"></div>
-    <div id="mob-feed"></div>
-    <div id="mob-feed-pages" style="display:flex;align-items:center;justify-content:center;gap:4px;padding:6px 8px;border-top:1px solid var(--dim);background:rgba(0,5,15,0.9);flex-wrap:wrap;"></div>
-    <div id="mob-top10" style="display:none"></div>
-    <div id="mob-topall" style="display:none"></div>
+    <div id="mob-view-top10" class="mob-panel-view">
+      <div class="mob-panel-scroll" id="mob-top10"></div>
+    </div>
+    <div id="mob-view-topall" class="mob-panel-view">
+      <div class="mob-panel-scroll" id="mob-topall"></div>
+    </div>
   </div>
 </div>
 
@@ -893,7 +927,7 @@ const SERVER_NAME_MAP = 'MEIN-SERVER';
 // Ab hier nichts mehr ändern
 // ============================================================
 
-const APP_VERSION  = 'v1.5.7';
+const APP_VERSION  = 'v1.5.9';
 const REFRESH_MS   = 30000;
 const localUnbanned = new Set();
 const ARC_FPS      = 30;
@@ -1386,25 +1420,61 @@ function setupReplayControls(){
 
 // ── COMPACT LAYOUT (Handy + Tablet ≤900px) ──
 const COMPACT_MAX_W=900;
+let layoutModeSig=null;
+let compactMapFitTimer=null;
 function isCompactLayout(){return window.innerWidth<=COMPACT_MAX_W;}
+function getHomeFitParams(){
+  const compact=isCompactLayout();
+  return{
+    xFrac:compact?0.5:HOME_SCREEN_X_FRAC,
+    yFrac:compact?0.36:HOME_SCREEN_Y_FRAC,
+    tyNudge:compact?10:HOME_TY_NUDGE_PX,
+    projShift:compact?0.07:HOME_PROJ_Y_SHIFT,
+    defaultK:compact?HOME_ZOOM_K_MOBILE:HOME_ZOOM_K_DESKTOP,
+  };
+}
+function scheduleCompactMapFit(){
+  clearTimeout(compactMapFitTimer);
+  compactMapFitTimer=setTimeout(()=>{
+    if(!mapWrap||mapWrap.clientWidth<50||mapWrap.clientHeight<50)return;
+    setupProj();
+    if(!baseSvg||!worldData)return;
+    baseSvg.selectAll('*').remove();
+    drawBaseMap();
+    renderDots();
+    if(!userHasZoomed)applyInitialMapView();
+    updateCountryFills();
+    if(animOn&&linesOn)startAnimLoop();else clearArcCanvas();
+  },90);
+}
 function syncCompactLayout(){
   const sh=document.getElementById('mob-sheet');
   const lay=document.getElementById('layout');
   if(!lay)return;
+  const sig=isCompactLayout()?'compact':'wide';
+  const modeChanged=layoutModeSig!==null&&layoutModeSig!==sig;
+  layoutModeSig=sig;
   if(!isCompactLayout()){
     lay.style.bottom='';
     if(sh)sh.style.height='';
+    if(modeChanged){
+      userHasZoomed=false;
+      scheduleCompactMapFit();
+    }
     return;
   }
   if(!sh)return;
   const h=sh.offsetHeight;
   if(h>80){
     lay.style.bottom=h+'px';
+    sh.style.height='';
   }else{
-    const px=Math.round(window.innerHeight*0.48);
+    const px=Math.round(window.innerHeight*0.46);
     sh.style.height=px+'px';
     lay.style.bottom=px+'px';
   }
+  if(modeChanged)userHasZoomed=false;
+  scheduleCompactMapFit();
 }
 (function initCompactLayoutSync(){
   syncCompactLayout();
@@ -1415,6 +1485,13 @@ function syncCompactLayout(){
   const sh=document.getElementById('mob-sheet');
   if(sh&&window.ResizeObserver){
     new ResizeObserver(syncCompactLayout).observe(sh);
+  }
+  const mw=document.getElementById('map-wrap');
+  if(mw&&window.ResizeObserver){
+    new ResizeObserver(()=>{
+      if(!isCompactLayout())return;
+      scheduleCompactMapFit();
+    }).observe(mw);
   }
 })();
 
@@ -1497,6 +1574,7 @@ const LANG = {
     zoom_prefs_saved:(k)=>`Gespeichert: ${k.toFixed(1)}×`,
     zoom_prefs_none:'Keine gespeicherte Ansicht',
     zoom_prefs_ok:'Ansicht gespeichert',
+    zoom_prefs_saved_desktop_only:'Gespeicherte Ansicht nur am Desktop (Handy: ⌂)',
     anim_title:  'Animierte Karte (Replay/Live) vs. statische Heatmap',
     lines_title: 'Angriffe auf der Karte ein/aus',
     autozoom_title:'Bei Angriff automatisch in die Region zoomen',
@@ -1599,6 +1677,7 @@ const LANG = {
     zoom_prefs_saved:(k)=>`Saved: ${k.toFixed(1)}×`,
     zoom_prefs_none:'No saved view',
     zoom_prefs_ok:'View saved',
+    zoom_prefs_saved_desktop_only:'Saved view: desktop only (mobile: use ⌂)',
     anim_title:  'Animated map (replay/live) vs. static heatmap',
     lines_title: 'Attack flights (rockets) on/off',
     autozoom_title:'Auto-zoom to attack region',
@@ -1934,7 +2013,8 @@ function setupProj(){
   W=mapWrap.clientWidth; H=mapWrap.clientHeight;
   canvas.width=W; canvas.height=H;
   canvas.style.width=W+'px'; canvas.style.height=H+'px';
-  proj=d3.geoNaturalEarth1().scale(Math.min(W/4.85,H/2.58)).translate([W/2,H/2-H*HOME_PROJ_Y_SHIFT]);
+  const {projShift}=getHomeFitParams();
+  proj=d3.geoNaturalEarth1().scale(Math.min(W/4.85,H/2.58)).translate([W/2,H/2-H*projShift]);
   pathGen=d3.geoPath().projection(proj);
 }
 
@@ -2025,22 +2105,6 @@ function loadScript(src){
   });
 }
 
-// ── MOBILE LAYOUT + FIT ──
-function mobileAdjustAndFit(){
-  syncCompactLayout();
-  requestAnimationFrame(()=>{
-    requestAnimationFrame(()=>{
-      setupProj();
-      canvas.width=W;canvas.height=H;
-      canvas.style.width=W+'px';canvas.style.height=H+'px';
-      if(W>50&&H>50){
-        if(!userHasZoomed)applyInitialMapView();
-        if(!animOn)clearArcCanvas();
-      }
-    });
-  });
-}
-
 // ── INIT ──
 async function init(){
   try{
@@ -2067,8 +2131,8 @@ async function init(){
       fitAttempts++;
       const wh=mapWrap.clientHeight;
       const ww=mapWrap.clientWidth;
-      const isMobile=window.innerWidth<=680;
-      // On mobile: wait until height stabilizes (stops changing between polls)
+      const isMobile=isCompactLayout();
+      // On compact: wait until height stabilizes (stops changing between polls)
       const heightStable=!isMobile||(wh===lastH&&wh>50);
       lastH=wh;
       if(wh>50&&ww>50&&(heightStable||fitAttempts>10)){
@@ -2102,11 +2166,15 @@ async function init(){
 }
 
 function onResize(){
+  const sig=isCompactLayout()?'compact':'wide';
+  const modeChanged=layoutModeSig!==null&&layoutModeSig!==sig;
+  layoutModeSig=sig;
   syncCompactLayout();
   setupProj();
   baseSvg.selectAll('*').remove();
   drawBaseMap();
   renderDots();
+  if(modeChanged)userHasZoomed=false;
   if(!userHasZoomed)applyInitialMapView();
   updateCountryFills();
   if(animOn&&linesOn)startAnimLoop();else clearArcCanvas();
@@ -2222,9 +2290,9 @@ function getMapChromeInsets(){
     ins.l=Math.max(ins.l,r.right-wr.left+8);
   }
   const consoleBar=document.getElementById('map-console-bar');
-  if(consoleBar){
+  if(consoleBar&&!isCompactLayout()){
     const r=consoleBar.getBoundingClientRect();
-    ins.b=Math.max(ins.b,wr.bottom-r.top+6);
+    if(r.top<wr.bottom+2)ins.b=Math.max(ins.b,wr.bottom-r.top+6);
   }
   const replay=document.getElementById('replay-bar');
   if(replay){
@@ -2279,14 +2347,14 @@ function syncZoomPrefsUI(){
   const homeEl=document.getElementById('zoom-prefs-home-k');
   const homeVal=document.getElementById('zoom-prefs-home-val');
   const status=document.getElementById('zoom-prefs-status');
-  const isMobile=window.innerWidth<=680;
-  const defaultK=isMobile?HOME_ZOOM_K_MOBILE:HOME_ZOOM_K_DESKTOP;
+  const {defaultK}=getHomeFitParams();
   const hk=mapViewPrefs.homeK??defaultK;
   if(useEl)useEl.checked=!!mapViewPrefs.useSavedOnLoad;
   if(homeEl){homeEl.value=String(hk);homeEl.title=t('zoom_prefs_home');}
   if(homeVal)homeVal.textContent=hk.toFixed(1)+'×';
   if(status){
-    if(mapViewPrefs.savedView)status.textContent=t('zoom_prefs_saved',mapViewPrefs.savedView.k);
+    if(isCompactLayout()&&mapViewPrefs.savedView)status.textContent=t('zoom_prefs_saved_desktop_only');
+    else if(mapViewPrefs.savedView)status.textContent=t('zoom_prefs_saved',mapViewPrefs.savedView.k);
     else status.textContent=t('zoom_prefs_none');
   }
 }
@@ -2312,6 +2380,7 @@ function resetMapViewPrefs(){
   syncZoomPrefsUI();
 }
 function applySavedMapView(opts={}){
+  if(isCompactLayout())return false;
   if(!mapViewPrefs.useSavedOnLoad||!mapViewPrefs.savedView||!zoomBeh||!baseSvg||!mapG||!dotG)return false;
   const {k,x,y}=mapViewPrefs.savedView;
   const t=d3.zoomIdentity.translate(x,y).scale(Math.max(0.1,Math.min(25,k)));
@@ -2332,7 +2401,7 @@ function applySavedMapView(opts={}){
   return true;
 }
 function applyInitialMapView(){
-  if(applySavedMapView({duration:0}))return true;
+  if(!isCompactLayout()&&applySavedMapView({duration:0}))return true;
   fitMapToServerHome({duration:0,resetUser:false});
   return false;
 }
@@ -2343,17 +2412,16 @@ function fitMapToServerHome(opts={}){
   const srv=proj([SERVER_LON,SERVER_LAT]);
   if(!srv)return;
   const[sx,sy]=srv;
-  const isMobile=window.innerWidth<=680;
-  const defaultK=isMobile?HOME_ZOOM_K_MOBILE:HOME_ZOOM_K_DESKTOP;
+  const {xFrac,yFrac,tyNudge,defaultK}=getHomeFitParams();
   const k=opts.k??mapViewPrefs.homeK??defaultK;
   const ins=getHomeViewInsets();
   const panelL=getMapPanelInsetLeft();
   const visW=Math.max(80,W-panelL-ins.r);
   const visH=Math.max(80,H-ins.t-ins.b);
-  const cx=panelL+visW*HOME_SCREEN_X_FRAC;
-  const cy=ins.t+visH*HOME_SCREEN_Y_FRAC;
+  const cx=panelL+visW*xFrac;
+  const cy=ins.t+visH*yFrac;
   const tx=cx-sx*k;
-  const ty=cy-sy*k-HOME_TY_NUDGE_PX;
+  const ty=cy-sy*k-tyNudge;
   homeTransform=d3.zoomIdentity.translate(tx,ty).scale(k);
   fitTransform=homeTransform;
   currentScale=k;currentTx=tx;currentTy=ty;
@@ -3372,12 +3440,16 @@ document.querySelectorAll('.tab').forEach(t=>{
     document.getElementById('tc-'+t.dataset.tab).classList.add('active');
   });
 });
-document.querySelectorAll('.mob-tab-btn').forEach(t=>{
-  t.addEventListener('click',()=>{
-    document.querySelectorAll('.mob-tab-btn').forEach(x=>x.classList.remove('active'));
-    t.classList.add('active');
-    ['feed','top10','topall'].forEach(id=>{document.getElementById('mob-'+id).style.display=t.dataset.mob===id?'block':'none';});
+function switchMobTab(tabId){
+  document.querySelectorAll('.mob-tab-btn').forEach(btn=>{
+    btn.classList.toggle('active',btn.dataset.mob===tabId);
   });
+  document.querySelectorAll('.mob-panel-view').forEach(v=>{
+    v.classList.toggle('active',v.id==='mob-view-'+tabId);
+  });
+}
+document.querySelectorAll('.mob-tab-btn').forEach(t=>{
+  t.addEventListener('click',()=>switchMobTab(t.dataset.mob));
 });
 
 // ── UTILS ──
