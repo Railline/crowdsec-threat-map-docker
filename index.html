@@ -60,16 +60,18 @@
 
   /* LINIE + ANIMATION — eigene Zeile, volle Breite, zentriert */
   #toggle-row{
-    display:flex;align-items:center;justify-content:center;gap:6px;
-    padding:4px 8px;border-bottom:1px solid var(--dim);
+    display:flex;align-items:stretch;justify-content:center;gap:3px;
+    padding:3px 5px;border-bottom:1px solid var(--dim);
     background:rgba(0,5,15,0.8);flex-shrink:0;
   }
   #toggle-row #lines-toggle,
   #toggle-row #anim-toggle,
   #toggle-row #autozoom-toggle {
-    flex:1;justify-content:center;
-    flex-shrink:0;min-width:0;overflow:hidden;
+    flex:1 1 0;justify-content:center;
+    min-width:0;overflow:hidden;
+    padding:3px 4px;font-size:7px;letter-spacing:0.2px;gap:3px;
   }
+  #toggle-row #autozoom-toggle span{overflow:hidden;text-overflow:ellipsis;}
 
   /* CSV neben Seitenzahlen */
   #feed-pages-wrap{
@@ -98,9 +100,9 @@
   #anim-toggle{
     display:flex;align-items:center;gap:6px;
     background:rgba(0,20,40,0.85);border:1px solid var(--dim);
-    border-radius:4px;padding:4px 10px;cursor:pointer;
-    font-family:'Share Tech Mono',monospace;font-size:clamp(8px,1vw,9px);
-    letter-spacing:1px;color:rgba(160,255,216,0.45);
+    border-radius:3px;padding:3px 6px;cursor:pointer;
+    font-family:'Share Tech Mono',monospace;font-size:7px;
+    letter-spacing:0.3px;color:rgba(160,255,216,0.45);
     transition:all 0.2s;white-space:nowrap;
     user-select:none;
   }
@@ -113,9 +115,9 @@
   #lines-toggle{
     display:flex;align-items:center;gap:6px;
     background:rgba(0,20,40,0.85);border:1px solid var(--dim);
-    border-radius:4px;padding:4px 10px;cursor:pointer;
-    font-family:'Share Tech Mono',monospace;font-size:clamp(8px,1vw,9px);
-    letter-spacing:1px;color:rgba(160,255,216,0.45);
+    border-radius:3px;padding:3px 6px;cursor:pointer;
+    font-family:'Share Tech Mono',monospace;font-size:7px;
+    letter-spacing:0.3px;color:rgba(160,255,216,0.45);
     transition:all 0.2s;white-space:nowrap;
     user-select:none;
   }
@@ -128,9 +130,9 @@
   #autozoom-toggle{
     display:flex;align-items:center;gap:6px;
     background:rgba(0,20,40,0.85);border:1px solid var(--dim);
-    border-radius:4px;padding:4px 10px;cursor:pointer;
-    font-family:'Share Tech Mono',monospace;font-size:clamp(8px,1vw,9px);
-    letter-spacing:1px;color:rgba(160,255,216,0.45);
+    border-radius:3px;padding:3px 4px;cursor:pointer;
+    font-family:'Share Tech Mono',monospace;font-size:6.5px;
+    letter-spacing:0.2px;color:rgba(160,255,216,0.45);
     transition:all 0.2s;white-space:nowrap;
     user-select:none;
   }
@@ -230,6 +232,13 @@
   .mws-val{font-family:'Orbitron',monospace;font-size:10px;font-weight:700;color:var(--accent);line-height:1;}
   .mws-lbl{font-size:5px;color:rgba(160,255,216,0.45);letter-spacing:0.3px;text-align:center;}
   #console-controls{display:flex;flex-direction:column;gap:4px;padding:5px 10px 6px;}
+  @media(min-width:901px){
+    #console-controls{
+      display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+      grid-template-rows:auto auto;column-gap:10px;row-gap:4px;
+    }
+    .console-legend-row{grid-column:1/-1;}
+  }
   .console-row{display:flex;align-items:center;gap:6px;min-width:0;}
   .ctrl-group-lbl{
     font-size:6px;color:rgba(160,255,216,0.4);letter-spacing:0.8px;
@@ -510,6 +519,11 @@
   .mob-panel-scroll::-webkit-scrollbar-thumb{background:var(--dim);}
   #mob-feed,#mob-top10,#mob-topall{padding:2px 0;}
   #mob-top10 .top-item,#mob-topall .top-item{padding:8px 10px;}
+  .mob-panel-tab-hdr{
+    flex-shrink:0;padding:6px 10px;font-size:8px;letter-spacing:1px;
+    color:var(--accent);border-bottom:1px solid var(--dim);
+    background:rgba(0,5,15,0.9);
+  }
 
   /* LOADING */
   #loading{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:500;gap:14px;font-family:'Orbitron',monospace;}
@@ -531,18 +545,24 @@
     #map-version-badge{font-size:6px;padding:1px 3px;}
     #mob-sheet{
       position:fixed;bottom:0;left:0;right:0;
-      max-height:min(52vh,420px);min-height:240px;
-      height:auto;
+      height:min(58vh,460px);max-height:min(62vh,480px);min-height:260px;
     }
+    #mob-sparkline-wrap{display:none;}
+    #mob-stats-bar .mob-stats-meta{display:none;}
+    #mob-stats-bar{padding:4px 6px;}
+    #mob-view-top10 .mob-panel-scroll,#mob-view-topall .mob-panel-scroll{flex:1;min-height:140px;}
+    #mob-feed .feed-item{padding:5px 8px 6px;}
+    #mob-feed .feed-action-btn{width:24px;height:24px;font-size:12px;}
+    #mob-feed .feed-ip{font-size:10px;}
+    #mob-top10 .top-item,#mob-topall .top-item{padding:7px 10px;}
     .mob-tab-btn{font-size:9px;min-height:40px;padding:8px 4px;}
     #mob-toolbar{padding:4px 6px;}
     #mob-panel{flex:1!important;min-height:0;max-height:none!important;}
     #map-col{flex:1;min-height:0;display:flex;flex-direction:column;}
     #map-wrap{flex:1 1 0;min-height:min(48vh,360px);max-height:none;}
-    #map-console-bar{max-height:min(32vh,260px);overflow-y:auto;-webkit-overflow-scrolling:touch;}
     #map-console-bar{
       font-size:8px;flex-shrink:0;
-      max-height:min(30vh,260px);overflow-y:auto;-webkit-overflow-scrolling:touch;
+      max-height:min(28vh,240px);overflow-y:auto;-webkit-overflow-scrolling:touch;
     }
     #mob-sheet{z-index:320;}
     #footer-stats{display:none!important;}
@@ -572,7 +592,7 @@
     .mob-stats-block-title{font-size:5px;}
   }
   @media(max-width:480px){
-    #mob-sheet{max-height:min(52vh,360px);}
+    #mob-sheet{height:min(60vh,400px);max-height:min(64vh,420px);}
     #map-wrap{min-height:min(44vh,280px);}
     #map-console-bar{max-height:min(30vh,220px);}
     #replay-bar{max-width:calc(100% - 12px);}
@@ -629,7 +649,7 @@
     <div id="map-wrap">
       <div id="map-title-overlay">
         <span id="h-title">CROWD<span>SEC</span> // THREAT MAP</span>
-        <span id="map-version-badge">v1.5.9</span>
+        <span id="map-version-badge">v1.6.0</span>
       </div>
       <svg id="base-svg" style="position:absolute;inset:0;width:100%;height:100%"></svg>
       <canvas id="arc-canvas"></canvas>
@@ -679,7 +699,7 @@
         </div>
       </div>
       <div id="console-controls">
-        <div class="console-row">
+        <div class="console-row console-speed-row">
           <span class="ctrl-group-lbl" id="lbl-speed">SPEED</span>
           <div class="ctrl-chip-strip ctrl-speed-strip">
             <button type="button" class="pill-btn" data-speed="0.25">0.25×</button>
@@ -691,7 +711,7 @@
             <button type="button" class="pill-btn" data-speed="4">4×</button>
           </div>
         </div>
-        <div class="console-row">
+        <div class="console-row console-range-row">
           <span class="ctrl-group-lbl" id="lbl-range">RANGE</span>
           <div class="ctrl-chip-strip ctrl-range-strip">
             <button type="button" class="pill-btn" data-range="24">24H</button>
@@ -891,9 +911,11 @@
       <div id="mob-feed-pages" style="display:flex;align-items:center;justify-content:center;gap:4px;padding:6px 8px;border-top:1px solid var(--dim);background:rgba(0,5,15,0.9);flex-wrap:wrap;flex-shrink:0;"></div>
     </div>
     <div id="mob-view-top10" class="mob-panel-view">
+      <div class="mob-panel-tab-hdr">🏆 TOP 10 LÄNDER</div>
       <div class="mob-panel-scroll" id="mob-top10"></div>
     </div>
     <div id="mob-view-topall" class="mob-panel-view">
+      <div class="mob-panel-tab-hdr">🌍 ALLE LÄNDER</div>
       <div class="mob-panel-scroll" id="mob-topall"></div>
     </div>
   </div>
@@ -927,7 +949,7 @@ const SERVER_NAME_MAP = 'MEIN-SERVER';
 // Ab hier nichts mehr ändern
 // ============================================================
 
-const APP_VERSION  = 'v1.5.9';
+const APP_VERSION  = 'v1.6.0';
 const REFRESH_MS   = 30000;
 const localUnbanned = new Set();
 const ARC_FPS      = 30;
@@ -1437,15 +1459,31 @@ function scheduleCompactMapFit(){
   clearTimeout(compactMapFitTimer);
   compactMapFitTimer=setTimeout(()=>{
     if(!mapWrap||mapWrap.clientWidth<50||mapWrap.clientHeight<50)return;
+    const w=mapWrap.clientWidth,h=mapWrap.clientHeight;
+    const prev=scheduleCompactMapFit._last||{w:0,h:0};
+    const sizeChanged=Math.abs(w-prev.w)>10||Math.abs(h-prev.h)>10;
+    scheduleCompactMapFit._last={w,h};
     setupProj();
+    activeRockets=[];
+    clearFlightLabels();
+    clearArcCanvas();
     if(!baseSvg||!worldData)return;
     baseSvg.selectAll('*').remove();
     drawBaseMap();
+    if(isCompactLayout()&&sizeChanged)userHasZoomed=false;
     renderDots();
     if(!userHasZoomed)applyInitialMapView();
+    else{
+      const tr=d3.zoomTransform(baseSvg.node());
+      mapG.attr('transform',tr);
+      dotG.attr('transform',tr);
+      currentScale=tr.k;currentTx=tr.x;currentTy=tr.y;
+      updateServerScale();
+      updateZoomLevel(tr.k);
+    }
     updateCountryFills();
-    if(animOn&&linesOn)startAnimLoop();else clearArcCanvas();
-  },90);
+    if(animOn&&linesOn)startAnimLoop();
+  },120);
 }
 function syncCompactLayout(){
   const sh=document.getElementById('mob-sheet');
@@ -1469,7 +1507,7 @@ function syncCompactLayout(){
     lay.style.bottom=h+'px';
     sh.style.height='';
   }else{
-    const px=Math.round(window.innerHeight*0.46);
+    const px=Math.round(window.innerHeight*0.54);
     sh.style.height=px+'px';
     lay.style.bottom=px+'px';
   }
@@ -1513,8 +1551,8 @@ const LANG = {
     anim_on:     'ANIMATION',
     lines_off:   'ANGRIFFE',
     lines_on:    'ANGRIFFE',
-    autozoom_on: 'AUTO-ZOOM AN',
-    autozoom_off:'AUTO-ZOOM AUS',
+    autozoom_on: 'ZOOM AUTO',
+    autozoom_off:'ZOOM AUTO',
     server_lbl:  SERVER_NAME_MAP,
     zoom_lbl:    'ZOOM',
     lookup:      'IP NACHSCHLAGEN',
@@ -1643,8 +1681,8 @@ const LANG = {
     replay_stop_title:'Stop replay',
     live_lbl:'LIVE',
     live_clock:'● LIVE',
-    autozoom_on: 'AUTO-ZOOM ON',
-    autozoom_off:'AUTO-ZOOM OFF',
+    autozoom_on: 'AUTO ZOOM',
+    autozoom_off:'AUTO ZOOM',
     entries:     (s,e,t) => `${s}–${e} of ${t} entries`,
     prev:        '◀',
     next:        '▶',
@@ -2170,6 +2208,8 @@ function onResize(){
   const modeChanged=layoutModeSig!==null&&layoutModeSig!==sig;
   layoutModeSig=sig;
   syncCompactLayout();
+  activeRockets=[];
+  clearFlightLabels();
   setupProj();
   baseSvg.selectAll('*').remove();
   drawBaseMap();
@@ -2177,7 +2217,8 @@ function onResize(){
   if(modeChanged)userHasZoomed=false;
   if(!userHasZoomed)applyInitialMapView();
   updateCountryFills();
-  if(animOn&&linesOn)startAnimLoop();else clearArcCanvas();
+  clearArcCanvas();
+  if(animOn&&linesOn)startAnimLoop();
 }
 
 function drawBaseMap(){
@@ -3447,6 +3488,8 @@ function switchMobTab(tabId){
   document.querySelectorAll('.mob-panel-view').forEach(v=>{
     v.classList.toggle('active',v.id==='mob-view-'+tabId);
   });
+  if(tabId==='top10'||tabId==='topall')renderCountryLists();
+  syncCompactLayout();
 }
 document.querySelectorAll('.mob-tab-btn').forEach(t=>{
   t.addEventListener('click',()=>switchMobTab(t.dataset.mob));
