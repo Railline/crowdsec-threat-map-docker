@@ -957,6 +957,19 @@ class MetricsHandler(BaseHTTPRequestHandler):
             self.send_header("Access-Control-Allow-Origin", "*")
             self.end_headers()
             self.wfile.write(body)
+        elif self.path == "/config":
+            import json as _json
+            body = _json.dumps({
+                "server_lat": SERVER_LAT,
+                "server_lon": SERVER_LON,
+                "server_name": SERVER_NAME,
+            }).encode()
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Content-Length", str(len(body)))
+            self.send_header("Access-Control-Allow-Origin", "*")
+            self.end_headers()
+            self.wfile.write(body)
         else:
             self._json_response(404, {"error": "Not found"})
 

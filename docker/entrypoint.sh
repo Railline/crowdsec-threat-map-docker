@@ -70,12 +70,19 @@ METRICS_URL="${EXPORTER_URL:-/metrics}"
 
 sed -i "s|http://EURE-UNRAID-IP:9456/metrics|${METRICS_URL}|g" \
     /var/www/html/index.html 2>/dev/null || true
-sed -i "s|const SERVER_LAT   = 0.0;|const SERVER_LAT   = ${SERVER_LAT};|g" \
+sed -i "s|let SERVER_LAT   = [^;]*;|let SERVER_LAT   = ${SERVER_LAT};|g" \
     /var/www/html/index.html 2>/dev/null || true
-sed -i "s|const SERVER_LON   = 0.0;|const SERVER_LON   = ${SERVER_LON};|g" \
+sed -i "s|let SERVER_LON   = [^;]*;|let SERVER_LON   = ${SERVER_LON};|g" \
     /var/www/html/index.html 2>/dev/null || true
-sed -i "s|'MEIN-SERVER'|'${SERVER_NAME}'|g" \
+sed -i "s|let SERVER_NAME_MAP = '[^']*';|let SERVER_NAME_MAP = '${SERVER_NAME}';|g" \
     /var/www/html/index.html 2>/dev/null || true
+log "📍 Server-Position: ${SERVER_LAT}, ${SERVER_LON} (${SERVER_NAME})"
+if awk -v lat="$SERVER_LAT" 'BEGIN{exit !(lat+0<-90 || lat+0>90)}' 2>/dev/null; then
+    log "⚠️  SERVER_LAT=${SERVER_LAT} ungültig (±90) — oft sind Breiten- und Längengrad vertauscht!"
+fi
+if awk -v lon="$SERVER_LON" 'BEGIN{exit !(lon+0<-180 || lon+0>180)}' 2>/dev/null; then
+    log "⚠️  SERVER_LON=${SERVER_LON} ungültig (±180)!"
+fi
 
 # Sprache setzen (de oder en)
 LANG_VAL="${LANGUAGE:-de}"
