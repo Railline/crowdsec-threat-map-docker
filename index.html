@@ -490,6 +490,8 @@
   }
   .mob-tab-btn.active{color:var(--accent);border-bottom-color:var(--accent);background:rgba(0,255,200,0.06);}
   #map-mob-controls .mob-ctrl-pill{flex-shrink:0;}
+  #mob-legend-bar{display:none;}
+  .mob-legend-strip{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;}
   #mob-gesamt-bar{
     flex-shrink:0;padding:6px 8px 4px;
     border-bottom:1px solid rgba(0,255,200,0.1);
@@ -568,51 +570,65 @@
     #mob-feed .feed-action-btn{width:24px;height:24px;font-size:12px;}
     #mob-feed .feed-ip{font-size:10px;}
     #mob-top10 .top-item,#mob-topall .top-item{padding:7px 10px;}
-    .mob-tab-btn{font-size:9px;min-height:38px;padding:8px 4px;}
+    .mob-tab-btn{font-size:8px;min-height:34px;padding:6px 4px;}
+    #mob-gesamt-bar{padding:4px 6px 3px;}
+    #mob-gesamt-bar .mob-stats-block{padding:3px 5px;}
+    .mob-stat-val{font-size:8px;}
     #mob-panel{flex:1!important;min-height:0;max-height:none!important;}
     #map-col{flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden;}
     #map-wrap{flex:1 1 0;min-height:0;}
     #map-console-bar{
-      font-size:8px;flex:0 0 auto;overflow:hidden;
-      padding-bottom:4px;
+      font-size:8px;flex:0 0 auto;overflow:visible;
+      padding-bottom:1px;
     }
     #mob-sheet{z-index:320;}
-    #timeline-wrap{padding:3px 8px 2px;flex-shrink:0;}
-    #timeline-labels{
-      font-size:5px;padding:0 8px 2px;line-height:1.2;
-      flex-direction:row;justify-content:space-between;gap:4px;
+    #timeline-wrap{padding:2px 8px 0;flex-shrink:0;}
+    #timeline-labels{display:none;}
+    #map-window-stats{padding:2px 6px 1px;}
+    .map-window-stats-title{font-size:5px;margin-bottom:1px;}
+    .map-window-stats-title::before{display:none;}
+    .map-window-stats-grid{gap:0;}
+    .mws-val{font-size:7px;}
+    .mws-lbl{font-size:3.5px;}
+    #map-mob-controls{
+      padding:2px 6px;gap:3px;
+      justify-content:center;
     }
-    #timeline-labels span{
-      display:block;min-width:0;flex:1;
-      overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+    #map-mob-controls .mob-ctrl-pill{padding:1px 4px;font-size:5.5px;}
+    #mob-legend-bar{
+      display:block;padding:2px 6px 3px;
+      border-top:1px solid rgba(0,255,200,0.08);
+      border-bottom:1px solid rgba(0,255,200,0.06);
+      background:rgba(0,5,15,0.85);flex-shrink:0;
     }
-    #tl-end{text-align:right;}
-    #map-window-stats{padding:4px 8px 3px;}
-    #map-mob-controls{padding:4px 8px;}
+    #mob-legend-bar .threat-leg{font-size:5px;gap:2px;color:rgba(160,255,216,0.55);}
+    #mob-legend-bar .threat-leg-dot{
+      width:7px;height:7px;border-radius:2px;flex-shrink:0;
+      display:inline-block;
+    }
+    #mob-legend-bar .mob-legend-strip{gap:3px 5px;justify-content:center;}
     #console-controls{
-      display:flex;flex-direction:column;gap:5px;
-      padding:4px 8px 6px;flex-shrink:0;
+      display:flex;flex-direction:column;gap:2px;
+      padding:2px 6px 3px;flex-shrink:0;
     }
-    #console-controls .console-legend-row{display:none;}
+    #console-controls .console-legend-row{display:none!important;}
     #console-controls .console-range-row{order:1;}
     #console-controls .console-speed-row{order:2;}
     #console-controls .console-row{
-      flex-direction:column;align-items:stretch;gap:3px;
+      flex-direction:row;align-items:center;gap:3px;
     }
     #console-controls .ctrl-group-lbl{
-      width:auto;font-size:7px;letter-spacing:0.5px;
-      color:var(--accent);padding-left:1px;
+      width:40px;flex-shrink:0;font-size:5.5px;letter-spacing:0.2px;
+      color:var(--accent);line-height:1.1;padding:0;
     }
     #console-controls .ctrl-chip-strip{
-      display:flex;flex-wrap:wrap;gap:3px;overflow:visible;
+      flex:1;min-width:0;display:flex;flex-wrap:wrap;gap:2px;
+      align-content:flex-start;
     }
     #console-controls .pill-btn{
-      padding:3px 6px;font-size:6px;min-height:20px;line-height:1.2;
+      padding:1px 3px;font-size:5px;min-height:14px;line-height:1;
+      border-radius:2px;
     }
-    .console-range-row .ctrl-chip-strip{min-height:44px;align-content:flex-start;}
-    .map-window-stats-grid{gap:2px;}
-    .mws-val{font-size:9px;}
-    .mws-lbl{font-size:4px;}
     #replay-bar{
       padding:4px 10px;gap:5px;
       max-width:min(calc(100% - 16px),340px);
@@ -625,13 +641,11 @@
     #zoom-level{left:44px;top:26px;bottom:auto;font-size:7px;}
     #zoom-prefs-panel{bottom:auto;top:60px;left:6px;max-width:calc(100vw - 12px);}
     .zoom-btn{width:28px;height:28px;font-size:14px;}
-    .mob-stat-val{font-size:9px;}
-    .mob-stats-block-title{font-size:5px;}
   }
   @media(max-width:480px){
-    #mob-sheet{height:min(60vh,400px);max-height:min(64vh,420px);}
-    #map-window-stats{padding:3px 6px 2px;}
-    .console-range-row .ctrl-chip-strip{min-height:40px;}
+    #mob-sheet{height:min(54vh,380px);max-height:min(58vh,400px);}
+    #console-controls .ctrl-group-lbl{width:42px;font-size:5.5px;}
+    #console-controls .pill-btn{font-size:5px;min-height:15px;padding:2px 3px;}
     #replay-bar{max-width:calc(100% - 12px);}
     #replay-clock{display:none;}
     #mode-live-btn{margin-left:auto;}
@@ -686,7 +700,7 @@
     <div id="map-wrap">
       <div id="map-title-overlay">
         <span id="h-title">CROWD<span>SEC</span> // THREAT MAP</span>
-        <span id="map-version-badge">v1.6.6</span>
+        <span id="map-version-badge">v1.6.8</span>
       </div>
       <svg id="base-svg" style="position:absolute;inset:0;width:100%;height:100%"></svg>
       <canvas id="arc-canvas"></canvas>
@@ -748,6 +762,9 @@
           <div id="mob-autozoom-dot" class="mob-ctrl-pill-dot"></div>
           <span id="mob-autozoom-label">AUTO-ZOOM</span>
         </div>
+      </div>
+      <div id="mob-legend-bar" class="mob-legend-bar" aria-label="Legende">
+        <div id="threat-legend-mob" class="mob-legend-strip"></div>
       </div>
       <div id="console-controls">
         <div class="console-row console-speed-row">
@@ -983,7 +1000,7 @@ const SERVER_NAME_MAP = 'MEIN-SERVER';
 // Ab hier nichts mehr ändern
 // ============================================================
 
-const APP_VERSION  = 'v1.6.6';
+const APP_VERSION  = 'v1.6.8';
 const REFRESH_MS   = 30000;
 const localUnbanned = new Set();
 const ARC_FPS      = 30;
@@ -1080,7 +1097,10 @@ function initReplayWindow(){const times=allEvents.map(e=>e.ts).filter(t=>t>0);if
 function getEventsInReplay(){let list=allEvents.filter(e=>e.ts>=replayWinStart&&e.ts<=replayCursor);if(activeFilters.country)list=list.filter(d=>d.country===activeFilters.country);if(activeFilters.scenario)list=list.filter(d=>d.scenario===activeFilters.scenario);if(activeFilters.search){const q=activeFilters.search;list=list.filter(d=>(d.ip||'').includes(q)||(d.country||'').toLowerCase().includes(q)||(d.scenario||'').toLowerCase().includes(q));}return list;}
 function aggregateFromEvents(events){const by={};events.forEach(e=>{if(!e.lat&&!e.lon)return;const k=`${e.lat.toFixed(2)},${e.lon.toFixed(2)},${e.scenario}`;if(!by[k])by[k]={...e,count:0};by[k].count++;});return Object.values(by);}
 function getDisplayAttackData(){return liveMode?getFilteredAttackData():aggregateFromEvents(getEventsInReplay());}
-function buildThreatLegend(){const el=document.getElementById('threat-legend');if(!el)return;el.innerHTML=Object.keys(THREAT_TYPES).map(k=>`<span class="threat-leg"><span class="threat-leg-dot" style="background:${THREAT_TYPES[k].color}"></span>${threatLabel(k)}</span>`).join('');}
+function buildThreatLegend(){
+  const html=Object.keys(THREAT_TYPES).map(k=>`<span class="threat-leg"><span class="threat-leg-dot" style="background:${THREAT_TYPES[k].color}"></span>${threatLabel(k)}</span>`).join('');
+  ['threat-legend','threat-legend-mob'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML=html;});
+}
 function getAlltimeFeedEvents(){
   return feedData.length?feedData:allEvents;
 }
