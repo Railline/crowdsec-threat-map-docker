@@ -1424,14 +1424,7 @@ function spawnLiveRocketsFromFeed(){
   spawnRocketsFromFeed();
 }
 function quadPoint(p,t){const u=1-t;return{x:u*u*p.sx+2*u*t*p.cpx+t*t*p.ex,y:u*u*p.sy+2*u*t*p.cpy+t*t*p.ey};}
-function drawRocketLegacy(ctx,pt,pTail,col,ik,r){
-  ctx.beginPath();
-  ctx.strokeStyle=col;
-  ctx.lineWidth=0.9*ik;
-  ctx.globalAlpha=0.12;
-  ctx.moveTo(r.sx,r.sy);
-  ctx.quadraticCurveTo(r.cpx,r.cpy,r.ex,r.ey);
-  ctx.stroke();
+function drawRocketLegacy(ctx,pt,pTail,col,ik){
   ctx.beginPath();
   ctx.strokeStyle=col;
   ctx.lineWidth=1.15*ik;
@@ -1501,7 +1494,7 @@ function drawCrowdSecRockets(ts){
       const tailT=rocketStyle==='legacy'?ROCKET_TAIL_LEGACY_T:ROCKET_TAIL_T;
       const tTail=Math.max(0,r.t-tailT);
       const pTail=quadPoint(r,tTail);
-      if(rocketStyle==='legacy')drawRocketLegacy(ctx2d,pt,pTail,col,ik,r);
+      if(rocketStyle==='legacy')drawRocketLegacy(ctx2d,pt,pTail,col,ik);
       else drawRocketClassic(ctx2d,pt,pTail,col,ik);
     }
     if(r.t>=0.92){
