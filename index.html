@@ -234,10 +234,19 @@
   #console-controls{display:flex;flex-direction:column;gap:4px;padding:5px 10px 6px;}
   @media(min-width:901px){
     #console-controls{
-      display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);
-      grid-template-rows:auto auto;column-gap:10px;row-gap:4px;
+      display:flex;flex-direction:row;flex-wrap:wrap;
+      justify-content:center;align-items:center;
+      gap:6px 18px;padding:6px 12px 8px;
     }
-    .console-legend-row{grid-column:1/-1;}
+    #console-controls .console-row{
+      flex:0 1 auto;justify-content:center;width:auto;max-width:100%;
+    }
+    #console-controls .console-legend-row{
+      flex:1 1 100%;justify-content:center;
+    }
+    #console-controls .console-legend-row .ctrl-chip-strip{
+      justify-content:center;flex:0 1 auto;
+    }
   }
   .console-row{display:flex;align-items:center;gap:6px;min-width:0;}
   .ctrl-group-lbl{
@@ -461,11 +470,12 @@
     z-index:320;flex-direction:column;
     box-shadow:0 -8px 24px rgba(0,0,0,0.55);
   }
-  #mob-sheet-head{flex-shrink:0;background:rgba(0,5,15,0.98);border-bottom:1px solid var(--dim);}
+  #mob-data-panel{display:flex;flex-direction:column;flex:1;min-height:0;overflow:hidden;}
   #mob-tab-btns{
-    display:flex;align-items:stretch;min-height:42px;
-    background:rgba(0,5,15,0.95);
+    display:flex;align-items:stretch;min-height:40px;flex-shrink:0;
+    background:rgba(0,5,15,0.95);border-bottom:1px solid var(--dim);
   }
+  #map-mob-controls{display:none;}
   .mob-tab-btn{
     flex:1;min-width:72px;max-width:33%;
     display:flex;align-items:center;justify-content:center;
@@ -477,18 +487,14 @@
     font-family:'Share Tech Mono',monospace;
   }
   .mob-tab-btn.active{color:var(--accent);border-bottom-color:var(--accent);background:rgba(0,255,200,0.06);}
-  #mob-toolbar{
-    display:flex;align-items:center;gap:5px;padding:5px 8px;
-    overflow-x:auto;-webkit-overflow-scrolling:touch;
-    border-top:1px solid rgba(0,255,200,0.08);
-    flex-wrap:nowrap;
-  }
-  #mob-toolbar .mob-ctrl-pill{flex-shrink:0;}
+  #map-mob-controls .mob-ctrl-pill{flex-shrink:0;}
   #mob-stats-bar{
     display:flex;flex-direction:column;gap:5px;
-    padding:6px 8px;border-bottom:1px solid var(--dim);
+    padding:6px 8px;border-bottom:1px solid rgba(0,255,200,0.12);
     background:rgba(0,5,15,0.95);flex-shrink:0;
   }
+  .mob-stats-blocks{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
+  .mob-stats-block.mob-stats-window{border-color:rgba(0,255,200,0.15);background:rgba(0,255,200,0.04);}
   .mob-stats-grid{display:flex;flex-direction:column;gap:5px;}
   .mob-stats-block{border:1px solid rgba(0,255,200,0.08);border-radius:4px;padding:4px 6px;background:rgba(0,12,24,0.5);}
   .mob-stats-block.mob-stats-alltime{border-color:rgba(160,255,216,0.12);background:rgba(0,8,18,0.55);}
@@ -547,16 +553,20 @@
       position:fixed;bottom:0;left:0;right:0;
       height:min(58vh,460px);max-height:min(62vh,480px);min-height:260px;
     }
-    #mob-sparkline-wrap{display:none;}
-    #mob-stats-bar .mob-stats-meta{display:none;}
-    #mob-stats-bar{padding:4px 6px;}
+    #map-mob-controls{
+      display:flex;align-items:center;justify-content:center;gap:6px;
+      padding:5px 8px;border-bottom:1px solid var(--dim);
+      background:rgba(0,5,15,0.92);flex-shrink:0;flex-wrap:wrap;
+    }
+    #map-window-stats{display:none!important;}
+    #mob-stats-bar{padding:5px 8px;}
+    #mob-stats-bar .mob-stats-meta{display:flex;}
     #mob-view-top10 .mob-panel-scroll,#mob-view-topall .mob-panel-scroll{flex:1;min-height:140px;}
     #mob-feed .feed-item{padding:5px 8px 6px;}
     #mob-feed .feed-action-btn{width:24px;height:24px;font-size:12px;}
     #mob-feed .feed-ip{font-size:10px;}
     #mob-top10 .top-item,#mob-topall .top-item{padding:7px 10px;}
-    .mob-tab-btn{font-size:9px;min-height:40px;padding:8px 4px;}
-    #mob-toolbar{padding:4px 6px;}
+    .mob-tab-btn{font-size:9px;min-height:38px;padding:8px 4px;}
     #mob-panel{flex:1!important;min-height:0;max-height:none!important;}
     #map-col{flex:1;min-height:0;display:flex;flex-direction:column;}
     #map-wrap{flex:1 1 0;min-height:min(48vh,360px);max-height:none;}
@@ -568,7 +578,6 @@
     #footer-stats{display:none!important;}
     #timeline-wrap{padding:4px 8px 2px;}
     #timeline-labels{font-size:6px;padding:0 8px;}
-    #map-window-stats{display:block;}
     #console-controls{gap:3px;padding:3px 8px 5px;}
     .ctrl-group-lbl{width:34px;font-size:5px;}
     .pill-btn{padding:2px 5px;font-size:6px;min-height:18px;border-radius:2px;}
@@ -649,7 +658,7 @@
     <div id="map-wrap">
       <div id="map-title-overlay">
         <span id="h-title">CROWD<span>SEC</span> // THREAT MAP</span>
-        <span id="map-version-badge">v1.6.0</span>
+        <span id="map-version-badge">v1.6.1</span>
       </div>
       <svg id="base-svg" style="position:absolute;inset:0;width:100%;height:100%"></svg>
       <canvas id="arc-canvas"></canvas>
@@ -689,6 +698,20 @@
     <div id="map-console-bar">
       <div id="timeline-wrap"><input type="range" id="replay-slider" min="0" max="1000" value="0"></div>
       <div id="timeline-labels"><span id="tl-start">—</span><span id="tl-end">—</span></div>
+      <div id="map-mob-controls" aria-label="Karten-Steuerung">
+        <div id="mob-lines-toggle" class="mob-ctrl-pill on" onclick="toggleLines()">
+          <div id="mob-lines-dot" class="mob-ctrl-pill-dot"></div>
+          <span id="mob-lines-label">ANGRIFFE</span>
+        </div>
+        <div id="mob-anim-toggle" class="mob-ctrl-pill on" onclick="toggleAnim()">
+          <div id="mob-anim-dot" class="mob-ctrl-pill-dot"></div>
+          <span id="mob-anim-label">ANIMATION</span>
+        </div>
+        <div id="mob-autozoom-toggle" class="mob-ctrl-pill off" onclick="toggleAutoZoom()">
+          <div id="mob-autozoom-dot" class="mob-ctrl-pill-dot"></div>
+          <span id="mob-autozoom-label">AUTO-ZOOM</span>
+        </div>
+      </div>
       <div id="map-window-stats">
         <div class="map-window-stats-title" id="mws-title-lbl">ZEITFENSTER · KARTE</div>
         <div class="map-window-stats-grid">
@@ -830,36 +853,25 @@
 </div>
 
 <div id="mob-sheet">
-  <div id="mob-sheet-head">
-    <nav id="mob-tab-btns" aria-label="Feed navigation">
-      <button type="button" class="mob-tab-btn active" data-mob="feed">▶ FEED</button>
-      <button type="button" class="mob-tab-btn" data-mob="top10">🏆 TOP 10</button>
-      <button type="button" class="mob-tab-btn" data-mob="topall">🌍 ALLE</button>
-    </nav>
-    <div id="mob-toolbar">
-      <div id="mob-lines-toggle" class="mob-ctrl-pill on" onclick="toggleLines()">
-        <div id="mob-lines-dot" class="mob-ctrl-pill-dot"></div>
-        <span id="mob-lines-label">ANGRIFFE</span>
-      </div>
-      <div id="mob-anim-toggle" class="mob-ctrl-pill on" onclick="toggleAnim()">
-        <div id="mob-anim-dot" class="mob-ctrl-pill-dot"></div>
-        <span id="mob-anim-label">ANIMATION</span>
-      </div>
-      <div id="mob-autozoom-toggle" class="mob-ctrl-pill off" onclick="toggleAutoZoom()">
-        <div id="mob-autozoom-dot" class="mob-ctrl-pill-dot"></div>
-        <span id="mob-autozoom-label">AUTO-ZOOM</span>
-      </div>
-    </div>
-  </div>
-
-  <!-- Mobile: nur GESAMT (Zeitfenster sitzt direkt unter der Karte) -->
+  <div id="mob-data-panel">
   <div id="mob-stats-bar">
-    <div class="mob-stats-block mob-stats-alltime">
-      <div class="mob-stats-block-title" id="mob-lbl-alltime">GESAMT (ALLTIME)</div>
-      <div class="mob-stats-items">
-        <div class="mob-stat-item"><span class="mob-stat-val" id="mob-s-total">—</span><span class="mob-stat-lbl" id="mob-attacks-lbl">ANGRIFFE</span></div>
-        <div class="mob-stat-item"><span class="mob-stat-val" id="mob-s-countries">—</span><span class="mob-stat-lbl" id="mob-countries-lbl">LÄNDER</span></div>
-        <div class="mob-stat-item"><span class="mob-stat-val" id="mob-s-scenarios">—</span><span class="mob-stat-lbl" id="mob-scenarios-lbl">SZENARIEN</span></div>
+    <div class="mob-stats-blocks">
+      <div class="mob-stats-block mob-stats-window">
+        <div class="mob-stats-block-title" id="mob-mws-title-lbl">ZEITFENSTER · KARTE</div>
+        <div class="mob-stats-items">
+          <div class="mob-stat-item"><span class="mob-stat-val" id="mob-mws-alerts">—</span><span class="mob-stat-lbl" id="mob-mws-alerts-lbl">MELDUNGEN</span></div>
+          <div class="mob-stat-item"><span class="mob-stat-val" id="mob-mws-ips">—</span><span class="mob-stat-lbl" id="mob-mws-ips-lbl">IPS</span></div>
+          <div class="mob-stat-item"><span class="mob-stat-val" id="mob-mws-scenarios">—</span><span class="mob-stat-lbl" id="mob-mws-scn-lbl">SZENARIEN</span></div>
+          <div class="mob-stat-item"><span class="mob-stat-val" id="mob-mws-countries">—</span><span class="mob-stat-lbl" id="mob-mws-ctry-lbl">LÄNDER</span></div>
+        </div>
+      </div>
+      <div class="mob-stats-block mob-stats-alltime">
+        <div class="mob-stats-block-title" id="mob-lbl-alltime">GESAMT (ALLTIME)</div>
+        <div class="mob-stats-items">
+          <div class="mob-stat-item"><span class="mob-stat-val" id="mob-s-total">—</span><span class="mob-stat-lbl" id="mob-attacks-lbl">ANGRIFFE</span></div>
+          <div class="mob-stat-item"><span class="mob-stat-val" id="mob-s-countries">—</span><span class="mob-stat-lbl" id="mob-countries-lbl">LÄNDER</span></div>
+          <div class="mob-stat-item"><span class="mob-stat-val" id="mob-s-scenarios">—</span><span class="mob-stat-lbl" id="mob-scenarios-lbl">SZENARIEN</span></div>
+        </div>
       </div>
     </div>
     <div class="mob-stats-meta">
@@ -886,7 +898,11 @@
       </div>
     </div>
   </div>
-
+  <nav id="mob-tab-btns" aria-label="Feed navigation">
+    <button type="button" class="mob-tab-btn active" data-mob="feed">▶ FEED</button>
+    <button type="button" class="mob-tab-btn" data-mob="top10">🏆 TOP 10</button>
+    <button type="button" class="mob-tab-btn" data-mob="topall">🌍 ALLE</button>
+  </nav>
   <div id="mob-panel">
     <div id="mob-view-feed" class="mob-panel-view active">
       <div id="mob-sparkline-wrap" style="padding:4px 10px 3px;border-bottom:1px solid var(--dim);background:rgba(0,5,15,0.7);flex-shrink:0;">
@@ -919,6 +935,7 @@
       <div class="mob-panel-scroll" id="mob-topall"></div>
     </div>
   </div>
+  </div>
 </div>
 
 <script>
@@ -949,7 +966,7 @@ const SERVER_NAME_MAP = 'MEIN-SERVER';
 // Ab hier nichts mehr ändern
 // ============================================================
 
-const APP_VERSION  = 'v1.6.0';
+const APP_VERSION  = 'v1.6.1';
 const REFRESH_MS   = 30000;
 const localUnbanned = new Set();
 const ARC_FPS      = 30;
@@ -1108,6 +1125,10 @@ function updateFooterStats(){
   set('mws-ips',ips);
   set('mws-scenarios',scenarios);
   set('mws-countries',countries);
+  set('mob-mws-alerts',reports);
+  set('mob-mws-ips',ips);
+  set('mob-mws-scenarios',scenarios);
+  set('mob-mws-countries',countries);
 }
 function renderMapPanels(){const events=liveMode?feedData:getEventsInReplay();const bySc={},byIp={},byCo={};events.forEach(e=>{bySc[e.scenario]=(bySc[e.scenario]||0)+1;byIp[e.ip]=(byIp[e.ip]||0)+1;byCo[e.country]=(byCo[e.country]||0)+1;});const row=(c,l,v)=>`<div class="map-panel-row"><span class="map-panel-dot" style="background:${c}"></span><span class="map-panel-label">${l}</span><span class="map-panel-val">${v}</span></div>`;document.getElementById('panel-scenarios-body').innerHTML=Object.entries(bySc).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([s,n])=>row(scenarioColor(s),s,n)).join('')||'—';document.getElementById('panel-ips-body').innerHTML=Object.entries(byIp).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([ip,n])=>{const c=events.find(e=>e.ip===ip)?.country||'??';return row(scenarioColor(events.find(e=>e.ip===ip)?.scenario),`${FLAG[c]||'🌐'} ${ip}`,n);}).join('')||'—';document.getElementById('panel-origins-body').innerHTML=Object.entries(byCo).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([cc,n],i)=>row('#888',`${i+1}. ${countryDisplayName(cc)}`,n)).join('')||'—';updateFooterStats();}
 function updateReplaySlider(){const sl=document.getElementById('replay-slider');if(!sl||replayWinEnd<=replayWinStart)return;sl.value=Math.round(1000*(replayCursor-replayWinStart)/(replayWinEnd-replayWinStart));document.getElementById('replay-clock').textContent=fmtReplayClock(replayCursor);document.getElementById('tl-start').textContent=fmtReplayClock(replayWinStart);document.getElementById('tl-end').textContent=fmtReplayClock(replayWinEnd);}
@@ -1879,14 +1900,24 @@ function applyLang(){
   if(mobAlltimeLbl)mobAlltimeLbl.textContent=l.mob_lbl_alltime;
   const mwsTitle=document.getElementById('mws-title-lbl');
   if(mwsTitle)mwsTitle.textContent=l.map_window_title;
+  const mobMwsTitle=document.getElementById('mob-mws-title-lbl');
+  if(mobMwsTitle)mobMwsTitle.textContent=l.map_window_title;
   const mwsAlerts=document.getElementById('mws-alerts-lbl');
   if(mwsAlerts)mwsAlerts.textContent=l.fs_alerts;
+  const mobMwsAlerts=document.getElementById('mob-mws-alerts-lbl');
+  if(mobMwsAlerts)mobMwsAlerts.textContent=l.fs_alerts;
   const mwsIps=document.getElementById('mws-ips-lbl');
   if(mwsIps)mwsIps.textContent=l.fs_ips;
+  const mobMwsIps=document.getElementById('mob-mws-ips-lbl');
+  if(mobMwsIps)mobMwsIps.textContent=l.fs_ips;
   const mwsScn=document.getElementById('mws-scn-lbl');
   if(mwsScn)mwsScn.textContent=l.fs_scenarios;
+  const mobMwsScn=document.getElementById('mob-mws-scn-lbl');
+  if(mobMwsScn)mobMwsScn.textContent=l.fs_scenarios;
   const mwsCtry=document.getElementById('mws-ctry-lbl');
   if(mwsCtry)mwsCtry.textContent=l.fs_countries;
+  const mobMwsCtry=document.getElementById('mob-mws-ctry-lbl');
+  if(mobMwsCtry)mobMwsCtry.textContent=l.fs_countries;
   const mobLiveLbl=document.getElementById('mob-live-lbl');
   if(mobLiveLbl)mobLiveLbl.textContent=l.live;
   const mobSparkTitle=document.getElementById('mob-sparkline-title');
