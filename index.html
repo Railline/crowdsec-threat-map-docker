@@ -66,8 +66,7 @@
   }
   #toggle-row #lines-toggle,
   #toggle-row #anim-toggle,
-  #toggle-row #autozoom-toggle,
-  #toggle-row #rocket-style-toggle {
+  #toggle-row #autozoom-toggle {
     flex:1 1 0;justify-content:center;
     min-width:0;overflow:hidden;
     padding:3px 4px;font-size:7px;letter-spacing:0.2px;gap:3px;
@@ -153,25 +152,6 @@
     box-shadow:none!important;
   }
 
-  #rocket-style-toggle{
-    display:flex;align-items:center;gap:5px;
-    background:rgba(0,20,40,0.85);border:1px solid var(--dim);
-    border-radius:3px;padding:3px 4px;cursor:pointer;
-    font-family:'Share Tech Mono',monospace;font-size:6.5px;
-    letter-spacing:0.2px;color:rgba(160,255,216,0.45);
-    transition:all 0.2s;white-space:nowrap;user-select:none;
-  }
-  #rocket-style-toggle:hover{border-color:var(--accent);color:var(--accent);}
-  #rocket-style-toggle.classic{border-color:var(--ok);color:var(--ok);background:rgba(0,255,136,0.08);}
-  #rocket-style-toggle.legacy{border-color:#ffaa44;color:#ffcc66;background:rgba(255,170,68,0.08);}
-  #rocket-style-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;transition:background 0.2s,box-shadow 0.2s;}
-  #rocket-style-toggle.classic #rocket-style-dot{background:var(--ok);box-shadow:0 0 5px var(--ok);}
-  #rocket-style-toggle.legacy #rocket-style-dot{background:#ffaa44;box-shadow:0 0 5px #ffaa44;}
-  #mob-rocket-style-toggle.classic{border-color:var(--ok);color:var(--ok);background:rgba(0,255,136,0.08);}
-  #mob-rocket-style-toggle.legacy{border-color:#ffaa44;color:#ffcc66;background:rgba(255,170,68,0.08);}
-  #mob-rocket-style-toggle.classic .mob-ctrl-pill-dot{background:var(--ok);box-shadow:0 0 4px var(--ok);}
-  #mob-rocket-style-toggle.legacy .mob-ctrl-pill-dot{background:#ffaa44;box-shadow:0 0 4px #ffaa44;}
-
   .settings-open-btn{
     margin-left:auto;padding:3px 8px;font-size:7px;letter-spacing:0.3px;
     font-family:'Share Tech Mono',monospace;background:rgba(0,20,40,0.85);
@@ -197,6 +177,18 @@
   .settings-panel header h3{margin:0;font-family:Orbitron,monospace;font-size:11px;color:var(--accent);letter-spacing:1px;}
   #settings-close-btn{background:none;border:none;color:rgba(160,255,216,0.5);cursor:pointer;font-size:14px;padding:2px 6px;}
   #settings-close-btn:hover{color:var(--accent);}
+  .settings-nav{
+    display:flex;gap:6px;padding:8px 14px;
+    border-bottom:1px solid rgba(0,255,200,0.12);
+    background:rgba(0,10,22,0.9);
+    overflow:auto;
+  }
+  .settings-nav button{
+    border:1px solid rgba(0,255,200,0.2);background:rgba(0,20,40,0.9);
+    color:rgba(160,255,216,0.65);border-radius:999px;padding:4px 9px;
+    font-size:8px;font-family:'Share Tech Mono',monospace;cursor:pointer;white-space:nowrap;
+  }
+  .settings-nav button.active{border-color:var(--ok);color:var(--ok);background:rgba(0,255,136,0.1);}
   .settings-body{padding:12px 14px;overflow-y:auto;flex:1;}
   .settings-body section{margin-bottom:14px;}
   .settings-body section h4{margin:0 0 8px;font-size:8px;letter-spacing:0.8px;color:rgba(160,255,216,0.45);text-transform:uppercase;}
@@ -209,6 +201,11 @@
   .settings-field input:disabled{opacity:0.45;}
   .settings-check{display:flex;align-items:center;gap:8px;margin:8px 0;font-size:9px;color:rgba(200,230,220,0.8);}
   .settings-hint{font-size:8px;color:rgba(140,170,160,0.5);line-height:1.35;margin:4px 0 0;}
+  .settings-help{
+    margin:0 14px 10px;border:1px solid rgba(0,255,200,0.14);
+    border-radius:4px;background:rgba(0,12,24,0.75);padding:8px 10px;
+    font-size:8px;color:rgba(170,210,195,0.78);line-height:1.35;
+  }
   .settings-panel footer{
     display:flex;gap:8px;justify-content:flex-end;padding:10px 14px;
     border-top:1px solid rgba(0,255,200,0.12);flex-wrap:wrap;
@@ -756,15 +753,31 @@
       <h3 id="settings-title">Einstellungen</h3>
       <button type="button" id="settings-close-btn" onclick="closeSettingsModal()" aria-label="Schließen">✕</button>
     </header>
+    <div class="settings-nav">
+      <button type="button" data-settings-jump="settings-sec-perf">Leistung</button>
+      <button type="button" data-settings-jump="settings-sec-anim">Animation</button>
+      <button type="button" data-settings-jump="settings-sec-rockets">Raketen</button>
+      <button type="button" data-settings-jump="settings-sec-map">Karte</button>
+    </div>
+    <div class="settings-help" id="settings-help-box">Tipp: In jedem Bereich auf einen Wert klicken, dann erscheint hier die Erklärung.</div>
     <div class="settings-body">
-      <section>
+      <section id="settings-sec-perf-block">
         <h4 id="settings-sec-perf">Leistung &amp; Daten</h4>
         <label class="settings-field"><span id="set-lbl-refresh">Feed aktualisieren (Sek.)</span><input type="number" id="set-refresh-sec" min="5" max="120" step="1"></label>
         <label class="settings-field"><span id="set-lbl-max-active">Max. Raketen gleichzeitig</span><input type="number" id="set-max-active" min="5" max="80" step="1"></label>
         <label class="settings-field"><span id="set-lbl-max-pending">Max. Warteschlange</span><input type="number" id="set-max-pending" min="10" max="300" step="1"></label>
         <label class="settings-field"><span id="set-lbl-max-batch">Raketen pro Schwung</span><input type="number" id="set-max-batch" min="3" max="50" step="1"></label>
+        <label class="settings-field"><span id="set-lbl-preset">Voreinstellung</span>
+          <select id="set-performance-preset">
+            <option value="">— auswählen —</option>
+            <option value="balanced">Balanced</option>
+            <option value="performance">Performance</option>
+            <option value="quality">Qualität</option>
+          </select>
+        </label>
+        <p class="settings-hint" id="settings-preset-hint">Presets setzen nur Leistungswerte und können danach fein angepasst werden.</p>
       </section>
-      <section>
+      <section id="settings-sec-anim-block">
         <h4 id="settings-sec-anim">Animation</h4>
         <label class="settings-field"><span id="set-lbl-duration">Flugdauer (Sek.)</span><input type="number" id="set-duration-sec" min="2" max="12" step="0.5"></label>
         <label class="settings-field"><span id="set-lbl-stagger">Abstand gleiche IP (ms)</span><input type="number" id="set-stagger-ms" min="100" max="3000" step="50"></label>
@@ -772,7 +785,7 @@
         <label class="settings-field"><span id="set-lbl-label-throttle">Flight-Labels (ms)</span><input type="number" id="set-label-throttle" min="50" max="500" step="10"></label>
         <label class="settings-field"><span id="set-lbl-replay-min">Replay-Dauer bei 1× (Min.)</span><input type="number" id="set-replay-min" min="1" max="15" step="0.5"></label>
       </section>
-      <section>
+      <section id="settings-sec-rockets-block">
         <h4 id="settings-sec-rockets">Raketen-Logik</h4>
         <label class="settings-field"><span id="set-lbl-spawn-mode">Rakete auslösen pro</span>
           <select id="set-spawn-mode">
@@ -794,7 +807,7 @@
         <label class="settings-check"><input type="checkbox" id="set-show-labels"> <span id="set-lbl-show-labels">Flight-Labels anzeigen</span></label>
         <label class="settings-field"><span id="set-lbl-max-labels">Max. Flight-Labels</span><input type="number" id="set-max-labels" min="0" max="15" step="1"></label>
       </section>
-      <section>
+      <section id="settings-sec-map-block">
         <h4 id="settings-sec-map">Karte / Server</h4>
         <label class="settings-check"><input type="checkbox" id="set-override-coords"> <span id="set-lbl-override">Eigene Koordinaten (überschreibt Docker)</span></label>
         <label class="settings-field"><span id="set-lbl-lat">Breitengrad (LAT)</span><input type="text" id="set-server-lat" inputmode="decimal" placeholder="53.55"></label>
@@ -893,10 +906,6 @@
           <div id="mob-autozoom-dot" class="mob-ctrl-pill-dot"></div>
           <span id="mob-autozoom-label">AUTO-ZOOM</span>
         </div>
-        <div id="mob-rocket-style-toggle" class="mob-ctrl-pill classic" onclick="toggleRocketStyle()" title="Raketen-Stil wechseln">
-          <div id="mob-rocket-style-dot" class="mob-ctrl-pill-dot"></div>
-          <span id="mob-rocket-style-label">RAKETE NEU</span>
-        </div>
         <button type="button" id="settings-open-btn-mob" class="settings-open-btn" onclick="openSettingsModal()" title="Einstellungen">⚙</button>
       </div>
       <div id="mob-legend-bar" class="mob-legend-bar" aria-label="Legende">
@@ -974,10 +983,6 @@
         <div id="autozoom-toggle" class="off" onclick="toggleAutoZoom()" title="Bei Angriff automatisch in die Region zoomen" aria-pressed="false">
           <div id="autozoom-dot"></div>
           <span id="autozoom-label">AUTO-ZOOM AUS</span>
-        </div>
-        <div id="rocket-style-toggle" class="classic" onclick="toggleRocketStyle()" title="Raketen-Stil: Neu (Schweif) oder Alt (Bogen)">
-          <div id="rocket-style-dot"></div>
-          <span id="rocket-style-label">RAKETE NEU</span>
         </div>
       </div>
       <!-- Theme row: separate line below controls -->
@@ -1170,6 +1175,56 @@ const MAP_SETTINGS_DEFAULTS={
 let mapSettings={...MAP_SETTINGS_DEFAULTS};
 let fetchIntervalId=null;
 let dockerServerCoords={lat:null,lon:null,name:''};
+const SETTINGS_HELP={
+  de:{
+    default:'Wert auswählen, hier siehst du wofür die Einstellung ist.',
+    'set-refresh-sec':'Wie oft neue Daten geladen werden. Kleiner = aktueller, aber mehr Last.',
+    'set-max-active':'Begrenzt gleichzeitig sichtbare Raketen. Niedriger = weniger GPU/CPU.',
+    'set-max-pending':'Maximale Gesamt-Warteschlange für Raketen.',
+    'set-max-batch':'Wie viele neue Raketen pro Tick gestartet werden.',
+    'set-performance-preset':'Preset für typische Lastprofile. Danach kannst du feinjustieren.',
+    'set-duration-sec':'Flugzeit einer Rakete vom Start bis Ziel.',
+    'set-stagger-ms':'Abstand zwischen Raketen derselben IP.',
+    'set-ui-throttle':'Wie oft die Replay-Karte (Dots/Panels) neu gezeichnet wird.',
+    'set-label-throttle':'Wie oft Flight-Labels aktualisiert werden.',
+    'set-replay-min':'Replay-Laufzeit bei 1x (Zeitskala).',
+    'set-spawn-mode':'Definiert, ob pro Angriff, pro IP+Zeit oder nur pro IP eine Rakete entsteht.',
+    'set-queue-ip':'Begrenzt Warteschlange je IP, verhindert Überlauf bei Brute-Force.',
+    'set-rocket-style':'Wählt visuellen Raketenstil.',
+    'set-tail-classic':'Länge des Schweifs beim neuen Stil in Prozent.',
+    'set-lane-spread':'Seitlicher Abstand paralleler Bahnen.',
+    'set-show-labels':'Ein-/Ausblenden der Herkunfts-Labels am Startpunkt.',
+    'set-max-labels':'Maximale Anzahl sichtbarer Labels gleichzeitig.',
+    'set-override-coords':'Wenn aktiv, werden Docker-Koordinaten lokal überschrieben.',
+    'set-server-lat':'Server-Breitengrad (LAT).',
+    'set-server-lon':'Server-Längengrad (LON).',
+    'set-server-name':'Name des Home-Punkts auf der Karte.',
+  },
+  en:{
+    default:'Select a value to see what this setting does.',
+    'set-refresh-sec':'How often new data is fetched. Lower = fresher but heavier.',
+    'set-max-active':'Limit simultaneous rockets. Lower reduces GPU/CPU.',
+    'set-max-pending':'Maximum total queued rockets.',
+    'set-max-batch':'How many rockets can start per tick.',
+    'set-performance-preset':'Quick profile for common load targets.',
+    'set-duration-sec':'Flight time from source to destination.',
+    'set-stagger-ms':'Gap between rockets from the same IP.',
+    'set-ui-throttle':'How often replay map UI redraws.',
+    'set-label-throttle':'How often flight labels refresh.',
+    'set-replay-min':'Replay duration at 1x speed.',
+    'set-spawn-mode':'Choose per attack, per IP+time, or IP-only launch mode.',
+    'set-queue-ip':'Queue cap per IP to avoid flooding.',
+    'set-rocket-style':'Choose visual rocket style.',
+    'set-tail-classic':'Tail length (new style) in percent.',
+    'set-lane-spread':'Side offset for parallel routes.',
+    'set-show-labels':'Show/hide source labels.',
+    'set-max-labels':'Maximum visible labels.',
+    'set-override-coords':'Override Docker coordinates locally.',
+    'set-server-lat':'Server latitude (LAT).',
+    'set-server-lon':'Server longitude (LON).',
+    'set-server-name':'Home marker label.',
+  }
+};
 const CROWDSEC_ARC_COLOR = '#ff9a3c'; // Orange wie CrowdSec Console
 const FIT_ZOOM_BOOST = 1.55;      // für fitMapToPoints (alle Angriffe)
 const FIT_MIN_SCALE = 1.35;
@@ -1236,6 +1291,44 @@ function updateSpawnModeHint(){
   const mode=document.getElementById('set-spawn-mode')?.value||mapSettings.rocketSpawnMode;
   const key=mode==='per_ip'?'spawn_hint_ip':mode==='per_ip_time'?'spawn_hint_ip_time':'spawn_hint_attack';
   el.textContent=l[key]||'';
+}
+function updateSettingsHelpForField(id){
+  const box=document.getElementById('settings-help-box');
+  if(!box)return;
+  const lang=SETTINGS_HELP[currentLang]||SETTINGS_HELP.de;
+  box.textContent=lang[id]||lang.default;
+}
+function initSettingsHelpBindings(){
+  const ids=['set-refresh-sec','set-max-active','set-max-pending','set-max-batch','set-performance-preset','set-duration-sec','set-stagger-ms','set-ui-throttle','set-label-throttle','set-replay-min','set-spawn-mode','set-queue-ip','set-rocket-style','set-tail-classic','set-lane-spread','set-show-labels','set-max-labels','set-override-coords','set-server-lat','set-server-lon','set-server-name'];
+  ids.forEach(id=>{
+    const el=document.getElementById(id);
+    if(!el)return;
+    ['focus','mouseenter','input','change'].forEach(ev=>el.addEventListener(ev,()=>updateSettingsHelpForField(id)));
+  });
+}
+function jumpToSettingsSection(targetId){
+  const target=document.getElementById(targetId);
+  if(!target)return;
+  target.scrollIntoView({behavior:'smooth',block:'start'});
+  document.querySelectorAll('.settings-nav button').forEach(b=>b.classList.toggle('active',b.dataset.settingsJump===targetId));
+}
+function applySettingsPreset(name){
+  if(!name)return;
+  const presets={
+    balanced:{refreshSec:30,maxActive:28,maxPending:64,maxBatch:14,uiThrottle:220,labelThrottle:150},
+    performance:{refreshSec:45,maxActive:16,maxPending:36,maxBatch:8,uiThrottle:320,labelThrottle:220},
+    quality:{refreshSec:20,maxActive:42,maxPending:90,maxBatch:20,uiThrottle:170,labelThrottle:110},
+  };
+  const p=presets[name];
+  if(!p)return;
+  const set=(id,v)=>{const el=document.getElementById(id);if(el)el.value=v;};
+  set('set-refresh-sec',p.refreshSec);
+  set('set-max-active',p.maxActive);
+  set('set-max-pending',p.maxPending);
+  set('set-max-batch',p.maxBatch);
+  set('set-ui-throttle',p.uiThrottle);
+  set('set-label-throttle',p.labelThrottle);
+  updateSettingsHelpForField('set-performance-preset');
 }
 let autoZoomOn=false;
 let lastAutoZoomTs=0;
@@ -1951,6 +2044,7 @@ const LANG = {
     set_max_active:'Max. Raketen gleichzeitig',
     set_max_pending:'Max. Warteschlange',
     set_max_batch:'Raketen pro Schwung',
+    set_preset:'Voreinstellung',
     set_duration:'Flugdauer (Sek.)',
     set_stagger:'Abstand gleiche IP (ms)',
     set_ui_throttle:'Karten-Update Replay (ms)',
@@ -1978,6 +2072,11 @@ const LANG = {
     set_show_labels:'Flight-Labels anzeigen',
     set_max_labels:'Max. Flight-Labels',
     set_replay_min:'Replay-Dauer bei 1× (Min.)',
+    settings_nav_perf:'Leistung',
+    settings_nav_anim:'Animation',
+    settings_nav_rockets:'Raketen',
+    settings_nav_map:'Karte',
+    settings_preset_hint:'Preset setzt nur Leistungswerte. Danach gern fein anpassen.',
     server_lbl:  SERVER_NAME_MAP,
     zoom_lbl:    'ZOOM',
     lookup:      'IP NACHSCHLAGEN',
@@ -2093,6 +2192,7 @@ const LANG = {
     set_max_active:'Max simultaneous rockets',
     set_max_pending:'Max queue size',
     set_max_batch:'Rockets per batch',
+    set_preset:'Preset',
     set_duration:'Flight duration (sec)',
     set_stagger:'Gap same IP (ms)',
     set_ui_throttle:'Map refresh replay (ms)',
@@ -2120,6 +2220,11 @@ const LANG = {
     set_show_labels:'Show flight labels',
     set_max_labels:'Max flight labels',
     set_replay_min:'Replay duration at 1× (min)',
+    settings_nav_perf:'Performance',
+    settings_nav_anim:'Animation',
+    settings_nav_rockets:'Rockets',
+    settings_nav_map:'Map',
+    settings_preset_hint:'Preset updates performance fields only. Fine-tune afterwards.',
     server_lbl:  SERVER_NAME_MAP,
     zoom_lbl:    'ZOOM',
     lookup:      'LOOKUP IP',
@@ -2615,6 +2720,7 @@ function syncSettingsModalLang(){
   set('settings-sec-anim','settings_sec_anim');
   set('settings-sec-map','settings_sec_map');
   set('settings-sec-rockets','settings_sec_rockets');
+  set('set-lbl-preset','set_preset');
   set('set-lbl-spawn-mode','set_spawn_mode');
   set('set-lbl-queue-ip','set_queue_ip');
   set('set-lbl-rocket-style','set_rocket_style_sel');
@@ -2650,6 +2756,13 @@ function syncSettingsModalLang(){
   set('settings-reset-btn','settings_reset');
   set('settings-cancel-btn','settings_cancel');
   set('settings-save-btn','settings_save');
+  const nav=document.querySelectorAll('.settings-nav button');
+  if(nav[0])nav[0].textContent=l.settings_nav_perf||'Leistung';
+  if(nav[1])nav[1].textContent=l.settings_nav_anim||'Animation';
+  if(nav[2])nav[2].textContent=l.settings_nav_rockets||'Raketen';
+  if(nav[3])nav[3].textContent=l.settings_nav_map||'Karte';
+  const hint=document.getElementById('settings-preset-hint');
+  if(hint)hint.textContent=l.settings_preset_hint||hint.textContent;
   const openLbl=document.getElementById('settings-open-lbl');
   if(openLbl)openLbl.textContent=l.settings_btn||'EINST.';
   const mobBtn=document.getElementById('settings-open-btn-mob');
@@ -2657,20 +2770,11 @@ function syncSettingsModalLang(){
   const deskBtn=document.getElementById('settings-open-btn');
   if(deskBtn)deskBtn.title=l.settings_title||'';
   updateSettingsCoordsHint();
+  updateSettingsHelpForField('default');
 }
 function syncRocketStyleUI(){
-  const l=LANG[currentLang]||LANG.de;
-  const txt=rocketStyle==='classic'?l.rocket_style_new:l.rocket_style_old;
-  const lbl=document.getElementById('rocket-style-label');
-  const mobLbl=document.getElementById('mob-rocket-style-label');
-  if(lbl)lbl.textContent=txt;
-  if(mobLbl)mobLbl.textContent=txt;
-  ['rocket-style-toggle','mob-rocket-style-toggle'].forEach(id=>{
-    const el=document.getElementById(id);
-    if(!el)return;
-    el.classList.remove('classic','legacy');
-    el.classList.add(rocketStyle);
-  });
+  const rs=document.getElementById('set-rocket-style');
+  if(rs)rs.value=rocketStyle;
 }
 function toggleRocketStyle(){
   rocketStyle=rocketStyle==='classic'?'legacy':'classic';
@@ -4280,6 +4384,9 @@ syncMapToggleStates();
 applyLang();
 document.getElementById('set-override-coords')?.addEventListener('change',syncSettingsFormDisabled);
 document.getElementById('set-spawn-mode')?.addEventListener('change',updateSpawnModeHint);
+document.getElementById('set-performance-preset')?.addEventListener('change',e=>applySettingsPreset(e.target.value));
+document.querySelectorAll('[data-settings-jump]').forEach(btn=>btn.addEventListener('click',()=>jumpToSettingsSection(btn.dataset.settingsJump)));
+initSettingsHelpBindings();
 document.addEventListener('keydown',e=>{
   if(e.key==='Escape'&&!document.getElementById('settings-modal')?.classList.contains('hidden'))closeSettingsModal();
 });
