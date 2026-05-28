@@ -18,6 +18,7 @@ COPY crowdsec_exporter.py /app/crowdsec_exporter.py
 
 # Dashboard
 COPY index.html /var/www/html/index.html
+COPY assets /var/www/html/assets
 
 # nginx-Konfiguration
 COPY docker/nginx.conf /etc/nginx/nginx.conf
