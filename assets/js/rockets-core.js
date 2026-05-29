@@ -91,6 +91,43 @@ function drawRocketLegacy(ctx,pt,pTail,col,ik){
   ctx.arc(pt.x,pt.y,2.2*ik,0,Math.PI*2);
   ctx.fill();
 }
+function drawRocketArc(ctx,r,tTail,tHead,col,ik){
+  const steps=Math.max(6,Math.ceil((tHead-tTail)*28));
+  const p0=quadPoint(r,tTail);
+  ctx.beginPath();
+  ctx.moveTo(p0.x,p0.y);
+  for(let i=1;i<=steps;i++){
+    const t=tTail+(tHead-tTail)*i/steps;
+    const p=quadPoint(r,t);
+    ctx.lineTo(p.x,p.y);
+  }
+  ctx.strokeStyle=col;
+  ctx.lineWidth=1.35*ik;
+  ctx.globalAlpha=0.88;
+  ctx.lineCap='round';
+  ctx.lineJoin='round';
+  ctx.stroke();
+  const pt=quadPoint(r,tHead);
+  ctx.beginPath();
+  ctx.fillStyle='#ffffff';
+  ctx.globalAlpha=0.96;
+  ctx.arc(pt.x,pt.y,2.4*ik,0,Math.PI*2);
+  ctx.fill();
+}
+function rocketTailTForStyle(){
+  if(rocketStyle==='legacy')return ROCKET_TAIL_LEGACY_T;
+  if(rocketStyle==='arc')return ROCKET_TAIL_ARC_T;
+  return ROCKET_TAIL_T;
+}
+function drawRocketForStyle(ctx,r,t,col,ik,lite){
+  const tailT=rocketTailTForStyle();
+  const tTail=Math.max(0,t-tailT);
+  const pt=quadPoint(r,t);
+  const pTail=quadPoint(r,tTail);
+  if(rocketStyle==='legacy')drawRocketLegacy(ctx,pt,pTail,col,ik);
+  else if(rocketStyle==='arc')drawRocketArc(ctx,r,tTail,t,col,ik);
+  else drawRocketClassic(ctx,pt,pTail,col,ik,lite);
+}
 function drawRocketClassic(ctx,pt,pTail,col,ik,lite){
   const grad=ctx.createLinearGradient(pTail.x,pTail.y,pt.x,pt.y);
   grad.addColorStop(0,hexToRgba(col,0));
@@ -145,13 +182,7 @@ function drawCrowdSecRockets(ts){
     r.t=Math.min(1,r.t+rocketStep);
     const pt=quadPoint(r,r.t);
     const col=r.col||scenarioColor(r.scenario);
-    if(r.t<1){
-      const tailT=rocketStyle==='legacy'?ROCKET_TAIL_LEGACY_T:ROCKET_TAIL_T;
-      const tTail=Math.max(0,r.t-tailT);
-      const pTail=quadPoint(r,tTail);
-      if(rocketStyle==='legacy')drawRocketLegacy(ctx2d,pt,pTail,col,ik);
-      else drawRocketClassic(ctx2d,pt,pTail,col,ik,rocketLite);
-    }
+    if(r.t<1)drawRocketForStyle(ctx2d,r,r.t,col,ik,rocketLite);
     if(r.t>=0.92){
       const flash=Math.min(1,(r.t-0.92)/0.08);
       ctx2d.beginPath();ctx2d.fillStyle=col;ctx2d.globalAlpha=0.45*(1-flash);

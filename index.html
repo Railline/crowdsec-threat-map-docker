@@ -798,8 +798,9 @@
         <label class="settings-field"><span id="set-lbl-queue-ip">Max. Warteschlange pro IP</span><input type="number" id="set-queue-ip" min="1" max="50" step="1"></label>
         <label class="settings-field"><span id="set-lbl-rocket-style">Raketen-Stil</span>
           <select id="set-rocket-style">
-            <option value="classic">Neu (Schweif + Farbe)</option>
-            <option value="legacy">Alt (kurzer Strich)</option>
+            <option value="classic">Neu (Schweif + Verlauf)</option>
+            <option value="arc">Klassisch (Bogen + Farbe)</option>
+            <option value="legacy">Minimal (kurzer Strich)</option>
           </select>
         </label>
         <label class="settings-field"><span id="set-lbl-tail">Schweif-Länge Neu (%)</span><input type="number" id="set-tail-classic" min="4" max="25" step="1"></label>
@@ -1155,6 +1156,7 @@ let ROCKET_DURATION_MS = 4500;
 let ROCKET_STAGGER_MS = 420;
 let ROCKET_TAIL_T = 0.13;
 let ROCKET_TAIL_LEGACY_T = 0.06;
+let ROCKET_TAIL_ARC_T = 0.10;
 const ROCKET_STYLE_STORAGE_KEY = 'csThreatMapRocketStyle';
 const MAP_SETTINGS_STORAGE_KEY = 'csThreatMapSettings';
 let ROCKET_LANE_SPREAD = 12;
@@ -1168,7 +1170,7 @@ const MAP_SETTINGS_DEFAULTS={
   refreshMs:30000,maxActiveRockets:28,maxPendingRockets:64,maxSpawnBatch:14,
   rocketDurationMs:4500,rocketStaggerMs:420,replayUiThrottleMs:220,flightLabelThrottleMs:150,
   rocketSpawnMode:'per_attack',maxQueuePerIp:12,
-  rocketTailClassic:0.13,rocketTailLegacy:0.06,rocketLaneSpread:12,
+  rocketTailClassic:0.13,rocketTailLegacy:0.06,rocketTailArc:0.10,rocketLaneSpread:12,
   showFlightLabels:true,maxFlightLabels:8,replayDurationMin:3,
   rocketStyle:'classic',
   overrideCoords:false,serverLat:'',serverLon:'',serverName:'',
@@ -1185,7 +1187,7 @@ const HOME_SCREEN_X_FRAC = 0.48;  // Server horizontal im sichtbaren Kartenberei
 const HOME_SCREEN_Y_FRAC = 0.28;  // Server höher → Weltkarte füllt Bereich bis zum Logo
 const HOME_PROJ_Y_SHIFT = 0.11;   // Projektion nach oben
 const HOME_TY_NUDGE_PX = 42;      // zusätzlich Karte nach oben schieben
-let rocketStyle='classic'; // 'classic' | 'legacy'
+let rocketStyle='classic'; // 'classic' | 'arc' | 'legacy'
 const MAP_VIEW_STORAGE_KEY = 'csThreatMapViewPrefs';
 const SHOW_OWN_IP_STORAGE_KEY = 'csThreatMapShowOwnIp';
 const ZOOM_STEP = 0.1;          // +/- Buttons
@@ -1721,8 +1723,9 @@ const LANG = {
     lines_on:    'ANGRIFFE',
     autozoom_on: 'ZOOM AUTO',
     autozoom_off:'ZOOM AUTO',
-    rocket_style_new:'RAKETE NEU',
-    rocket_style_old:'RAKETE ALT',
+    rocket_style_new:'Neu (Schweif + Verlauf)',
+    rocket_style_arc:'Klassisch (Bogen + Farbe)',
+    rocket_style_legacy:'Minimal (kurzer Strich)',
     settings_btn:'EINST.',
     settings_title:'Einstellungen',
     settings_sec_perf:'Leistung & Daten',
@@ -1869,8 +1872,9 @@ const LANG = {
     lines_on:    'FLIGHTS',
     autozoom_on: 'ZOOM AUTO',
     autozoom_off:'ZOOM AUTO',
-    rocket_style_new:'ROCKET NEW',
-    rocket_style_old:'ROCKET OLD',
+    rocket_style_new:'New (gradient tail)',
+    rocket_style_arc:'Classic (arc + color)',
+    rocket_style_legacy:'Minimal (short line)',
     settings_btn:'SETTINGS',
     settings_title:'Settings',
     settings_sec_perf:'Performance & data',
@@ -2112,7 +2116,7 @@ function setToggleBtn(id,on,dotId){
 function loadRocketStylePrefs(){
   try{
     const v=localStorage.getItem(ROCKET_STYLE_STORAGE_KEY);
-    if(v==='legacy'||v==='classic'){
+    if(v==='legacy'||v==='classic'||v==='arc'){
       rocketStyle=v;
       if(!localStorage.getItem(MAP_SETTINGS_STORAGE_KEY))mapSettings.rocketStyle=v;
     }
@@ -2137,7 +2141,8 @@ function syncSettingsToGlobals(){
   ROCKET_TAIL_LEGACY_T=mapSettings.rocketTailLegacy??0.06;
   ROCKET_LANE_SPREAD=mapSettings.rocketLaneSpread??12;
   REPLAY_PLAY_MS=Math.round((mapSettings.replayDurationMin??3)*60000);
-  if(mapSettings.rocketStyle==='legacy'||mapSettings.rocketStyle==='classic')rocketStyle=mapSettings.rocketStyle;
+  if(['legacy','classic','arc'].includes(mapSettings.rocketStyle))rocketStyle=mapSettings.rocketStyle;
+  ROCKET_TAIL_ARC_T=mapSettings.rocketTailArc??0.10;
 }
 function loadMapSettings(){
   try{
@@ -2229,7 +2234,7 @@ function readSettingsForm(){
     replayDurationMin:clampNum(set('set-replay-min')?.value,1,15,3),
     rocketSpawnMode:['per_attack','per_ip_time','per_ip'].includes(set('set-spawn-mode')?.value)?set('set-spawn-mode').value:'per_attack',
     maxQueuePerIp:clampNum(set('set-queue-ip')?.value,1,50,12),
-    rocketStyle:['classic','legacy'].includes(set('set-rocket-style')?.value)?set('set-rocket-style').value:'classic',
+    rocketStyle:['classic','legacy','arc'].includes(set('set-rocket-style')?.value)?set('set-rocket-style').value:'classic',
     rocketTailClassic:clampNum(set('set-tail-classic')?.value,4,25,13)/100,
     rocketTailLegacy:mapSettings.rocketTailLegacy??0.06,
     rocketLaneSpread:clampNum(set('set-lane-spread')?.value,0,30,12),
@@ -2311,7 +2316,8 @@ function syncSettingsModalLang(){
   const rs=document.getElementById('set-rocket-style');
   if(rs&&l.rocket_style_new){
     rs.options[0].text=l.rocket_style_new;
-    rs.options[1].text=l.rocket_style_old||'Alt';
+    if(rs.options[1])rs.options[1].text=l.rocket_style_arc||'Klassisch';
+    if(rs.options[2])rs.options[2].text=l.rocket_style_legacy||'Minimal';
   }
   updateSpawnModeHint();
   set('set-lbl-refresh','set_refresh');

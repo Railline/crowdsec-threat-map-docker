@@ -4,7 +4,9 @@ function syncRocketStyleUI(){
 }
 
 function toggleRocketStyle(){
-  rocketStyle=rocketStyle==='classic'?'legacy':'classic';
+  const order=['classic','arc','legacy'];
+  const i=order.indexOf(rocketStyle);
+  rocketStyle=order[(i<0?0:i+1)%order.length];
   persistRocketStylePrefs();
   syncRocketStyleUI();
   if(animOn&&linesOn){
