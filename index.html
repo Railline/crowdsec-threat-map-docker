@@ -799,7 +799,7 @@
         <label class="settings-field"><span id="set-lbl-rocket-style">Raketen-Stil</span>
           <select id="set-rocket-style">
             <option value="classic">Neu (Schweif + Verlauf)</option>
-            <option value="arc">Klassisch (Bogen + Farbe)</option>
+            <option value="arc">Console (gestrichelte Bögen)</option>
             <option value="legacy">Minimal (kurzer Strich)</option>
           </select>
         </label>
@@ -1527,7 +1527,13 @@ function refreshMapFromData(){
   renderDots();
   renderMapPanels();
   updateCountryFills();
-  if(!animOn||!linesOn){clearArcCanvas();clearFlightLabels();return;}
+  if(!linesOn){clearArcCanvas();clearFlightLabels();return;}
+  if(rocketStyle==='arc'){
+    if(animOn)startAnimLoop();
+    else drawCrowdSecRockets(performance.now());
+    return;
+  }
+  if(!animOn){clearArcCanvas();clearFlightLabels();return;}
   if(liveMode)spawnLiveRocketsFromFeed();
   else if(!replayPlaying&&replayWinEnd>replayWinStart&&replayCursor>=replayWinEnd)spawnRocketsFromFeed();
   if(animOn)startAnimLoop();
@@ -1724,7 +1730,7 @@ const LANG = {
     autozoom_on: 'ZOOM AUTO',
     autozoom_off:'ZOOM AUTO',
     rocket_style_new:'Neu (Schweif + Verlauf)',
-    rocket_style_arc:'Klassisch (Bogen + Farbe)',
+    rocket_style_arc:'Console (gestrichelte Bögen)',
     rocket_style_legacy:'Minimal (kurzer Strich)',
     settings_btn:'EINST.',
     settings_title:'Einstellungen',
@@ -1873,7 +1879,7 @@ const LANG = {
     autozoom_on: 'ZOOM AUTO',
     autozoom_off:'ZOOM AUTO',
     rocket_style_new:'New (gradient tail)',
-    rocket_style_arc:'Classic (arc + color)',
+    rocket_style_arc:'Console (dashed arcs)',
     rocket_style_legacy:'Minimal (short line)',
     settings_btn:'SETTINGS',
     settings_title:'Settings',
@@ -2547,7 +2553,7 @@ function buildArcPaths(){
     arcPaths.push({
       sx:px,sy:py,ex:sx,ey:sy,
       cpx:(px+sx)/2,cpy:(py+sy)/2-Math.min(dist*0.38,130),
-      col:scenarioColor(d.scenario),
+      col:countColor(d.count||1),
       phase:Math.random()*10,
       scenario:d.scenario,
     });

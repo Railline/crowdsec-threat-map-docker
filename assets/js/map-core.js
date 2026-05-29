@@ -70,9 +70,13 @@ function onZoom(event){
   if(wasCluster!==isCluster) renderDots();
   else{updateCityLabelScale();updateCountryLabelScale();}
   drawCountryLabels();
-  if(!animOn){updateCountryFills();}
-  if(!animOn||!linesOn){if(!animOn)return;updateCountryFills();return;}
-  if(animOn&&linesOn){drawCrowdSecRockets();updateFlightLabels(activeRockets);}
+  if(!linesOn){
+    if(!animOn)updateCountryFills();
+    return;
+  }
+  if(animOn||rocketStyle==='arc')drawCrowdSecRockets(performance.now());
+  if(animOn&&rocketStyle!=='arc')updateFlightLabels(activeRockets);
+  if(!animOn)updateCountryFills();
 }
 
 function onResize(){
