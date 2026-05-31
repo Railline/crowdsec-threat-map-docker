@@ -232,14 +232,16 @@ function setTheme(name){
 function checkAlarms(){} // Stub — kein Sound mehr
 
 function exportCSV(){
+  const data=getFilteredFeed();
   const rows=[t('csv_headers')];
-  feedData.forEach(d=>{
+  data.forEach(d=>{
     rows.push([d.ip,d.country,d.city||'',d.asnumber||'',d.asname||'',d.scenario,d.count||1,d.time_de||d.time_iso||'']);
   });
   const csv=rows.map(r=>r.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
   const blob=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'});
   const url=URL.createObjectURL(blob);
-  const a=document.createElement('a');a.href=url;a.download=`cyberdefense_${new Date().toISOString().slice(0,10)}.csv`;a.click();
+  const suffix=(activeFilters.country||activeFilters.scenario||activeFilters.search)?'_filtered':'';
+  const a=document.createElement('a');a.href=url;a.download=`cyberdefense_${new Date().toISOString().slice(0,10)}${suffix}.csv`;a.click();
   URL.revokeObjectURL(url);
 }
 

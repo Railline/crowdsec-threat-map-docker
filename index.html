@@ -764,9 +764,9 @@
       <section id="settings-sec-perf-block">
         <h4 id="settings-sec-perf">Leistung &amp; Daten</h4>
         <label class="settings-field"><span id="set-lbl-refresh">Feed aktualisieren (Sek.)</span><input type="number" id="set-refresh-sec" min="5" max="120" step="1"></label>
-        <label class="settings-field"><span id="set-lbl-max-active">Max. Raketen gleichzeitig</span><input type="number" id="set-max-active" min="5" max="200" step="1"></label>
-        <label class="settings-field"><span id="set-lbl-max-pending">Max. Warteschlange</span><input type="number" id="set-max-pending" min="10" max="1000" step="10"></label>
-        <label class="settings-field"><span id="set-lbl-max-batch">Raketen pro Schwung</span><input type="number" id="set-max-batch" min="3" max="100" step="1"></label>
+        <label class="settings-field"><span id="set-lbl-max-active">Max. Raketen gleichzeitig</span><input type="number" id="set-max-active" min="5" step="1"></label>
+        <label class="settings-field"><span id="set-lbl-max-pending">Max. Warteschlange</span><input type="number" id="set-max-pending" min="10" step="10"></label>
+        <label class="settings-field"><span id="set-lbl-max-batch">Raketen pro Schwung</span><input type="number" id="set-max-batch" min="3" step="1"></label>
         <label class="settings-field"><span id="set-lbl-preset">Voreinstellung</span>
           <select id="set-performance-preset">
             <option value="">— auswählen —</option>
@@ -2236,9 +2236,9 @@ function readSettingsForm(){
   const refreshSec=clampNum(set('set-refresh-sec')?.value,5,120,30);
   return{
     refreshMs:refreshSec*1000,
-    maxActiveRockets:clampNum(set('set-max-active')?.value,5,200,28),
-    maxPendingRockets:clampNum(set('set-max-pending')?.value,10,1000,64),
-    maxSpawnBatch:clampNum(set('set-max-batch')?.value,3,100,14),
+    maxActiveRockets:clampNum(set('set-max-active')?.value,5,99999,28),
+    maxPendingRockets:clampNum(set('set-max-pending')?.value,10,99999,64),
+    maxSpawnBatch:clampNum(set('set-max-batch')?.value,3,99999,14),
     rocketDurationMs:clampNum(set('set-duration-sec')?.value,1,20,4.5)*1000,
     rocketStaggerMs:clampNum(set('set-stagger-ms')?.value,50,5000,420),
     replayUiThrottleMs:clampNum(set('set-ui-throttle')?.value,80,1000,220),
