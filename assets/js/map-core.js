@@ -60,6 +60,7 @@ function onZoom(event){
   dotG.attr('transform',tr);
   const ik=1/tr.k;
   dotG.selectAll('.adot').attr('r',function(){return parseFloat(this.dataset.sr||4)*ik;});
+  dotG.selectAll('circle.cluster-dot').attr('r',function(){return parseFloat(this.dataset.sr||6)*ik;});
   updateServerScale();
   updateZoomLevel(tr.k);
   updateSelectionRing();
