@@ -764,26 +764,27 @@
       <section id="settings-sec-perf-block">
         <h4 id="settings-sec-perf">Leistung &amp; Daten</h4>
         <label class="settings-field"><span id="set-lbl-refresh">Feed aktualisieren (Sek.)</span><input type="number" id="set-refresh-sec" min="5" max="120" step="1"></label>
-        <label class="settings-field"><span id="set-lbl-max-active">Max. Raketen gleichzeitig</span><input type="number" id="set-max-active" min="5" max="80" step="1"></label>
-        <label class="settings-field"><span id="set-lbl-max-pending">Max. Warteschlange</span><input type="number" id="set-max-pending" min="10" max="300" step="1"></label>
-        <label class="settings-field"><span id="set-lbl-max-batch">Raketen pro Schwung</span><input type="number" id="set-max-batch" min="3" max="50" step="1"></label>
+        <label class="settings-field"><span id="set-lbl-max-active">Max. Raketen gleichzeitig</span><input type="number" id="set-max-active" min="5" max="200" step="1"></label>
+        <label class="settings-field"><span id="set-lbl-max-pending">Max. Warteschlange</span><input type="number" id="set-max-pending" min="10" max="1000" step="10"></label>
+        <label class="settings-field"><span id="set-lbl-max-batch">Raketen pro Schwung</span><input type="number" id="set-max-batch" min="3" max="100" step="1"></label>
         <label class="settings-field"><span id="set-lbl-preset">Voreinstellung</span>
           <select id="set-performance-preset">
             <option value="">— auswählen —</option>
             <option value="balanced">Balanced</option>
             <option value="performance">Performance</option>
             <option value="quality">Qualität</option>
+            <option value="ultra">Ultra (High-End)</option>
           </select>
         </label>
         <p class="settings-hint" id="settings-preset-hint">Presets setzen nur Leistungswerte und können danach fein angepasst werden.</p>
       </section>
       <section id="settings-sec-anim-block">
         <h4 id="settings-sec-anim">Animation</h4>
-        <label class="settings-field"><span id="set-lbl-duration">Flugdauer (Sek.)</span><input type="number" id="set-duration-sec" min="2" max="12" step="0.5"></label>
-        <label class="settings-field"><span id="set-lbl-stagger">Abstand gleiche IP (ms)</span><input type="number" id="set-stagger-ms" min="100" max="3000" step="50"></label>
+        <label class="settings-field"><span id="set-lbl-duration">Flugdauer (Sek.)</span><input type="number" id="set-duration-sec" min="1" max="20" step="0.5"></label>
+        <label class="settings-field"><span id="set-lbl-stagger">Abstand gleiche IP (ms)</span><input type="number" id="set-stagger-ms" min="50" max="5000" step="50"></label>
         <label class="settings-field"><span id="set-lbl-ui-throttle">Karten-Update Replay (ms)</span><input type="number" id="set-ui-throttle" min="80" max="1000" step="20"></label>
         <label class="settings-field"><span id="set-lbl-label-throttle">Flight-Labels (ms)</span><input type="number" id="set-label-throttle" min="50" max="500" step="10"></label>
-        <label class="settings-field"><span id="set-lbl-replay-min">Replay-Dauer bei 1× (Min.)</span><input type="number" id="set-replay-min" min="1" max="15" step="0.5"></label>
+        <label class="settings-field"><span id="set-lbl-replay-min">Replay-Dauer bei 1× (Min.)</span><input type="number" id="set-replay-min" min="1" max="30" step="0.5"></label>
       </section>
       <section id="settings-sec-rockets-block">
         <h4 id="settings-sec-rockets">Raketen-Logik</h4>
@@ -805,8 +806,9 @@
         </label>
         <label class="settings-field"><span id="set-lbl-tail">Schweif-Länge Neu (%)</span><input type="number" id="set-tail-classic" min="4" max="25" step="1"></label>
         <label class="settings-field"><span id="set-lbl-lane">Bahn-Abstand (px)</span><input type="number" id="set-lane-spread" min="0" max="30" step="1"></label>
+        <label class="settings-field"><span id="set-lbl-max-arcs">Max. Console-Bögen</span><input type="number" id="set-max-arcs" min="10" max="500" step="10"></label>
         <label class="settings-check"><input type="checkbox" id="set-show-labels"> <span id="set-lbl-show-labels">Flight-Labels anzeigen</span></label>
-        <label class="settings-field"><span id="set-lbl-max-labels">Max. Flight-Labels</span><input type="number" id="set-max-labels" min="0" max="15" step="1"></label>
+        <label class="settings-field"><span id="set-lbl-max-labels">Max. Flight-Labels</span><input type="number" id="set-max-labels" min="0" max="30" step="1"></label>
       </section>
       <section id="settings-sec-map-block">
         <h4 id="settings-sec-map">Karte / Server</h4>
@@ -1172,6 +1174,7 @@ const MAP_SETTINGS_DEFAULTS={
   rocketSpawnMode:'per_attack',maxQueuePerIp:12,
   rocketTailClassic:0.13,rocketTailLegacy:0.06,rocketTailArc:0.10,rocketLaneSpread:12,
   showFlightLabels:true,maxFlightLabels:8,replayDurationMin:3,
+  maxConsoleArcs:150,
   rocketStyle:'classic',
   overrideCoords:false,serverLat:'',serverLon:'',serverName:'',
 };
@@ -1766,6 +1769,7 @@ const LANG = {
     spawn_mode_ip:'nur IP',
     set_tail:'Schweif-Länge Neu (%)',
     set_lane:'Bahn-Abstand (px)',
+    set_max_arcs:'Max. Console-Bögen',
     set_show_labels:'Flight-Labels anzeigen',
     set_max_labels:'Max. Flight-Labels',
     set_replay_min:'Replay-Dauer bei 1× (Min.)',
@@ -1915,6 +1919,7 @@ const LANG = {
     spawn_mode_ip:'IP only',
     set_tail:'Tail length new (%)',
     set_lane:'Path offset (px)',
+    set_max_arcs:'Max console arcs',
     set_show_labels:'Show flight labels',
     set_max_labels:'Max flight labels',
     set_replay_min:'Replay duration at 1× (min)',
@@ -2213,6 +2218,7 @@ function fillSettingsForm(){
   if(rs)rs.value=s.rocketStyle||rocketStyle||'classic';
   set('set-tail-classic',Math.round((s.rocketTailClassic??0.13)*100));
   set('set-lane-spread',s.rocketLaneSpread??12);
+  set('set-max-arcs',s.maxConsoleArcs??150);
   const sl=document.getElementById('set-show-labels');
   if(sl)sl.checked=s.showFlightLabels!==false;
   set('set-max-labels',s.maxFlightLabels??8);
@@ -2230,14 +2236,14 @@ function readSettingsForm(){
   const refreshSec=clampNum(set('set-refresh-sec')?.value,5,120,30);
   return{
     refreshMs:refreshSec*1000,
-    maxActiveRockets:clampNum(set('set-max-active')?.value,5,80,28),
-    maxPendingRockets:clampNum(set('set-max-pending')?.value,10,300,64),
-    maxSpawnBatch:clampNum(set('set-max-batch')?.value,3,50,14),
-    rocketDurationMs:clampNum(set('set-duration-sec')?.value,2,12,4.5)*1000,
-    rocketStaggerMs:clampNum(set('set-stagger-ms')?.value,100,3000,420),
+    maxActiveRockets:clampNum(set('set-max-active')?.value,5,200,28),
+    maxPendingRockets:clampNum(set('set-max-pending')?.value,10,1000,64),
+    maxSpawnBatch:clampNum(set('set-max-batch')?.value,3,100,14),
+    rocketDurationMs:clampNum(set('set-duration-sec')?.value,1,20,4.5)*1000,
+    rocketStaggerMs:clampNum(set('set-stagger-ms')?.value,50,5000,420),
     replayUiThrottleMs:clampNum(set('set-ui-throttle')?.value,80,1000,220),
     flightLabelThrottleMs:clampNum(set('set-label-throttle')?.value,50,500,150),
-    replayDurationMin:clampNum(set('set-replay-min')?.value,1,15,3),
+    replayDurationMin:clampNum(set('set-replay-min')?.value,1,30,3),
     rocketSpawnMode:['per_attack','per_ip_time','per_ip'].includes(set('set-spawn-mode')?.value)?set('set-spawn-mode').value:'per_attack',
     maxQueuePerIp:clampNum(set('set-queue-ip')?.value,1,50,12),
     rocketStyle:['classic','legacy','arc'].includes(set('set-rocket-style')?.value)?set('set-rocket-style').value:'classic',
@@ -2245,7 +2251,8 @@ function readSettingsForm(){
     rocketTailLegacy:mapSettings.rocketTailLegacy??0.06,
     rocketLaneSpread:clampNum(set('set-lane-spread')?.value,0,30,12),
     showFlightLabels:!!set('set-show-labels')?.checked,
-    maxFlightLabels:clampNum(set('set-max-labels')?.value,0,15,8),
+    maxConsoleArcs:clampNum(set('set-max-arcs')?.value,10,500,150),
+    maxFlightLabels:clampNum(set('set-max-labels')?.value,0,30,8),
     overrideCoords:!!set('set-override-coords')?.checked,
     serverLat:String(set('set-server-lat')?.value||'').trim(),
     serverLon:String(set('set-server-lon')?.value||'').trim(),
@@ -2310,6 +2317,7 @@ function syncSettingsModalLang(){
   set('set-lbl-rocket-style','set_rocket_style_sel');
   set('set-lbl-tail','set_tail');
   set('set-lbl-lane','set_lane');
+  set('set-lbl-max-arcs','set_max_arcs');
   set('set-lbl-show-labels','set_show_labels');
   set('set-lbl-max-labels','set_max_labels');
   set('set-lbl-replay-min','set_replay_min');
