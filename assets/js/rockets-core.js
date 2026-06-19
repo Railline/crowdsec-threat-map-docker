@@ -9,6 +9,7 @@ function launchRocketFromEvent(ev){
   activeRockets.push({
     id:rocketIdSeq,
     queueIp:ip,ip:ev.ip,country:ev.country||'??',city:ev.city||'',scenario:ev.scenario,
+    source:ev.source||'attack',
     sx:px,sy:py,ex:sx,ey:sy,
     cpx:(px+sx)/2+nx*lane,cpy:(py+sy)/2-arcLift+ny*lane,
     col:scenarioColor(ev.scenario),t:0,
@@ -113,11 +114,16 @@ function drawConsoleArcs(ts){
     if(!pt)return;
     const[px,py]=pt;
     const dx=sx-px,dy=sy-py,dist=Math.sqrt(dx*dx+dy*dy);
-    const col=countColor(d.count||1);
+    const col=d.source==='drop'?'#00ffe0':countColor(d.count||1);
+    const dropGrad=d.source==='drop'?ctx2d.createLinearGradient(px,py,sx,sy):null;
+    if(dropGrad){
+      dropGrad.addColorStop(0,'rgba(156,92,255,0.72)');
+      dropGrad.addColorStop(1,'rgba(0,255,224,0.92)');
+    }
     ctx2d.beginPath();
     ctx2d.moveTo(px,py);
     ctx2d.quadraticCurveTo((px+sx)/2,(py+sy)/2-Math.min(dist*0.38,130),sx,sy);
-    ctx2d.strokeStyle=col;
+    ctx2d.strokeStyle=dropGrad||col;
     ctx2d.lineWidth=1.15*ik;
     ctx2d.globalAlpha=0.72;
     ctx2d.lineCap='round';
@@ -139,14 +145,21 @@ function drawRocketForStyle(ctx,r,t,col,ik,lite){
   const pt=quadPoint(r,t);
   const pTail=quadPoint(r,tTail);
   if(rocketStyle==='legacy')drawRocketLegacy(ctx,pt,pTail,col,ik);
-  else drawRocketClassic(ctx,pt,pTail,col,ik,lite);
+  else drawRocketClassic(ctx,pt,pTail,col,ik,lite,r.source==='drop');
 }
-function drawRocketClassic(ctx,pt,pTail,col,ik,lite){
+function drawRocketClassic(ctx,pt,pTail,col,ik,lite,isDrop){
   const grad=ctx.createLinearGradient(pTail.x,pTail.y,pt.x,pt.y);
-  grad.addColorStop(0,hexToRgba(col,0));
-  grad.addColorStop(0.3,hexToRgba(col,0.22));
-  grad.addColorStop(0.72,hexToRgba(col,0.78));
-  grad.addColorStop(1,hexToRgba(col,0.95));
+  if(isDrop){
+    grad.addColorStop(0,'rgba(156,92,255,0)');
+    grad.addColorStop(0.28,'rgba(156,92,255,0.28)');
+    grad.addColorStop(0.66,'rgba(90,170,255,0.78)');
+    grad.addColorStop(1,'rgba(0,255,224,0.98)');
+  }else{
+    grad.addColorStop(0,hexToRgba(col,0));
+    grad.addColorStop(0.3,hexToRgba(col,0.22));
+    grad.addColorStop(0.72,hexToRgba(col,0.78));
+    grad.addColorStop(1,hexToRgba(col,0.95));
+  }
   ctx.lineCap='round';
   ctx.lineJoin='round';
   ctx.beginPath();
@@ -164,14 +177,14 @@ function drawRocketClassic(ctx,pt,pTail,col,ik,lite){
   ctx.lineTo(pt.x,pt.y);
   ctx.stroke();
   ctx.beginPath();
-  ctx.fillStyle=hexToRgba(col,0.4);
+  ctx.fillStyle=isDrop?'rgba(0,255,224,0.45)':hexToRgba(col,0.4);
   ctx.globalAlpha=1;
   ctx.arc(pt.x,pt.y,3.6*ik,0,Math.PI*2);
   ctx.fill();
   ctx.beginPath();
   ctx.fillStyle='#fffefb';
   if(!lite){
-    ctx.shadowColor=hexToRgba(col,0.9);
+    ctx.shadowColor=isDrop?'rgba(0,255,224,0.9)':hexToRgba(col,0.9);
     ctx.shadowBlur=5*ik;
   }
   ctx.arc(pt.x,pt.y,2.35*ik,0,Math.PI*2);
