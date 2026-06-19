@@ -8,7 +8,8 @@ LABEL org.opencontainers.image.authors="kabelsalatundklartext, Railline"
 LABEL org.opencontainers.image.version="1.6.9"
 
 # nginx fuer Dashboard + docker-cli fuer Unban via docker exec
-RUN apk add --no-cache nginx docker-cli curl
+RUN apk add --no-cache nginx docker-cli curl \
+    && pip install --no-cache-dir maxminddb
 
 # App-Verzeichnisse
 RUN mkdir -p /app /crowdsec/data /crowdsec/postoverflows /var/www/html /run/nginx

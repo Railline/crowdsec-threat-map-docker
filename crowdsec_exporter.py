@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # CrowdSec → Prometheus Exporter
 # Liest direkt aus der CrowdSec SQLite-DB + MaxMind GeoLite2-City.mmdb
-# Keine externen pip-Pakete nötig – nur Python3 stdlib + mmdb pure-python reader
+# Uses the official maxminddb Python package when available, with a pure-Python fallback reader.
 # Version: 2.2 | 2026-05-21
 # Port: 9456
 
@@ -60,6 +60,11 @@ from http.server import HTTPServer, BaseHTTPRequestHandler
 from datetime import datetime, timezone
 import sys
 
+try:
+    import maxminddb
+except Exception:
+    maxminddb = None
+
 ### ====================================================
 ### ⚙️  KONFIGURATION
 ### Werte werden aus Umgebungsvariablen gelesen (Docker).
@@ -94,6 +99,35 @@ def log(msg):
 # ---------------------------------------------------------------------------
 # Minimaler MaxMind MMDB Reader (pure Python, keine pip-Pakete)
 # ---------------------------------------------------------------------------
+class MaxMindDBReader:
+    def __init__(self, path):
+        self.reader = maxminddb.open_database(path)
+
+    def get(self, ip_str):
+        try:
+            record = self.reader.get(ip_str)
+            if not isinstance(record, dict):
+                return None
+            loc = record.get("location") or {}
+            lat = loc.get("latitude") or 0.0
+            lon = loc.get("longitude") or 0.0
+            if not lat or not lon:
+                return None
+            country = record.get("country") or record.get("registered_country") or {}
+            city = record.get("city") or {}
+            names = city.get("names") if isinstance(city, dict) else {}
+            country_names = country.get("names") if isinstance(country, dict) else {}
+            return {
+                "lat": lat,
+                "lon": lon,
+                "country_iso": country.get("iso_code", "??") if isinstance(country, dict) else "??",
+                "country_name": country_names.get("en", "Unknown") if isinstance(country_names, dict) else "Unknown",
+                "city": names.get("en", "") if isinstance(names, dict) else "",
+            }
+        except Exception:
+            return None
+
+
 class MMDBReader:
     def __init__(self, path):
         with open(path, "rb") as f:
@@ -469,8 +503,12 @@ def init_mmdb():
     global _mmdb
     if os.path.exists(MMDB_PATH):
         try:
-            _mmdb = MMDBReader(MMDB_PATH)
-            log(f"✅ MaxMind MMDB geladen: {MMDB_PATH}")
+            if maxminddb:
+                _mmdb = MaxMindDBReader(MMDB_PATH)
+                log(f"✅ MaxMind MMDB geladen via maxminddb package: {MMDB_PATH}")
+            else:
+                _mmdb = MMDBReader(MMDB_PATH)
+                log(f"✅ MaxMind MMDB geladen via fallback reader: {MMDB_PATH}")
         except Exception as e:
             log(f"⚠️  MMDB laden fehlgeschlagen: {e} – nutze Länder-Fallback")
     else:
