@@ -2350,6 +2350,8 @@ function loadMapSettings(){
   }catch(e){mapSettings={...MAP_SETTINGS_DEFAULTS};}
   const modes=['per_attack','per_ip_time','per_ip'];
   if(!modes.includes(mapSettings.rocketSpawnMode))mapSettings.rocketSpawnMode='per_attack';
+  if(mapSettings.showLiveDrops===undefined)mapSettings.showLiveDrops=true;
+  if(mapSettings.showLiveAttacks===undefined)mapSettings.showLiveAttacks=true;
   syncSettingsToGlobals();
 }
 function persistMapSettings(){
@@ -3491,7 +3493,7 @@ function setFeedPage(p){
 let dropsData=[];
 let dropsApiEnabled=false;
 function liveDropsVisible(){
-  return mapSettings.showDrops!==false&&mapSettings.showLiveDrops!==false;
+  return mapSettings.showLiveDrops!==false;
 }
 function liveAttacksVisible(){
   return mapSettings.showLiveAttacks!==false;
@@ -3560,6 +3562,7 @@ function setLiveSourceFilter(source,value){
   renderCountryLists();
   renderMapPanels();
   renderFilterBar();
+  if(!liveMode&&typeof enterLiveMode==='function')enterLiveMode();
   if(source==='drop'&&value&&typeof fetchDrops==='function')fetchDrops();
   if(liveMode)refreshMapFromData();
 }
@@ -3574,10 +3577,14 @@ function dropsEndpoint(){
   return EXPORTER_URL.replace(/\/metrics.*$/,'').replace(/\/$/,'') + '/drops';
 }
 async function fetchDrops(){
-  if(!mapSettings.showDrops){
+  if(!liveDropsVisible()){
     dropsData=[];
     dropsApiEnabled=false;
+    dropFeedData=[];
+    rebuildLiveFeedData();
     renderDrops();
+    renderFeed();
+    if(liveMode)refreshMapFromData();
     return;
   }
   try{
@@ -3615,7 +3622,7 @@ function dropEventHtml(d){
   </div>`;
 }
 function renderDrops(){
-  const enabled=!!mapSettings.showDrops && dropsApiEnabled;
+  const enabled=liveDropsVisible() && dropsApiEnabled;
   const packets=dropsData.reduce((n,d)=>n+Number(d.packets||0),0);
   const bytes=dropsData.reduce((n,d)=>n+Number(d.bytes||0),0);
   const summary=enabled?t('drops_summary',dropsData.length,packets,bytes):t('drops_disabled');
