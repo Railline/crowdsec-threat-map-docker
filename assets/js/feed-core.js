@@ -6,7 +6,7 @@ function parseMetrics(text){
       const ls=line.match(/\{(.+)\}/)?.[1]||'';
       const val=parseFloat(line.split('} ')[1])||1;
       const lb={};ls.replace(/(\w+)="([^"]*)"/g,(_,k,v)=>{lb[k]=v;});
-      if(lb.src_lat&&lb.src_lon)flows.push({lat:parseFloat(lb.src_lat),lon:parseFloat(lb.src_lon),country:lb.country||'??',city:lb.city||lb.src_city||'',scenario:lb.scenario||'unknown',ip:lb.ip||'',count:val});
+      if(lb.src_lat&&lb.src_lon)flows.push({lat:parseFloat(lb.src_lat),lon:parseFloat(lb.src_lon),country:lb.country||'??',city:lb.city||lb.src_city||'',scenario:lb.scenario||'unknown',ip:lb.ip||'',count:val,source:'attack'});
     }catch(e){}
   }
   return flows;
@@ -66,6 +66,7 @@ function parseFeedData(text){
         count:    1,
         active_ban: lb.active_ban==='1',
         ts:       parseEventTime(lb.attack_time_iso),
+        source:   'attack',
       });
     }catch(e){}
   }
@@ -85,8 +86,10 @@ async function fetchAndRender(){
         else{replayWinEnd=Math.max(...times);replayWinStart=Math.max(Math.min(...times),replayWinEnd-replayRangeH*3600000);if(replayCursor>replayWinEnd)replayCursor=replayWinEnd;}
       }
     }
-    attackData=liveMode?parseMetrics(text):aggregateFromEvents(getEventsInReplay());
-    feedData=parseFeedData(text).filter(d=>!localUnbanned.has(d.ip));
+    attackFeedData=parseFeedData(text).filter(d=>!localUnbanned.has(d.ip));
+    if(typeof rebuildLiveFeedData==='function')rebuildLiveFeedData();
+    else feedData=attackFeedData;
+    attackData=liveMode?(typeof getVisibleLiveAttackData==='function'?getVisibleLiveAttackData(parseMetrics(text)):parseMetrics(text)):aggregateFromEvents(getEventsInReplay());
     enrichAttackData();
     const total=(text.match(/cs_exporter_total_alerts (\d+)/)||[])[1]||'—';
     updateSidebarStats({totalAlerts:total});

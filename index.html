@@ -275,6 +275,10 @@
   #mode-live-btn{font-size:8px;padding:3px 10px;border:1px solid var(--dim);border-radius:12px;background:transparent;color:rgba(160,255,216,0.45);cursor:pointer;font-family:'Share Tech Mono',monospace;letter-spacing:1px;transition:all 0.2s;}
   #mode-live-btn:hover{border-color:var(--ok);color:var(--ok);}
   #mode-live-btn.active{border-color:var(--ok);color:var(--ok);background:rgba(0,255,136,0.12);box-shadow:0 0 8px rgba(0,255,136,0.25);}
+  .live-filter-btn{font-size:8px;padding:3px 9px;border:1px solid rgba(0,255,200,0.18);border-radius:12px;background:rgba(0,20,40,0.35);color:rgba(160,255,216,0.4);cursor:pointer;font-family:'Share Tech Mono',monospace;letter-spacing:0.8px;transition:all 0.2s;white-space:nowrap;}
+  .live-filter-btn:hover{border-color:var(--accent);color:var(--accent);}
+  .live-filter-btn.active{border-color:var(--accent);color:var(--accent);background:rgba(0,255,224,0.1);box-shadow:0 0 8px rgba(0,255,224,0.18);}
+  .live-filter-btn.drop.active{border-color:#9c6cff;color:#c8b5ff;background:rgba(156,108,255,0.13);box-shadow:0 0 8px rgba(156,108,255,0.22);}
   #map-console-bar{display:flex;flex-direction:column;background:rgba(2,8,16,0.98);border-top:1px solid var(--dim);flex-shrink:0;}
   #timeline-wrap{padding:6px 12px 4px;}
   #replay-slider{width:100%;height:4px;-webkit-appearance:none;background:rgba(0,255,200,0.12);border-radius:2px;cursor:pointer;}
@@ -878,6 +882,8 @@
         <button type="button" id="replay-stop-btn" class="replay-ctrl-btn" title="Wiedergabe stoppen" aria-label="Stop"></button>
         <span id="replay-clock">—</span>
         <button type="button" id="mode-live-btn" title="Live-Feed (Echtzeit)">LIVE</button>
+        <button type="button" id="live-filter-drops-btn" class="live-filter-btn drop active" title="Afficher les drops firewall live">DROPS</button>
+        <button type="button" id="live-filter-attacks-btn" class="live-filter-btn active" title="Afficher les attaques CrowdSec">ATTAQUES</button>
       </div>
       <div id="zoom-ctrl">
         <div class="zoom-btn" id="bzi">+</div>
@@ -1204,6 +1210,7 @@ const MAP_SETTINGS_DEFAULTS={
   rocketTailClassic:0.13,rocketTailLegacy:0.06,rocketTailArc:0.10,rocketLaneSpread:12,
   showFlightLabels:true,maxFlightLabels:8,replayDurationMin:3,
   showDrops:false,
+  showLiveDrops:true,showLiveAttacks:true,
   maxConsoleArcs:150,
   rocketStyle:'classic',
   overrideCoords:false,serverLat:'',serverLon:'',serverName:'',
@@ -1554,7 +1561,7 @@ function zoomToAttackPoint(lon,lat,opts={}){
 }
 function quadPoint(p,t){const u=1-t;return{x:u*u*p.sx+2*u*t*p.cpx+t*t*p.ex,y:u*u*p.sy+2*u*t*p.cpy+t*t*p.ey};}
 function refreshMapFromData(){
-  attackData=liveMode?parseMetrics(lastMetricsText):aggregateFromEvents(getEventsInReplay());
+  attackData=liveMode?getVisibleLiveAttackData(parseMetrics(lastMetricsText)):aggregateFromEvents(getEventsInReplay());
   enrichAttackData();
   buildArcPaths();
   renderDots();
@@ -1628,6 +1635,9 @@ function setupReplayControls(){
   document.getElementById('replay-play-btn')?.addEventListener('click',playReplay);
   document.getElementById('replay-stop-btn')?.addEventListener('click',stopReplay);
   document.getElementById('mode-live-btn')?.addEventListener('click',enterLiveMode);
+  document.getElementById('live-filter-drops-btn')?.addEventListener('click',()=>toggleLiveSourceFilter('drop'));
+  document.getElementById('live-filter-attacks-btn')?.addEventListener('click',()=>toggleLiveSourceFilter('attack'));
+  syncLiveFilterButtons();
   document.querySelectorAll('[data-speed]').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('[data-speed]').forEach(x=>x.classList.remove('active'));b.classList.add('active');replaySpeed=parseFloat(b.dataset.speed);}));
   document.querySelectorAll('[data-range]').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('[data-range]').forEach(x=>x.classList.remove('active'));b.classList.add('active');replayRangeH=parseInt(b.dataset.range,10);initReplayWindow();refreshMapFromData();}));
   updateReplayControlsUI();
@@ -2273,7 +2283,7 @@ const baseSvg=d3.select('#base-svg');
 const canvas=document.getElementById('arc-canvas');
 const ctx2d=canvas.getContext('2d');
 let proj,pathGen,W,H,currentScale=1,currentTx=0,currentTy=0;
-let feedData=[];
+let feedData=[],attackFeedData=[],dropFeedData=[];
 let feedSort="newest";
 let feedPage=0;        // current page (0-based)
 const FEED_PER_PAGE=20; // entries per page
@@ -3480,6 +3490,83 @@ function setFeedPage(p){
 // ── LIVE FIREWALL DROPS ──
 let dropsData=[];
 let dropsApiEnabled=false;
+function liveDropsVisible(){
+  return mapSettings.showDrops!==false&&mapSettings.showLiveDrops!==false;
+}
+function liveAttacksVisible(){
+  return mapSettings.showLiveAttacks!==false;
+}
+function getVisibleLiveEvents(){
+  const list=[];
+  if(liveAttacksVisible())list.push(...attackFeedData);
+  if(liveDropsVisible())list.push(...dropFeedData);
+  return list;
+}
+function getVisibleLiveAttackData(metricAttacks){
+  const list=[];
+  if(liveAttacksVisible())list.push(...metricAttacks);
+  if(liveDropsVisible())list.push(...aggregateFromEvents(dropFeedData));
+  return list;
+}
+function rebuildLiveFeedData(){
+  feedData=getVisibleLiveEvents().filter(d=>!localUnbanned.has(d.ip));
+}
+function parseDropTime(ts){
+  if(!ts)return Date.now();
+  const t=Date.parse(ts);
+  return Number.isFinite(t)?t:Date.now();
+}
+function dropToFeedEvent(d){
+  return {
+    ip:String(d.ip||''),
+    country:String(d.country||'??').toUpperCase(),
+    city:d.city||'',
+    scenario:d.rule||'firewall-drop',
+    time_iso:d.ts||new Date().toISOString(),
+    time_de:d.ts?new Date(d.ts).toLocaleString(currentLang==='fr'?'fr-FR':'en-GB'):'',
+    asname:'',
+    asnumber:'',
+    iprange:'',
+    lat:parseFloat(d.lat||d.latitude||0),
+    lon:parseFloat(d.lon||d.longitude||0),
+    count:Number(d.packets||1),
+    active_ban:true,
+    ts:parseDropTime(d.ts),
+    source:'drop',
+    packets:Number(d.packets||1),
+    bytes:Number(d.bytes||0),
+  };
+}
+function syncLiveFilterButtons(){
+  const d=document.getElementById('live-filter-drops-btn');
+  const a=document.getElementById('live-filter-attacks-btn');
+  if(d)d.classList.toggle('active',liveDropsVisible());
+  if(a)a.classList.toggle('active',liveAttacksVisible());
+}
+function setLiveSourceFilter(source,value){
+  if(source==='drop'){
+    mapSettings.showLiveDrops=!!value;
+    if(value)mapSettings.showDrops=true;
+  }
+  if(source==='attack')mapSettings.showLiveAttacks=!!value;
+  if(mapSettings.showLiveDrops===false&&mapSettings.showLiveAttacks===false){
+    if(source==='drop')mapSettings.showLiveAttacks=true;
+    else mapSettings.showLiveDrops=true;
+  }
+  persistMapSettings();
+  rebuildLiveFeedData();
+  syncLiveFilterButtons();
+  renderFeed();
+  renderCountryLists();
+  renderMapPanels();
+  renderFilterBar();
+  if(source==='drop'&&value&&typeof fetchDrops==='function')fetchDrops();
+  if(liveMode)refreshMapFromData();
+}
+function toggleLiveSourceFilter(source){
+  if(source==='drop')setLiveSourceFilter('drop',!liveDropsVisible());
+  if(source==='attack')setLiveSourceFilter('attack',!liveAttacksVisible());
+}
 function escHtml(v){
   return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
@@ -3499,11 +3586,18 @@ async function fetchDrops(){
     const data=await res.json();
     dropsApiEnabled=!!data.enabled;
     dropsData=Array.isArray(data.events)?data.events:[];
+    dropFeedData=dropsData.map(dropToFeedEvent).filter(d=>d.ip&&d.ts>0&&Number.isFinite(d.lat)&&Number.isFinite(d.lon)&&(d.lat||d.lon));
   }catch(e){
     dropsApiEnabled=false;
     dropsData=[];
+    dropFeedData=[];
   }
+  rebuildLiveFeedData();
   renderDrops();
+  renderFeed();
+  renderCountryLists();
+  renderMapPanels();
+  if(liveMode)refreshMapFromData();
 }
 function dropEventHtml(d){
   const cc=String(d.country||'??').toUpperCase();
