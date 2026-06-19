@@ -302,6 +302,7 @@ _cache_metrics = ""
 _cache_time    = 0
 _unbanned_ips  = set()  # IPs die manuell entsperrt wurden
 _mmdb          = None
+_ip_geo_cache  = {}
 
 # Whitelist-Status (für Dashboard-Badge)
 _whitelist_status = {
@@ -725,6 +726,14 @@ def load_drops():
                 lat = row.get("lat") or row.get("latitude")
                 lon = row.get("lon") or row.get("longitude")
                 city = str(row.get("city") or "")
+                cached_geo = _ip_geo_cache.get(ip, {})
+                if country == "??" and cached_geo.get("country"):
+                    country = cached_geo["country"]
+                if not city and cached_geo.get("city"):
+                    city = cached_geo["city"]
+                if (not lat or not lon) and cached_geo.get("lat") and cached_geo.get("lon"):
+                    lat = cached_geo["lat"]
+                    lon = cached_geo["lon"]
                 if not lat or not lon:
                     if _mmdb:
                         mm = _mmdb.get(ip)
@@ -777,6 +786,8 @@ def load_metrics():
     flow_data = {}  # flow_key -> {src_lat, src_lon, country, scenario, ip, count}
 
     try:
+        global _ip_geo_cache
+        ip_geo_cache = {}
         conn = sqlite3.connect(f"file:{DB_PATH}?mode=ro", uri=True, timeout=5)
         conn.row_factory = sqlite3.Row
         cur = conn.cursor()
@@ -865,6 +876,16 @@ def load_metrics():
 
             # Szenario bereinigen
             scenario_clean = clean_scenario(scenario)
+            if lat and lon and (lat != 0.0 or lon != 0.0):
+                ip_geo_cache[ip] = {
+                    "country": country,
+                    "city": city,
+                    "lat": float(lat),
+                    "lon": float(lon),
+                    "asname": as_name,
+                    "asnumber": as_number,
+                    "iprange": ip_range,
+                }
 
             # Flow-Daten für Vaduga MapGL sammeln
             flow_key = f"{round(lat, 2)},{round(lon, 2)}"
@@ -935,6 +956,8 @@ def load_metrics():
                 f'}} {fd["count"]}'
             )
 
+        _ip_geo_cache = ip_geo_cache
+
         # Scrape-Info
         lines.append("# HELP cs_exporter_last_scrape Unix timestamp of last successful scrape")
         lines.append("# TYPE cs_exporter_last_scrape gauge")
@@ -954,6 +977,47 @@ def load_metrics():
 
         if DROPS_ENABLED:
             drops = load_drops()["events"]
+            for d in drops:
+                lat = float(d.get("lat") or 0.0)
+                lon = float(d.get("lon") or 0.0)
+                if not lat and not lon:
+                    continue
+                ts_epoch = _drop_ts_to_epoch(d.get("ts"))
+                dt = datetime.fromtimestamp(ts_epoch, tz=timezone.utc)
+                attack_time_de = dt.strftime("%d.%m.%Y %H:%M:%S")
+                attack_time_iso = dt.strftime("%Y-%m-%d %H:%M:%S")
+                scenario = clean_scenario(d.get("rule") or "firewall-drop")
+                labels = {
+                    "instance":        sanitize_label(socket.gethostbyname(socket.gethostname())),
+                    "country":         sanitize_label(d.get("country", "??")),
+                    "city":            sanitize_label(d.get("city", "")),
+                    "asname":          "",
+                    "asnumber":        "",
+                    "iprange":         "",
+                    "ip":              sanitize_label(d["ip"]),
+                    "type":            "drop",
+                    "scenario":        sanitize_label(scenario),
+                    "latitude":        str(round(lat, 4)),
+                    "longitude":       str(round(lon, 4)),
+                    "attack_time":     sanitize_label(attack_time_de),
+                    "attack_time_iso": sanitize_label(attack_time_iso),
+                    "active_ban":      "1",
+                }
+                label_str = ",".join(f'{k}="{v}"' for k, v in labels.items())
+                lines.append(f"cs_lapi_realtime{{{label_str}}} {int(d.get('packets', 1))}")
+                lines.append(
+                    f'cs_attack_flow{{'
+                    f'src_lat="{round(lat, 4)}",'
+                    f'src_lon="{round(lon, 4)}",'
+                    f'dst_lat="{SERVER_LAT}",'
+                    f'dst_lon="{SERVER_LON}",'
+                    f'country="{sanitize_label(d.get("country", "??"))}",'
+                    f'city="{sanitize_label(d.get("city", ""))}",'
+                    f'scenario="{sanitize_label(scenario)}",'
+                    f'ip="{sanitize_label(d["ip"])}",'
+                    f'server="{SERVER_NAME}"'
+                    f'}} {int(d.get("packets", 1))}'
+                )
             lines.append("# HELP cs_firewall_drops Live firewall drops from optional JSONL input")
             lines.append("# TYPE cs_firewall_drops counter")
             for d in drops:

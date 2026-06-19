@@ -1217,6 +1217,7 @@ const MAP_SETTINGS_DEFAULTS={
 };
 let mapSettings={...MAP_SETTINGS_DEFAULTS};
 let fetchIntervalId=null;
+let dropsIntervalId=null;
 let dockerServerCoords={lat:null,lon:null,name:''};
 const CROWDSEC_ARC_COLOR = '#ff9a3c'; // Orange wie CrowdSec Console
 const FIT_ZOOM_BOOST = 1.55;      // für fitMapToPoints (alle Angriffe)
@@ -2372,6 +2373,8 @@ function applyCoordOverrides(){
 function restartFetchLoop(){
   if(fetchIntervalId)clearInterval(fetchIntervalId);
   fetchIntervalId=setInterval(fetchAndRender,REFRESH_MS);
+  if(dropsIntervalId)clearInterval(dropsIntervalId);
+  dropsIntervalId=setInterval(()=>{if(typeof fetchDrops==='function')fetchDrops();},Math.max(5000,Math.min(REFRESH_MS,10000)));
 }
 function updateSettingsCoordsHint(){
   const el=document.getElementById('settings-coords-hint');
@@ -3518,19 +3521,30 @@ function parseDropTime(ts){
   const t=Date.parse(ts);
   return Number.isFinite(t)?t:Date.now();
 }
+function eventGeoFallback(ip){
+  return attackFeedData.find(e=>e.ip===ip&&Number.isFinite(e.lat)&&Number.isFinite(e.lon)&&(e.lat||e.lon))
+    || feedData.find(e=>e.ip===ip&&Number.isFinite(e.lat)&&Number.isFinite(e.lon)&&(e.lat||e.lon))
+    || allEvents.find(e=>e.ip===ip&&Number.isFinite(e.lat)&&Number.isFinite(e.lon)&&(e.lat||e.lon))
+    || null;
+}
 function dropToFeedEvent(d){
+  const ip=String(d.ip||'');
+  const fb=eventGeoFallback(ip);
+  const lat=parseFloat(d.lat||d.latitude||0);
+  const lon=parseFloat(d.lon||d.longitude||0);
+  const hasDropCoords=Number.isFinite(lat)&&Number.isFinite(lon)&&(lat||lon);
   return {
-    ip:String(d.ip||''),
-    country:String(d.country||'??').toUpperCase(),
-    city:d.city||'',
+    ip,
+    country:String((d.country&&d.country!=='??'?d.country:fb?.country)||'??').toUpperCase(),
+    city:d.city||fb?.city||'',
     scenario:d.rule||'firewall-drop',
     time_iso:d.ts||new Date().toISOString(),
     time_de:d.ts?new Date(d.ts).toLocaleString(currentLang==='fr'?'fr-FR':'en-GB'):'',
-    asname:'',
-    asnumber:'',
-    iprange:'',
-    lat:parseFloat(d.lat||d.latitude||0),
-    lon:parseFloat(d.lon||d.longitude||0),
+    asname:fb?.asname||'',
+    asnumber:fb?.asnumber||'',
+    iprange:fb?.iprange||'',
+    lat:hasDropCoords?lat:(fb?.lat||0),
+    lon:hasDropCoords?lon:(fb?.lon||0),
     count:Number(d.packets||1),
     active_ban:true,
     ts:parseDropTime(d.ts),
