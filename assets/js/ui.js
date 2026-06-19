@@ -253,6 +253,7 @@ function switchMobTab(tabId){
     v.classList.toggle('active',v.id==='mob-view-'+tabId);
   });
   if(tabId==='top10'||tabId==='topall')renderCountryLists();
+  if(tabId==='drops')renderDrops();
   syncCompactLayout();
 }
 
@@ -271,7 +272,7 @@ document.querySelectorAll('.mob-tab-btn').forEach(btn=>{
 
 function applyLang(){
   normalizeLang();
-  const l=LANG[currentLang];
+  const l=LANG[currentLang]||LANG.en;
   const vbadge=document.getElementById('map-version-badge');
   if(vbadge)vbadge.textContent=APP_VERSION;
   const hTitle=document.getElementById('h-title');
@@ -289,9 +290,11 @@ function applyLang(){
   document.querySelectorAll('[data-tab="feed"]').forEach(e=>e.textContent=l.feed);
   document.querySelectorAll('[data-tab="top10"]').forEach(e=>e.textContent=l.top10);
   document.querySelectorAll('[data-tab="topall"]').forEach(e=>e.textContent=l.all);
+  document.querySelectorAll('[data-tab="drops"]').forEach(e=>e.textContent=l.drops_tab);
   document.querySelectorAll('[data-mob="feed"]').forEach(e=>e.textContent=l.feed);
   document.querySelectorAll('[data-mob="top10"]').forEach(e=>e.textContent=l.top10);
   document.querySelectorAll('[data-mob="topall"]').forEach(e=>e.textContent=l.all);
+  document.querySelectorAll('[data-mob="drops"]').forEach(e=>e.textContent=l.drops_tab);
   document.querySelectorAll('.sort-lbl').forEach(e=>e.textContent=l.sort);
   document.querySelectorAll('#fsort-new,#mob-fsort-new').forEach(e=>e.textContent=l.newest);
   document.querySelectorAll('#fsort-old,#mob-fsort-old').forEach(e=>e.textContent=l.oldest);
@@ -337,6 +340,8 @@ function applyLang(){
   if(feedSearch)feedSearch.placeholder=l.search_ph;
   const mobFeedSearch=document.getElementById('mob-feed-search');
   if(mobFeedSearch)mobFeedSearch.placeholder=l.search_ph;
+  const mobDropsTitle=document.getElementById('mob-drops-title');
+  if(mobDropsTitle)mobDropsTitle.textContent=l.drops_title;
   document.querySelectorAll('.csv-feed-btn').forEach(btn=>{btn.textContent=l.csv_btn;btn.title=l.csv_title;});
   const tipClose=document.getElementById('tip-close');
   if(tipClose){tipClose.title=l.tip_close;tipClose.setAttribute('aria-label',l.tip_close);}

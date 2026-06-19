@@ -1,6 +1,6 @@
 services:
   crowdsec-monitor:
-    image: ghcr.io/kabelsalatundklartext/crowdsec-threat-map-docker:latest
+    image: ghcr.io/railline/crowdsec-threat-map-docker:latest
     container_name: crowdsec-monitor
     restart: unless-stopped
 
@@ -8,45 +8,53 @@ services:
       - "8080:8080"   # Dashboard → http://EURE-IP:8080
 
     volumes:
-      # ⚠️  PFLICHT: Pfad zu euren CrowdSec-Daten anpassen
-      # Tipp: docker inspect crowdsec | grep -A5 "Mounts" → zeigt euren Datenpfad
+      # Required: path to your CrowdSec data directory.
+      # Tip: docker inspect crowdsec | grep -A5 "Mounts"
       - /EUER-PFAD/data:/crowdsec/data:ro
 
-      # Für dynamische Whitelist: Schreibzugriff auf postoverflows
-      # Nur nötig wenn WHITELIST_ENABLED=true (Standard)
+      # Dynamic whitelist support. Required only when WHITELIST_ENABLED=true.
       - /EUER-PFAD/postoverflows:/crowdsec/postoverflows
 
-      # Für IP-Unban: Docker-Socket einbinden
+      # IP unban support.
       - /var/run/docker.sock:/var/run/docker.sock:ro
+
+      # Optional live firewall drops input.
+      # The file is JSONL, one event per line. See README.md.
+      # - /EUER-PFAD/drops:/crowdsec/drops:ro
 
     environment:
       # ──────────────────────────────────────────────
-      # ⚠️  PFLICHT: Server-Koordinaten eintragen
-      # Tipp: Rechtsklick auf Google Maps → "Was ist hier?"
+      # Required: server coordinates.
       # ──────────────────────────────────────────────
       - SERVER_LAT=0.0
       - SERVER_LON=0.0
 
       # ──────────────────────────────────────────────
-      # ℹ️  OPTIONAL: Weitere Einstellungen
+      # Optional settings.
       # ──────────────────────────────────────────────
-      - SERVER_NAME=MeinServer          # Anzeigename im Dashboard
+      - SERVER_NAME=MyServer            # Display name in dashboard
       - CROWDSEC_CONTAINER=crowdsec     # Name des CrowdSec-Containers
-      - CACHE_TTL=60                    # Cache-Zeit in Sekunden
-      - DAYS_BACK=365                   # Wie viele Tage zurück anzeigen
+      - LANGUAGE=en                     # en or fr
+      - CACHE_TTL=60                    # Cache TTL in seconds
+      - DAYS_BACK=365                   # Days of history to display
 
-      # Dynamische Whitelist (verhindert Selbst-Ban bei IP-Wechsel)
+      # Dynamic whitelist.
       - WHITELIST_ENABLED=true
       # Standard-Pfad: /crowdsec/postoverflows/s01-whitelist/my-whitelist.yaml
       # Nur ändern wenn ihr einen anderen Pfad nutzt:
       # - WHITELIST_FILE=/crowdsec/postoverflows/s01-whitelist/my-whitelist.yaml
       - WHITELIST_INTERVAL=900          # Prüfintervall in Sekunden (Standard: 15 min)
-      # Wartezeit nach CrowdSec-Neustart — erhöhen wenn Timeout-Fehler im Log erscheinen
       - CROWDSEC_RESTART_WAIT=15
-      - CROWDSEC_RESTART_COOLDOWN=300     # Mindestabstand zwischen CrowdSec-Neustarts (Sekunden)
+      - CROWDSEC_RESTART_COOLDOWN=300
 
-      # Sicherheit: Zufälliges Token setzen (z.B. openssl rand -hex 32)
-      # Schützt /unban vor unbefugten Aufrufen und CSRF aus dem Browser
+      # Optional live firewall drops.
+      - DROPS_ENABLED=false
+      - DROPS_LOG_PATH=/crowdsec/drops/drops.jsonl
+      - DROPS_MAX_EVENTS=200
+      - DROPS_MAX_AGE_SECONDS=3600
+
+      # Security: set a random token, for example: openssl rand -hex 32.
+      # Protects /unban from unauthorized browser calls.
       # - UNBAN_API_TOKEN=dein-geheimes-token-hier
 
     # Docker-Gruppe für Socket-Zugriff (Unban + Whitelist-Restart)

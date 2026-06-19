@@ -55,6 +55,7 @@ import socket
 import json
 import time
 import threading
+from collections import deque
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from datetime import datetime, timezone
 import sys
@@ -70,6 +71,10 @@ LISTEN_PORT  = int(os.environ.get("LISTEN_PORT",     "9456"))
 LISTEN_HOST  = "0.0.0.0"
 CACHE_TTL    = int(os.environ.get("CACHE_TTL",       "60"))
 DAYS_BACK    = int(os.environ.get("DAYS_BACK",       "365"))
+DROPS_ENABLED = os.environ.get("DROPS_ENABLED", "false").lower() == "true"
+DROPS_LOG_PATH = os.environ.get("DROPS_LOG_PATH", "/crowdsec/drops/drops.jsonl")
+DROPS_MAX_EVENTS = int(os.environ.get("DROPS_MAX_EVENTS", "200"))
+DROPS_MAX_AGE_SECONDS = int(os.environ.get("DROPS_MAX_AGE_SECONDS", "3600"))
 
 # Dynamic Whitelist
 WHITELIST_ENABLED   = os.environ.get("WHITELIST_ENABLED",  "true").lower() == "true"
@@ -671,6 +676,97 @@ def clean_scenario(scenario):
         return scenario.split("/", 1)[1]
     return scenario
 
+def _drop_ts_to_epoch(value):
+    if value is None:
+        return int(time.time())
+    if isinstance(value, (int, float)):
+        return int(value)
+    raw = str(value).strip()
+    if not raw:
+        return int(time.time())
+    try:
+        return int(float(raw))
+    except ValueError:
+        pass
+    try:
+        dt = datetime.fromisoformat(raw.replace("Z", "+00:00"))
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        return int(dt.timestamp())
+    except Exception:
+        return int(time.time())
+
+def load_drops():
+    if not DROPS_ENABLED:
+        return {"enabled": False, "events": []}
+    if not os.path.exists(DROPS_LOG_PATH):
+        return {"enabled": True, "events": []}
+
+    now = int(time.time())
+    events = []
+    max_lines = max(DROPS_MAX_EVENTS * 4, 200)
+    try:
+        with open(DROPS_LOG_PATH, "r", encoding="utf-8", errors="replace") as fh:
+            for line in deque(fh, maxlen=max_lines):
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    row = json.loads(line)
+                except Exception:
+                    continue
+                ip = str(row.get("ip") or row.get("src_ip") or row.get("source_ip") or "").strip()
+                if not validate_ip(ip):
+                    continue
+                ts_epoch = _drop_ts_to_epoch(row.get("ts") or row.get("time") or row.get("timestamp"))
+                if DROPS_MAX_AGE_SECONDS > 0 and ts_epoch < now - DROPS_MAX_AGE_SECONDS:
+                    continue
+                country = str(row.get("country") or row.get("country_iso") or "").upper()[:2] or "??"
+                lat = row.get("lat") or row.get("latitude")
+                lon = row.get("lon") or row.get("longitude")
+                city = str(row.get("city") or "")
+                if not lat or not lon:
+                    if _mmdb:
+                        mm = _mmdb.get(ip)
+                        if mm:
+                            country = country if country != "??" else mm.get("country_iso", "??")
+                            lat = mm.get("lat", 0.0)
+                            lon = mm.get("lon", 0.0)
+                            city = city or mm.get("city", "")
+                    if not lat or not lon:
+                        lat, lon, fallback_city = geo_lookup(ip, country)
+                        city = city or fallback_city
+                try:
+                    packets = int(row.get("packets") or row.get("packet_count") or 1)
+                except Exception:
+                    packets = 1
+                try:
+                    bytes_count = int(row.get("bytes") or row.get("byte_count") or 0)
+                except Exception:
+                    bytes_count = 0
+                events.append({
+                    "ts": datetime.fromtimestamp(ts_epoch, tz=timezone.utc).isoformat().replace("+00:00", "Z"),
+                    "ts_epoch": ts_epoch,
+                    "ip": ip,
+                    "country": country,
+                    "city": city,
+                    "lat": float(lat or 0.0),
+                    "lon": float(lon or 0.0),
+                    "packets": max(packets, 1),
+                    "bytes": max(bytes_count, 0),
+                    "chain": str(row.get("chain") or ""),
+                    "rule": str(row.get("rule") or ""),
+                    "interface": str(row.get("interface") or row.get("iface") or ""),
+                })
+    except Exception as e:
+        log(f"⚠️  Drops lesen fehlgeschlagen: {e}")
+        return {"enabled": True, "events": []}
+
+    events.sort(key=lambda e: e["ts_epoch"], reverse=True)
+    for event in events:
+        event.pop("ts_epoch", None)
+    return {"enabled": True, "events": events[:DROPS_MAX_EVENTS]}
+
 def load_metrics():
     if not os.path.exists(DB_PATH):
         return f"# ERROR: DB nicht gefunden: {DB_PATH}\n"
@@ -856,6 +952,21 @@ def load_metrics():
             f'last_change="{ws["last_change"]}"}} 1'
         )
 
+        if DROPS_ENABLED:
+            drops = load_drops()["events"]
+            lines.append("# HELP cs_firewall_drops Live firewall drops from optional JSONL input")
+            lines.append("# TYPE cs_firewall_drops counter")
+            for d in drops:
+                lines.append(
+                    f'cs_firewall_drops{{'
+                    f'ip="{sanitize_label(d["ip"])}",'
+                    f'country="{sanitize_label(d["country"])}",'
+                    f'city="{sanitize_label(d.get("city",""))}",'
+                    f'chain="{sanitize_label(d.get("chain",""))}",'
+                    f'rule="{sanitize_label(d.get("rule",""))}"'
+                    f'}} {int(d.get("packets", 1))}'
+                )
+
         log(f"✅ Metriken geladen: {total} Alerts, {len(country_counts)} Länder, "
             f"{len(scenario_counts)} Szenarien, {len(flow_data)} Flow-Quellen")
 
@@ -963,6 +1074,7 @@ class MetricsHandler(BaseHTTPRequestHandler):
                 "server_lat": SERVER_LAT,
                 "server_lon": SERVER_LON,
                 "server_name": SERVER_NAME,
+                "drops_enabled": DROPS_ENABLED,
             }).encode()
             self.send_response(200)
             self.send_header("Content-Type", "application/json")
@@ -970,6 +1082,8 @@ class MetricsHandler(BaseHTTPRequestHandler):
             self.send_header("Access-Control-Allow-Origin", "*")
             self.end_headers()
             self.wfile.write(body)
+        elif self.path == "/drops":
+            self._json_response(200, load_drops())
         else:
             self._json_response(404, {"error": "Not found"})
 
@@ -1001,6 +1115,7 @@ if __name__ == "__main__":
     log(f"   Port:   {LISTEN_PORT}")
     log(f"   TTL:    {CACHE_TTL}s")
     log(f"   Server: {SERVER_NAME} ({SERVER_LAT}, {SERVER_LON})")
+    log(f"   Drops:  {'enabled' if DROPS_ENABLED else 'disabled'} ({DROPS_LOG_PATH})")
     if UNBAN_API_TOKEN:
         log("   Unban:  API-Token aktiv")
     else:

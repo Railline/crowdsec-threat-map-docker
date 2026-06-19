@@ -5,6 +5,7 @@ const SETTINGS_HELP={
     'set-max-active':'Begrenzt gleichzeitig sichtbare Raketen. Niedriger = weniger GPU/CPU. Kein Maximum — beliebig hoch einstellen.',
     'set-max-pending':'Maximale Gesamt-Warteschlange für Raketen. Bei vielen Angriffen erhöhen. Kein Maximum.',
     'set-max-batch':'Wie viele neue Raketen pro Tick gestartet werden. Kein Maximum.',
+    'set-show-drops':'Zeigt Live-Drops aus dem optionalen /drops-Endpunkt. Benötigt DROPS_ENABLED=true im Container.',
     'set-performance-preset':'Preset für typische Lastprofile. Danach kannst du feinjustieren.',
     'set-duration-sec':'Flugzeit einer Rakete vom Start bis Ziel. 1–20 Sekunden.',
     'set-stagger-ms':'Abstand zwischen Raketen derselben IP. 50–5000 ms.',
@@ -30,6 +31,7 @@ const SETTINGS_HELP={
     'set-max-active':'Limit simultaneous rockets. Lower reduces GPU/CPU. No upper limit — set as high as you want.',
     'set-max-pending':'Maximum total queued rockets. Increase for high-traffic servers. No upper limit.',
     'set-max-batch':'How many rockets can start per tick. No upper limit.',
+    'set-show-drops':'Show live firewall drops from the optional /drops endpoint. Requires DROPS_ENABLED=true in the container.',
     'set-performance-preset':'Quick profile for common load targets.',
     'set-duration-sec':'Flight time from source to destination. 1–20 seconds.',
     'set-stagger-ms':'Gap between rockets from the same IP. 50–5000 ms.',
@@ -48,18 +50,44 @@ const SETTINGS_HELP={
     'set-server-lat':'Server latitude (LAT).',
     'set-server-lon':'Server longitude (LON).',
     'set-server-name':'Home marker label.',
+  },
+  fr:{
+    default:'Selectionnez une valeur pour voir son effet.',
+    'set-refresh-sec':'Frequence de chargement des nouvelles donnees. Plus bas = plus frais, mais plus lourd.',
+    'set-max-active':'Limite le nombre de fusees visibles en meme temps.',
+    'set-max-pending':'File totale maximale des fusees.',
+    'set-max-batch':'Nombre de fusees lancees par cycle.',
+    'set-show-drops':'Affiche les drops firewall live depuis le endpoint optionnel /drops. Necessite DROPS_ENABLED=true dans le conteneur.',
+    'set-performance-preset':'Profil rapide pour des charges typiques.',
+    'set-duration-sec':'Duree du vol de la source vers la destination.',
+    'set-stagger-ms':'Delai entre les fusees venant de la meme IP.',
+    'set-ui-throttle':'Frequence de rafraichissement de la carte replay.',
+    'set-label-throttle':'Frequence de rafraichissement des labels.',
+    'set-replay-min':'Duree du replay a vitesse 1x.',
+    'set-spawn-mode':'Choisit si une fusee represente une attaque, une IP+heure ou seulement une IP.',
+    'set-queue-ip':'Limite la file par IP pour eviter le flood visuel.',
+    'set-rocket-style':'Nouveau = fusee avec trainee, Console = arcs pointilles, Minimal = segment court.',
+    'set-tail-classic':'Longueur de la trainee en pourcentage.',
+    'set-lane-spread':'Decalage lateral des trajectoires paralleles.',
+    'set-max-arcs':'Nombre maximum d arcs console simultanes.',
+    'set-show-labels':'Afficher ou masquer les labels de source.',
+    'set-max-labels':'Nombre maximum de labels visibles.',
+    'set-override-coords':'Remplace localement les coordonnees Docker.',
+    'set-server-lat':'Latitude du serveur.',
+    'set-server-lon':'Longitude du serveur.',
+    'set-server-name':'Nom du marqueur maison.',
   }
 };
 
 function updateSettingsHelpForField(id){
   const box=document.getElementById('settings-help-box');
   if(!box)return;
-  const lang=SETTINGS_HELP[currentLang]||SETTINGS_HELP.de;
+  const lang=SETTINGS_HELP[currentLang]||SETTINGS_HELP.en;
   box.textContent=lang[id]||lang.default;
 }
 
 function initSettingsHelpBindings(){
-  const ids=['set-refresh-sec','set-max-active','set-max-pending','set-max-batch','set-performance-preset','set-duration-sec','set-stagger-ms','set-ui-throttle','set-label-throttle','set-replay-min','set-spawn-mode','set-queue-ip','set-rocket-style','set-tail-classic','set-lane-spread','set-max-arcs','set-show-labels','set-max-labels','set-override-coords','set-server-lat','set-server-lon','set-server-name'];
+  const ids=['set-refresh-sec','set-max-active','set-max-pending','set-max-batch','set-show-drops','set-performance-preset','set-duration-sec','set-stagger-ms','set-ui-throttle','set-label-throttle','set-replay-min','set-spawn-mode','set-queue-ip','set-rocket-style','set-tail-classic','set-lane-spread','set-max-arcs','set-show-labels','set-max-labels','set-override-coords','set-server-lat','set-server-lon','set-server-name'];
   ids.forEach(id=>{
     const el=document.getElementById(id);
     if(!el)return;

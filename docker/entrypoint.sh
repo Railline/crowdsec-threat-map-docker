@@ -2,46 +2,46 @@
 set -e
 
 # ============================================================
-# CrowdSec Threat Map — Container Entrypoint v1.5.0
+# CrowdSec Threat Map — Container Entrypoint v1.6.9
 # ============================================================
 
 log() { echo "[$(date '+%F %T')] $*"; }
 
-log "🛡️  CrowdSec Threat Map startet..."
-log "   Version: v1.5.0"
+log "🛡️  Starting CrowdSec Threat Map..."
+log "   Version: v1.6.9"
 
 # ── Pflichtprüfungen ──
 if [ -z "$SERVER_LAT" ] || [ "$SERVER_LAT" = "0.0" ]; then
-    log "⚠️  SERVER_LAT nicht gesetzt! Bitte in docker-compose.yml eintragen."
+    log "⚠️  SERVER_LAT is not set. Please configure it in Docker/Compose/Unraid."
 fi
 if [ -z "$SERVER_LON" ] || [ "$SERVER_LON" = "0.0" ]; then
-    log "⚠️  SERVER_LON nicht gesetzt! Bitte in docker-compose.yml eintragen."
+    log "⚠️  SERVER_LON is not set. Please configure it in Docker/Compose/Unraid."
 fi
 
 # ── DB-Pfad prüfen ──
 DB_FILE="${CROWDSEC_DB_PATH:-/crowdsec/data/crowdsec.db}"
 if [ ! -f "$DB_FILE" ]; then
-    log "❌ CrowdSec-Datenbank nicht gefunden: $DB_FILE"
-    log "   Bitte volumes in docker-compose.yml prüfen!"
-    log "   Erwartet: /crowdsec/data/crowdsec.db"
+    log "❌ CrowdSec database not found: $DB_FILE"
+    log "   Check your volume mappings."
+    log "   Expected: /crowdsec/data/crowdsec.db"
     exit 1
 fi
-log "✅ Datenbank gefunden: $DB_FILE"
+log "✅ Database found: $DB_FILE"
 
 # ── GeoLite2 prüfen ──
 MMDB_FILE="${CROWDSEC_MMDB_PATH:-/crowdsec/data/GeoLite2-City.mmdb}"
 if [ -f "$MMDB_FILE" ]; then
-    log "✅ GeoLite2 gefunden: $MMDB_FILE (Stadtanzeige aktiv)"
+    log "✅ GeoLite2 found: $MMDB_FILE (city display enabled)"
 else
-    log "ℹ️  GeoLite2 nicht gefunden — Stadtanzeige deaktiviert"
+    log "ℹ️  GeoLite2 not found — city display disabled"
 fi
 
 # ── Whitelist-Info ──
 WL_ENABLED="${WHITELIST_ENABLED:-true}"
 if [ "$WL_ENABLED" = "true" ]; then
-    log "🛡️  Dynamische Whitelist: AKTIV (Interval: ${WHITELIST_INTERVAL:-900}s)"
+    log "🛡️  Dynamic whitelist: enabled (interval: ${WHITELIST_INTERVAL:-900}s)"
 else
-    log "ℹ️  Dynamische Whitelist: deaktiviert"
+    log "ℹ️  Dynamic whitelist: disabled"
 fi
 
 # ── Umgebungsvariablen exportieren (werden vom Exporter gelesen) ──
@@ -59,11 +59,15 @@ export WHITELIST_INTERVAL="${WHITELIST_INTERVAL:-900}"
 export CROWDSEC_RESTART_WAIT="${CROWDSEC_RESTART_WAIT:-15}"
 export CROWDSEC_RESTART_COOLDOWN="${CROWDSEC_RESTART_COOLDOWN:-300}"
 export UNBAN_API_TOKEN="${UNBAN_API_TOKEN:-}"
+export DROPS_ENABLED="${DROPS_ENABLED:-false}"
+export DROPS_LOG_PATH="${DROPS_LOG_PATH:-/crowdsec/drops/drops.jsonl}"
+export DROPS_MAX_EVENTS="${DROPS_MAX_EVENTS:-200}"
+export DROPS_MAX_AGE_SECONDS="${DROPS_MAX_AGE_SECONDS:-3600}"
 
-export LANGUAGE="${LANGUAGE:-de}"
+export LANGUAGE="${LANGUAGE:-en}"
 
 # ── index.html mit korrekter Exporter-URL patchen ──
-log "🔧 Dashboard konfigurieren..."
+log "🔧 Configuring dashboard..."
 
 # Relative URL /metrics — nginx proxied intern zu Port 9456
 METRICS_URL="${EXPORTER_URL:-/metrics}"
@@ -76,58 +80,59 @@ sed -i "s|let SERVER_LON   = [^;]*;|let SERVER_LON   = ${SERVER_LON};|g" \
     /var/www/html/index.html 2>/dev/null || true
 sed -i "s|let SERVER_NAME_MAP = '[^']*';|let SERVER_NAME_MAP = '${SERVER_NAME}';|g" \
     /var/www/html/index.html 2>/dev/null || true
-log "📍 Server-Position: ${SERVER_LAT}, ${SERVER_LON} (${SERVER_NAME})"
+log "📍 Server location: ${SERVER_LAT}, ${SERVER_LON} (${SERVER_NAME})"
 if awk -v lat="$SERVER_LAT" 'BEGIN{exit !(lat+0<-90 || lat+0>90)}' 2>/dev/null; then
-    log "⚠️  SERVER_LAT=${SERVER_LAT} ungültig (±90) — oft sind Breiten- und Längengrad vertauscht!"
+    log "⚠️  SERVER_LAT=${SERVER_LAT} is invalid (±90) — latitude/longitude may be swapped."
 fi
 if awk -v lon="$SERVER_LON" 'BEGIN{exit !(lon+0<-180 || lon+0>180)}' 2>/dev/null; then
-    log "⚠️  SERVER_LON=${SERVER_LON} ungültig (±180)!"
+    log "⚠️  SERVER_LON=${SERVER_LON} is invalid (±180)."
 fi
 
-# Sprache setzen (de oder en)
-LANG_VAL="${LANGUAGE:-de}"
-if [ "$LANG_VAL" != "de" ] && [ "$LANG_VAL" != "en" ]; then
-    log "⚠️  LANGUAGE='${LANG_VAL}' unbekannt — Fallback auf 'de'"
-    LANG_VAL="de"
+# Sprache setzen (en oder fr)
+LANG_VAL="${LANGUAGE:-en}"
+if [ "$LANG_VAL" != "en" ] && [ "$LANG_VAL" != "fr" ]; then
+    log "⚠️  LANGUAGE='${LANG_VAL}' is unknown — falling back to 'en'"
+    LANG_VAL="en"
 fi
 sed -i "s|'LANGUAGE_PLACEHOLDER'|'${LANG_VAL}'|g" \
     /var/www/html/index.html 2>/dev/null || true
-log "🌐 Sprache: ${LANG_VAL}"
+log "🌐 Language: ${LANG_VAL}"
+log "▣ Drops: ${DROPS_ENABLED} (${DROPS_LOG_PATH})"
 
 # Unban-API-Token ins Dashboard (leer = kein Token nötig)
 if [ -n "$UNBAN_API_TOKEN" ]; then
     sed -i "s|UNBAN_TOKEN_PLACEHOLDER|${UNBAN_API_TOKEN}|g" \
         /var/www/html/index.html 2>/dev/null || true
-    log "🔐 Unban-API-Token: gesetzt"
+    log "🔐 Unban API token: set"
 else
-    log "⚠️  Unban-API-Token: nicht gesetzt — Unban nur im vertrauenswürdigen LAN nutzen"
+    log "⚠️  Unban API token: not set — use unban only on a trusted LAN"
 fi
 
-log "✅ Dashboard konfiguriert (Exporter-URL: ${METRICS_URL})"
+log "✅ Dashboard configured (Exporter URL: ${METRICS_URL})"
 
 # ── Nginx starten ──
-log "🌐 Nginx starten (Dashboard auf Port 8080)..."
+log "🌐 Starting nginx (dashboard on port 8080)..."
 nginx -g "daemon off;" &
 NGINX_PID=$!
 
 # ── Exporter starten ──
-log "📡 Exporter starten (API auf Port 9456)..."
+log "📡 Starting exporter (API on port 9456)..."
 python3 /app/crowdsec_exporter.py &
 EXPORTER_PID=$!
 
-log "✅ Alles läuft!"
+log "✅ Services are running."
 log "   Dashboard: http://<EURE-IP>:8080"
 log "   API direkt: http://<EURE-IP>:9456/metrics (optional)"
 
 # ── Warten und bei Absturz neu starten ──
 while true; do
     if ! kill -0 $EXPORTER_PID 2>/dev/null; then
-        log "⚠️  Exporter abgestürzt — Neustart..."
+        log "⚠️  Exporter stopped — restarting..."
         python3 /app/crowdsec_exporter.py &
         EXPORTER_PID=$!
     fi
     if ! kill -0 $NGINX_PID 2>/dev/null; then
-        log "⚠️  Nginx abgestürzt — Neustart..."
+        log "⚠️  Nginx stopped — restarting..."
         nginx -g "daemon off;" &
         NGINX_PID=$!
     fi

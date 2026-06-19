@@ -106,6 +106,7 @@ async function fetchAndRender(){
     renderFilterBar();
     renderSparkline();
     renderMapPanels();
+    if(typeof fetchDrops==='function')fetchDrops();
     checkAlarms();
     hideErr();
     if(!serverCoordsConfigured()){

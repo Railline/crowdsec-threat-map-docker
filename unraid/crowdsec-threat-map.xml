@@ -3,45 +3,45 @@
 
   <!-- ═══════════════════════════════════════════════════
        CrowdSec Threat Map — Unraid CA Template
-       Autor: kabelsalatundklartext
-       https://github.com/kabelsalatundklartext/crowdsec-threat-map-docker
+       Authors: kabelsalatundklartext, Railline
+       https://github.com/Railline/crowdsec-threat-map-docker
        ═══════════════════════════════════════════════════ -->
 
   <Name>CrowdSec-Threat-Map</Name>
-  <Repository>ghcr.io/kabelsalatundklartext/crowdsec-threat-map-docker:latest</Repository>
-  <Registry>https://github.com/kabelsalatundklartext/crowdsec-threat-map-docker/pkgs/container/crowdsec-threat-map</Registry>
+  <Repository>ghcr.io/railline/crowdsec-threat-map-docker:latest</Repository>
+  <Registry>https://github.com/Railline/crowdsec-threat-map-docker/pkgs/container/crowdsec-threat-map-docker</Registry>
   <Network>bridge</Network>
   <MyIP/>
   <Shell>sh</Shell>
   <Privileged>false</Privileged>
-  <Support>https://github.com/kabelsalatundklartext/crowdsec-threat-map-docker/issues</Support>
-  <Project>https://github.com/kabelsalatundklartext/crowdsec-threat-map-docker</Project>
+  <Support>https://github.com/Railline/crowdsec-threat-map-docker/issues</Support>
+  <Project>https://github.com/Railline/crowdsec-threat-map-docker</Project>
   <Overview>
-    Echtzeit-Angriffskarte direkt aus eurer lokalen CrowdSec-Datenbank.&#xD;&#xA;
+    CrowdSec threat map from your local CrowdSec database.&#xD;&#xA;
     &#xD;&#xA;
     Features:&#xD;&#xA;
-    - Interaktive Weltkarte mit animierten Angriffspfeilen (D3.js)&#xD;&#xA;
-    - Live-Feed mit Suche, Filter und Pagination&#xD;&#xA;
-    - Ban-Status-Anzeige und IP-Unban direkt aus dem Dashboard&#xD;&#xA;
-    - Dynamische IP-Whitelist (verhindert Selbst-Ban bei IP-Wechsel)&#xD;&#xA;
-    - 4 Farbthemen, Sound-Alarm, CSV-Export&#xD;&#xA;
-    - Vollständig responsive — Desktop und Mobile&#xD;&#xA;
+    - English and French dashboard UI&#xD;&#xA;
+    - Interactive D3 world map with animated attack flights&#xD;&#xA;
+    - Live feed with search, filters and pagination&#xD;&#xA;
+    - Optional live firewall drops panel, fed by a mounted JSONL file&#xD;&#xA;
+    - Ban status and optional IP unban from the dashboard&#xD;&#xA;
+    - Dynamic IP whitelist, themes, sound alerts and CSV export&#xD;&#xA;
     &#xD;&#xA;
-    Voraussetzung: CrowdSec muss als Docker-Container auf Unraid laufen.&#xD;&#xA;
+    Requirement: CrowdSec must run as a Docker container on Unraid.&#xD;&#xA;
     &#xD;&#xA;
-    Tipp — CrowdSec Datenpfad herausfinden:&#xD;&#xA;
+    Tip — find the CrowdSec data path:&#xD;&#xA;
     docker inspect crowdsec | grep -A5 "Mounts"
   </Overview>
   <Category>Tools: Network:Other</Category>
   <WebUI>http://[IP]:[PORT:8080]/</WebUI>
-  <TemplateURL>https://raw.githubusercontent.com/kabelsalatundklartext/crowdsec-threat-map-docker/main/unraid/crowdsec-threat-map.xml</TemplateURL>
-  <Icon>https://raw.githubusercontent.com/kabelsalatundklartext/crowdsec-threat-map-docker/main/unraid/icon.png</Icon>
+  <TemplateURL>https://raw.githubusercontent.com/Railline/crowdsec-threat-map-docker/main/unraid/crowdsec-threat-map.xml</TemplateURL>
+  <Icon>https://raw.githubusercontent.com/Railline/crowdsec-threat-map-docker/main/unraid/icon.png</Icon>
   <ExtraParams>--group-add 999</ExtraParams>
   <PostArgs/>
   <CPUset/>
   <DateInstalled/>
   <DonateText>Gefällt dir das Projekt? Gib einen Stern auf GitHub!</DonateText>
-  <DonateLink>https://github.com/kabelsalatundklartext/crowdsec-threat-map-docker</DonateLink>
+  <DonateLink>https://github.com/Railline/crowdsec-threat-map-docker</DonateLink>
   <Requires>CrowdSec Docker Container</Requires>
 
   <!-- ═══════ PORT ═══════ -->
@@ -90,6 +90,17 @@
     Required="false"
     Mask="false">/var/run/docker.sock</Config>
 
+  <Config
+    Name="Optional Drops Log Directory"
+    Target="/crowdsec/drops"
+    Default=""
+    Mode="ro"
+    Description="Optional directory containing drops.jsonl for the live firewall drops panel. Leave empty if you only want the translated dashboard."
+    Type="Path"
+    Display="advanced"
+    Required="false"
+    Mask="false"></Config>
+
   <!-- ═══════ PFLICHT-VARIABLEN ═══════ -->
   <Config
     Name="Server Breitengrad (LAT)"
@@ -125,15 +136,15 @@
     Mask="false">MeinServer</Config>
 
   <Config
-    Name="Sprache (LANGUAGE)"
+    Name="Language"
     Target="LANGUAGE"
-    Default="de"
+    Default="en"
     Mode=""
-    Description="Oberflächensprache des Dashboards: de (Deutsch) oder en (Englisch)."
+    Description="Dashboard language: en or fr."
     Type="Variable"
     Display="always"
     Required="false"
-    Mask="false">de</Config>
+    Mask="false">en</Config>
 
   <!-- ═══════ CROWDSEC-CONTAINER ═══════ -->
   <Config
@@ -203,6 +214,50 @@
     Display="advanced"
     Required="false"
     Mask="false">365</Config>
+
+  <Config
+    Name="Enable Live Drops"
+    Target="DROPS_ENABLED"
+    Default="false"
+    Mode=""
+    Description="Enable the optional /drops API. Requires a JSONL file mounted at DROPS_LOG_PATH."
+    Type="Variable"
+    Display="advanced"
+    Required="false"
+    Mask="false">false</Config>
+
+  <Config
+    Name="Drops JSONL Path"
+    Target="DROPS_LOG_PATH"
+    Default="/crowdsec/drops/drops.jsonl"
+    Mode=""
+    Description="Path inside the container to the optional firewall drops JSONL file."
+    Type="Variable"
+    Display="advanced"
+    Required="false"
+    Mask="false">/crowdsec/drops/drops.jsonl</Config>
+
+  <Config
+    Name="Drops Max Events"
+    Target="DROPS_MAX_EVENTS"
+    Default="200"
+    Mode=""
+    Description="Maximum number of live drop events returned by /drops."
+    Type="Variable"
+    Display="advanced"
+    Required="false"
+    Mask="false">200</Config>
+
+  <Config
+    Name="Drops Max Age Seconds"
+    Target="DROPS_MAX_AGE_SECONDS"
+    Default="3600"
+    Mode=""
+    Description="Only keep drop events newer than this age. Use 0 to disable age filtering."
+    Type="Variable"
+    Display="advanced"
+    Required="false"
+    Mask="false">3600</Config>
 
   <Config
     Name="CrowdSec Restart Wartezeit (Sekunden)"

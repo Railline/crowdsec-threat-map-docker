@@ -1,11 +1,11 @@
 FROM python:3.12-alpine
 
 LABEL org.opencontainers.image.title="CrowdSec Threat Map"
-LABEL org.opencontainers.image.description="Echtzeit-Angriffskarte fuer CrowdSec"
-LABEL org.opencontainers.image.source="https://github.com/kabelsalatundklartext/crowdsec-threat-map-docker"
+LABEL org.opencontainers.image.description="CrowdSec threat map with English/French UI and optional live firewall drops"
+LABEL org.opencontainers.image.source="https://github.com/Railline/crowdsec-threat-map-docker"
 LABEL org.opencontainers.image.licenses="GPL-3.0-or-later"
-LABEL org.opencontainers.image.authors="kabelsalatundklartext"
-LABEL org.opencontainers.image.version="1.5.1"
+LABEL org.opencontainers.image.authors="kabelsalatundklartext, Railline"
+LABEL org.opencontainers.image.version="1.6.9"
 
 # nginx fuer Dashboard + docker-cli fuer Unban via docker exec
 RUN apk add --no-cache nginx docker-cli curl

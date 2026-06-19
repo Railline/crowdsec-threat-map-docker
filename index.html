@@ -381,8 +381,9 @@
   .tab-content{display:none;flex:1;overflow:hidden;flex-direction:column;}
   .tab-content.active{display:flex;}
   #feed,#top10,#topall{flex:1;overflow-y:auto;padding:3px 0;}
-  #feed::-webkit-scrollbar,#top10::-webkit-scrollbar,#topall::-webkit-scrollbar{width:2px;}
-  #feed::-webkit-scrollbar-thumb,#top10::-webkit-scrollbar-thumb,#topall::-webkit-scrollbar-thumb{background:var(--dim);}
+  #drops{flex:1;overflow-y:auto;padding:3px 0;}
+  #feed::-webkit-scrollbar,#top10::-webkit-scrollbar,#topall::-webkit-scrollbar,#drops::-webkit-scrollbar{width:2px;}
+  #feed::-webkit-scrollbar-thumb,#top10::-webkit-scrollbar-thumb,#topall::-webkit-scrollbar-thumb,#drops::-webkit-scrollbar-thumb{background:var(--dim);}
   #feed-filter{
     display:flex;align-items:center;justify-content:space-between;
     padding:6px 10px;border-bottom:1px solid var(--dim);
@@ -400,6 +401,20 @@
   .feed-item{padding:6px 10px 7px;border-bottom:1px solid rgba(0,255,200,0.05);cursor:pointer;}
   .feed-item{border-left:2px solid transparent;transition:background 0.15s;}
   .feed-item:hover{background:rgba(0,255,200,0.03);}
+  .drop-summary{padding:8px 10px;border-bottom:1px solid rgba(130,80,255,0.18);background:linear-gradient(90deg,rgba(130,80,255,0.12),rgba(0,255,224,0.05));font-size:10px;letter-spacing:0.9px;color:rgba(210,245,255,0.78);line-height:1.45;}
+  .drop-item{padding:8px 10px;border-bottom:1px solid rgba(0,255,224,0.07);border-left:2px solid transparent;border-image:linear-gradient(180deg,#9b5cff,#00ffe0) 1;background:linear-gradient(90deg,rgba(120,70,255,0.08),rgba(0,255,224,0.025));cursor:pointer;}
+  .drop-item:hover{background:linear-gradient(90deg,rgba(120,70,255,0.16),rgba(0,255,224,0.07));}
+  .drop-main{display:flex;align-items:center;justify-content:space-between;gap:8px;font-family:Orbitron,monospace;font-size:12px;color:#d8faff;}
+  .drop-ip{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .drop-count{flex-shrink:0;color:#00ffe0;text-shadow:0 0 8px rgba(0,255,224,0.45);}
+  .drop-meta{font-size:10px;line-height:1.45;color:rgba(210,245,255,0.58);margin-top:4px;word-break:break-word;}
+  .drop-empty{padding:18px 12px;text-align:center;font-size:10px;color:rgba(210,245,255,0.42);line-height:1.5;}
+  .ui-readable body, body{font-size:15px;}
+  .tab{font-size:clamp(7px,0.9vw,9px);}
+  .feed-item,.top-item,.drop-item{font-size:11px;}
+  .feed-ip{font-size:13px;}
+  .stat-lbl,.fstat,.settings-field,.settings-check,.settings-hint,.settings-help{font-size:10px;}
+  .settings-panel header h3{font-size:13px;}
   .page-btn{
     min-width:26px;height:24px;padding:0 5px;
     border:1px solid rgba(0,255,200,0.2);border-radius:3px;
@@ -545,7 +560,7 @@
   }
   #map-mob-controls{display:none;}
   .mob-tab-btn{
-    flex:1;min-width:72px;max-width:33%;
+    flex:1;min-width:64px;max-width:25%;
     display:flex;align-items:center;justify-content:center;
     padding:10px 6px;text-align:center;
     font-size:10px;letter-spacing:0.8px;line-height:1.2;
@@ -767,6 +782,7 @@
         <label class="settings-field"><span id="set-lbl-max-active">Max. Raketen gleichzeitig</span><input type="number" id="set-max-active" min="5" step="1"></label>
         <label class="settings-field"><span id="set-lbl-max-pending">Max. Warteschlange</span><input type="number" id="set-max-pending" min="10" step="10"></label>
         <label class="settings-field"><span id="set-lbl-max-batch">Raketen pro Schwung</span><input type="number" id="set-max-batch" min="3" step="1"></label>
+        <label class="settings-check"><input type="checkbox" id="set-show-drops"> <span id="set-lbl-show-drops">Live firewall drops anzeigen</span></label>
         <label class="settings-field"><span id="set-lbl-preset">Voreinstellung</span>
           <select id="set-performance-preset">
             <option value="">— auswählen —</option>
@@ -1002,6 +1018,7 @@
       <div class="tab active" data-tab="feed">▶ FEED</div>
       <div class="tab" data-tab="top10">🏆 TOP 10</div>
       <div class="tab" data-tab="topall">🌍 ALLE</div>
+      <div class="tab" data-tab="drops">▣ DROPS</div>
     </div>
     <div class="tab-content active" id="tc-feed">
       <!-- Sparkline -->
@@ -1031,6 +1048,10 @@
     </div>
     <div class="tab-content" id="tc-top10"><div id="top10"></div></div>
     <div class="tab-content" id="tc-topall"><div id="topall"></div></div>
+    <div class="tab-content" id="tc-drops">
+      <div class="drop-summary" id="drops-summary">Live firewall drops disabled.</div>
+      <div id="drops"></div>
+    </div>
     <div id="sidebar-bottom"><span id="sidebar-server-lbl">MEIN-SERVER</span> &nbsp;|&nbsp; <span id="lu">—</span><br>
       <div id="wl-badge" style="margin:4px 0 3px;display:flex;align-items:center;gap:5px;font-size:8px;letter-spacing:0.5px;">
         <span id="wl-dot" style="width:6px;height:6px;border-radius:50%;background:rgba(160,255,216,0.2);flex-shrink:0;display:inline-block;"></span>
@@ -1085,6 +1106,7 @@
     <button type="button" class="mob-tab-btn active" data-mob="feed">▶ FEED</button>
     <button type="button" class="mob-tab-btn" data-mob="top10">🏆 TOP 10</button>
     <button type="button" class="mob-tab-btn" data-mob="topall">🌍 ALLE</button>
+    <button type="button" class="mob-tab-btn" data-mob="drops">▣ DROPS</button>
   </nav>
   <div id="mob-panel">
     <div id="mob-view-feed" class="mob-panel-view active">
@@ -1116,6 +1138,13 @@
     <div id="mob-view-topall" class="mob-panel-view">
       <div class="mob-panel-tab-hdr">🌍 ALLE LÄNDER · ALLTIME</div>
       <div class="mob-panel-scroll" id="mob-topall"></div>
+    </div>
+    <div id="mob-view-drops" class="mob-panel-view">
+      <div class="mob-panel-tab-hdr" id="mob-drops-title">▣ LIVE DROPS</div>
+      <div class="drop-summary" id="mob-drops-summary">Live firewall drops disabled.</div>
+      <div class="mob-panel-scroll">
+        <div id="mob-drops"></div>
+      </div>
     </div>
   </div>
   </div>
@@ -1150,7 +1179,7 @@ let SERVER_NAME_MAP = 'MEIN-SERVER';
 // Ab hier nichts mehr ändern
 // ============================================================
 
-const APP_VERSION  = 'v1.6.8';
+const APP_VERSION  = 'v1.6.9';
 let REFRESH_MS   = 30000;
 const localUnbanned = new Set();
 const ARC_FPS      = 30;
@@ -1174,6 +1203,7 @@ const MAP_SETTINGS_DEFAULTS={
   rocketSpawnMode:'per_attack',maxQueuePerIp:12,
   rocketTailClassic:0.13,rocketTailLegacy:0.06,rocketTailArc:0.10,rocketLaneSpread:12,
   showFlightLabels:true,maxFlightLabels:8,replayDurationMin:3,
+  showDrops:false,
   maxConsoleArcs:150,
   rocketStyle:'classic',
   overrideCoords:false,serverLat:'',serverLon:'',serverName:'',
@@ -1243,7 +1273,7 @@ function filterEventsForSpawnMode(events){
 function updateSpawnModeHint(){
   const el=document.getElementById('settings-spawn-hint');
   if(!el)return;
-  const l=LANG[currentLang]||LANG.de;
+  const l=LANG[currentLang]||LANG.en;
   const mode=document.getElementById('set-spawn-mode')?.value||mapSettings.rocketSpawnMode;
   const key=mode==='per_ip'?'spawn_hint_ip':mode==='per_ip_time'?'spawn_hint_ip_time':'spawn_hint_attack';
   el.textContent=l[key]||'';
@@ -1723,6 +1753,14 @@ const LANG = {
     feed:        '▶ FEED',
     top10:       '🏆 TOP 10',
     all:         '🌍 ALLE',
+    drops_tab:   '▣ DROPS',
+    drops_title: 'LIVE FIREWALL DROPS',
+    drops_disabled:'Drops deaktiviert — in den Einstellungen aktivieren und DROPS_ENABLED=true setzen.',
+    drops_empty: 'Keine verworfenen Pakete im aktuellen Fenster.',
+    drops_summary:(n,p,b)=>`${n} Drop-Ereignisse · ${p} Pakete · ${b} Bytes`,
+    drops_packets:'Pakete',
+    drops_bytes:'Bytes',
+    set_show_drops:'Live firewall drops anzeigen',
     sort:        'SORTIERUNG:',
     newest:      '▼ NEUESTE',
     oldest:      '▲ ÄLTESTE',
@@ -1873,6 +1911,14 @@ const LANG = {
     feed:        '▶ FEED',
     top10:       '🏆 TOP 10',
     all:         '🌍 ALL',
+    drops_tab:   '▣ DROPS',
+    drops_title: 'LIVE FIREWALL DROPS',
+    drops_disabled:'Drops disabled — enable the UI checkbox and set DROPS_ENABLED=true.',
+    drops_empty: 'No dropped packets in the current window.',
+    drops_summary:(n,p,b)=>`${n} drop events · ${p} packets · ${b} bytes`,
+    drops_packets:'Packets',
+    drops_bytes:'Bytes',
+    set_show_drops:'Show live firewall drops',
     sort:        'SORT:',
     newest:      '▼ NEWEST',
     oldest:      '▲ OLDEST',
@@ -2017,11 +2063,143 @@ const LANG = {
     range_labels:  {'168':'7D','720':'1M','4320':'6M','8760':'12M','17520':'2Y','26280':'3Y','35040':'4Y','43800':'5Y','52560':'6Y'},
   }
 };
+LANG.fr = {
+  ...LANG.en,
+  attacks:'ATTAQUES',
+  countries:'PAYS',
+  scenarios:'SCENARIOS',
+  feed:'▶ FLUX',
+  top10:'🏆 TOP 10',
+  all:'🌍 TOUS',
+  sort:'TRI :',
+  newest:'▼ RECENTS',
+  oldest:'▲ ANCIENS',
+  settings_btn:'REGLAGES',
+  settings_title:'Reglages',
+  settings_sec_perf:'Performance et donnees',
+  settings_sec_anim:'Animation',
+  settings_sec_map:'Carte / serveur',
+  settings_sec_rockets:'Logique des fusees',
+  settings_nav_perf:'Performance',
+  settings_nav_anim:'Animation',
+  settings_nav_rockets:'Fusees',
+  settings_nav_map:'Carte',
+  set_refresh:'Actualiser le flux (sec.)',
+  set_max_active:'Fusees simultanees max',
+  set_max_pending:'File max',
+  set_max_batch:'Fusees par lot',
+  set_preset:'Profil',
+  set_duration:'Duree de vol (sec.)',
+  set_stagger:'Delai meme IP (ms)',
+  set_ui_throttle:'Rafraichissement replay (ms)',
+  set_label_throttle:'Labels de vol (ms)',
+  set_override:'Coordonnees personnalisees',
+  set_lat:'Latitude (LAT)',
+  set_lon:'Longitude (LON)',
+  set_name:'Nom affiche',
+  settings_reset:'Defaut',
+  settings_cancel:'Annuler',
+  settings_save:'Enregistrer',
+  set_spawn_mode:'Declencher une fusee par',
+  spawn_hint_attack:'Chaque entree du flux (IP + scenario + heure) = une fusee.',
+  spawn_hint_ip_time:'Meme IP a la meme heure = une fusee.',
+  spawn_hint_ip:'Une seule fusee par IP.',
+  set_queue_ip:'File max par IP',
+  set_rocket_style_sel:'Style de fusee',
+  spawn_mode_attack:'Attaque (IP + scenario + heure)',
+  spawn_mode_ip_time:'IP + horodatage',
+  spawn_mode_ip:'IP seulement',
+  set_tail:'Longueur trainee (%)',
+  set_lane:'Ecart des trajectoires (px)',
+  set_max_arcs:'Arcs console max',
+  set_show_labels:'Afficher les labels de vol',
+  set_max_labels:'Labels de vol max',
+  set_replay_min:'Duree replay a 1x (min)',
+  settings_preset_hint:'Le profil ne modifie que les valeurs de performance.',
+  zoom_lbl:'ZOOM',
+  lookup:'RECHERCHER IP',
+  goto_map:'SUR CARTE',
+  close:'✕ FERMER',
+  unban:'Debannir IP',
+  leg_1_4:'1-4 ATTAQUES',
+  leg_5_9:'5-9 ATTAQUES',
+  leg_10_19:'10-19 ATTAQUES',
+  leg_20:'20+ ATTAQUES',
+  leg_server:'SERVEUR',
+  leg_click:'| CLIC POINT = DETAILS',
+  top_scenarios:'TOP SCENARIOS',
+  malevolent_ips:'IPS MALVEILLANTES',
+  top_origins:'ORIGINES DES ATTAQUES',
+  fs_alerts:'ALERTES',
+  fs_ips:'IPS UNIQUES',
+  fs_scenarios:'SCENARIOS',
+  fs_countries:'PAYS',
+  lbl_speed:'VITESSE',
+  lbl_range:'PLAGE',
+  mob_lbl_alltime:'TOTAL (GLOBAL)',
+  map_window_title:'FENETRE CARTE',
+  replay_play_title:'Demarrer le replay',
+  replay_stop_title:'Arreter le replay',
+  live_clock:'● DIRECT',
+  entries:(s,e,t)=>`${s}-${e} sur ${t} entrees`,
+  top_list_empty:'Pas encore de donnees globales.',
+  error_conn:'ERREUR CONNEXION : ',
+  error_prefix:'ERREUR : ',
+  load_init:'INITIALISATION',
+  load_map:'CHARGEMENT CARTE...',
+  load_feed:'CONNEXION AU FLUX...',
+  sparkline:'ATTAQUES / HEURE',
+  search_ph:'🔍  IP, PAYS, SCENARIO...',
+  theme_lbl:'THEME :',
+  csv_btn:'↓ CSV',
+  csv_title:'Exporter le flux en CSV',
+  tip_close:'Fermer',
+  tip_click:'CLIQUER POUR DETAILS',
+  live_title:'Flux live des attaques',
+  home_zoom:'Aller au serveur',
+  zoom_prefs_title:'Enregistrer le zoom',
+  zoom_prefs_use:'Utiliser la vue sauvegardee',
+  zoom_prefs_save:'Sauvegarder la vue',
+  zoom_prefs_reset:'Reinitialiser',
+  zoom_prefs_home:'Zoom par defaut (⌂) :',
+  zoom_prefs_saved:(k)=>`Sauvegarde : ${k.toFixed(1)}x`,
+  zoom_prefs_none:'Aucune vue sauvegardee',
+  zoom_prefs_ok:'Vue sauvegardee',
+  zoom_prefs_saved_desktop_only:'Vue sauvegardee : bureau seulement',
+  wl_title:'Statut whitelist',
+  wl_na:'Whitelist : n/a',
+  wl_err:'⚠️ Erreur whitelist',
+  wl_updated:(ip)=>`🔄 ${ip} mis a jour`,
+  wl_check:(c,ch)=>`Derniere verification : ${c}${ch ? ' | Modifie : '+ch : ''}`,
+  show_own_ip_on:'AFFICHER MON IP',
+  show_own_ip_off:'MASQUER MON IP',
+  show_own_ip_title:'Afficher ou masquer votre IP',
+  wl_ip_hidden:'🛡️ IP masquee',
+  filter_country:(cc)=>`Clic : afficher seulement ${cc}`,
+  filter_scenario:'Clic : filtrer par scenario',
+  unban_active:'Ban actif — debannir',
+  unban_history:'Effacer historique',
+  lookup_title:'Rechercher IP',
+  map_title:'Afficher sur carte',
+  unban_confirm1:(ip)=>`🔓 Debannir ${ip} ?\n\nCette IP sera retiree des bans CrowdSec actifs.`,
+  unban_confirm2:(ip)=>`⚠️ Dernier avertissement !\n\nIP : ${ip}\n\nConfirmer ?`,
+  unban_fail:'Echec du deban',
+  unban_conn:'Erreur de connexion a l exporter',
+  csv_headers:['IP','Pays','Ville','ASN','Nom AS','Scenario','Nombre','Heure'],
+  drops_tab:'▣ DROPS',
+  drops_title:'DROPS FIREWALL LIVE',
+  drops_disabled:'Drops desactives — cochez l option et configurez DROPS_ENABLED=true.',
+  drops_empty:'Aucun paquet drop dans la fenetre actuelle.',
+  drops_summary:(n,p,b)=>`${n} evenements · ${p} paquets · ${b} octets`,
+  drops_packets:'Paquets',
+  drops_bytes:'Octets',
+  set_show_drops:'Afficher les drops firewall live',
+};
 let currentLang = 'LANGUAGE_PLACEHOLDER'; // wird durch entrypoint.sh ersetzt
 
 function normalizeLang(){
-  let lang=String(currentLang||'de').toLowerCase().trim();
-  if(lang==='LANGUAGE_PLACEHOLDER'||!LANG[lang]) lang='de';
+  let lang=String(currentLang||'en').toLowerCase().trim();
+  if(lang==='LANGUAGE_PLACEHOLDER'||!LANG[lang]) lang='en';
   currentLang=lang;
   document.documentElement.lang=lang;
 }
@@ -2050,7 +2228,7 @@ function translateCity(city) {
 }
 
 function t(key, ...args){
-  const tr=LANG[currentLang]||LANG.de;
+  const tr=LANG[currentLang]||LANG.en;
   const v=tr[key];
   if(typeof v==='function') return v(...args);
   return v!=null?v:key;
@@ -2186,7 +2364,7 @@ function restartFetchLoop(){
 function updateSettingsCoordsHint(){
   const el=document.getElementById('settings-coords-hint');
   if(!el)return;
-  const l=LANG[currentLang]||LANG.de;
+  const l=LANG[currentLang]||LANG.en;
   const lat=dockerServerCoords.lat!=null?dockerServerCoords.lat:'—';
   const lon=dockerServerCoords.lon!=null?dockerServerCoords.lon:'—';
   const tpl=l.settings_coords_hint||'Docker: {lat}, {lon}';
@@ -2221,6 +2399,8 @@ function fillSettingsForm(){
   set('set-max-arcs',s.maxConsoleArcs??150);
   const sl=document.getElementById('set-show-labels');
   if(sl)sl.checked=s.showFlightLabels!==false;
+  const sd=document.getElementById('set-show-drops');
+  if(sd)sd.checked=!!s.showDrops;
   set('set-max-labels',s.maxFlightLabels??8);
   const oc=document.getElementById('set-override-coords');
   if(oc)oc.checked=!!s.overrideCoords;
@@ -2251,6 +2431,7 @@ function readSettingsForm(){
     rocketTailLegacy:mapSettings.rocketTailLegacy??0.06,
     rocketLaneSpread:clampNum(set('set-lane-spread')?.value,0,30,12),
     showFlightLabels:!!set('set-show-labels')?.checked,
+    showDrops:!!set('set-show-drops')?.checked,
     maxConsoleArcs:clampNum(set('set-max-arcs')?.value,10,500,150),
     maxFlightLabels:clampNum(set('set-max-labels')?.value,0,30,8),
     overrideCoords:!!set('set-override-coords')?.checked,
@@ -2282,6 +2463,7 @@ function saveSettingsFromForm(){
   syncRocketStyleUI();
   applyCoordOverrides();
   restartFetchLoop();
+  if(typeof fetchDrops==='function')fetchDrops();
   if(dotG){
     drawServerDots();
     renderDots();
@@ -2304,7 +2486,7 @@ function resetMapSettings(){
   if(dotG){drawServerDots();renderDots();drawCountryLabels();}
 }
 function syncSettingsModalLang(){
-  const l=LANG[currentLang]||LANG.de;
+  const l=LANG[currentLang]||LANG.en;
   const set=(id,key)=>{const el=document.getElementById(id);if(el)el.textContent=l[key]||'';};
   set('settings-title','settings_title');
   set('settings-sec-perf','settings_sec_perf');
@@ -2319,6 +2501,7 @@ function syncSettingsModalLang(){
   set('set-lbl-lane','set_lane');
   set('set-lbl-max-arcs','set_max_arcs');
   set('set-lbl-show-labels','set_show_labels');
+  set('set-lbl-show-drops','set_show_drops');
   set('set-lbl-max-labels','set_max_labels');
   set('set-lbl-replay-min','set_replay_min');
   const sm=document.getElementById('set-spawn-mode');
@@ -2369,7 +2552,7 @@ function ensureAutoZoomOff(){
   autoZoomOn=false;
   setToggleBtn('autozoom-toggle',false,'autozoom-dot');
   setToggleBtn('mob-autozoom-toggle',false,'mob-autozoom-dot');
-  const l=LANG[currentLang]||LANG.de;
+  const l=LANG[currentLang]||LANG.en;
   const lbl=document.getElementById('autozoom-label');
   const mobLbl=document.getElementById('mob-autozoom-label');
   if(lbl)lbl.textContent=l.autozoom_off;
@@ -2382,7 +2565,7 @@ function syncMapToggleStates(){
   setToggleBtn('mob-anim-toggle',animOn,'mob-anim-dot');
   setToggleBtn('mob-lines-toggle',linesOn,'mob-lines-dot');
   setToggleBtn('mob-autozoom-toggle',autoZoomOn,'mob-autozoom-dot');
-  const l=LANG[currentLang]||LANG.de;
+  const l=LANG[currentLang]||LANG.en;
   const animLbl=document.getElementById('anim-label');
   if(animLbl)animLbl.textContent=animOn?l.anim_on:l.anim_off;
   const linesLbl=document.getElementById('lines-label');
@@ -3292,6 +3475,64 @@ function setFeedPage(p){
   if(f)f.scrollTop=0;
   const mf=document.getElementById('mob-panel');
   if(mf)mf.scrollTop=0;
+}
+
+// ── LIVE FIREWALL DROPS ──
+let dropsData=[];
+let dropsApiEnabled=false;
+function escHtml(v){
+  return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function dropsEndpoint(){
+  return EXPORTER_URL.replace(/\/metrics.*$/,'').replace(/\/$/,'') + '/drops';
+}
+async function fetchDrops(){
+  if(!mapSettings.showDrops){
+    dropsData=[];
+    dropsApiEnabled=false;
+    renderDrops();
+    return;
+  }
+  try{
+    const res=await fetch(dropsEndpoint(),{cache:'no-store'});
+    if(!res.ok)throw new Error(String(res.status));
+    const data=await res.json();
+    dropsApiEnabled=!!data.enabled;
+    dropsData=Array.isArray(data.events)?data.events:[];
+  }catch(e){
+    dropsApiEnabled=false;
+    dropsData=[];
+  }
+  renderDrops();
+}
+function dropEventHtml(d){
+  const cc=String(d.country||'??').toUpperCase();
+  const flag=FLAG[cc]||'🌐';
+  const packets=Number(d.packets||0);
+  const bytes=Number(d.bytes||0);
+  const city=d.city?` · ${escHtml(d.city)}`:'';
+  const chain=d.chain?` · ${escHtml(d.chain)}`:'';
+  const rule=d.rule?` · ${escHtml(d.rule)}`:'';
+  const ts=d.ts?new Date(d.ts).toLocaleString(currentLang==='fr'?'fr-FR':'en-GB'):'—';
+  const ip=escHtml(d.ip||'');
+  return `<div class="drop-item" onclick="openCtxFeed('${ip}','${cc}','firewall-drop',1,event,'')">
+    <div class="drop-main"><span class="drop-ip">${flag} ${ip}</span><span class="drop-count">${packets} ${escHtml(t('drops_packets'))}</span></div>
+    <div class="drop-meta">${escHtml(countryDisplayName(cc))}${city}${chain}${rule}<br>${ts} · ${bytes} ${escHtml(t('drops_bytes'))}</div>
+  </div>`;
+}
+function renderDrops(){
+  const enabled=!!mapSettings.showDrops && dropsApiEnabled;
+  const packets=dropsData.reduce((n,d)=>n+Number(d.packets||0),0);
+  const bytes=dropsData.reduce((n,d)=>n+Number(d.bytes||0),0);
+  const summary=enabled?t('drops_summary',dropsData.length,packets,bytes):t('drops_disabled');
+  ['drops-summary','mob-drops-summary'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=summary;});
+  const html=!enabled
+    ? `<div class="drop-empty">${escHtml(t('drops_disabled'))}</div>`
+    : (dropsData.length?dropsData.map(dropEventHtml).join(''):`<div class="drop-empty">${escHtml(t('drops_empty'))}</div>`);
+  const d=document.getElementById('drops');
+  if(d)d.innerHTML=html;
+  const md=document.getElementById('mob-drops');
+  if(md)md.innerHTML=html;
 }
 
 // ── UTILS ──
