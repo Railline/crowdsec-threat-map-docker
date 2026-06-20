@@ -1209,7 +1209,7 @@ const MAP_SETTINGS_DEFAULTS={
   rocketSpawnMode:'per_attack',maxQueuePerIp:12,
   rocketTailClassic:0.13,rocketTailLegacy:0.06,rocketTailArc:0.10,rocketLaneSpread:12,
   showFlightLabels:true,maxFlightLabels:8,replayDurationMin:3,
-  showDrops:false,
+  showDrops:true,
   showLiveDrops:true,showLiveAttacks:true,
   maxConsoleArcs:150,
   rocketStyle:'classic',
@@ -1242,15 +1242,28 @@ const AUTO_ZOOM_MAX_K = 5.5;      // Max. Zoom bei Einzelangriff
 const THREAT_TYPES = {
   cve:  { color:'#ff4400', labelDe:'CVE-Exploit', labelEn:'CVE Exploit' },
   brute:{ color:'#ff6b9d', labelDe:'Brute-Force', labelEn:'Brute Force' },
+  auth: { color:'#ffcc33', labelDe:'Auth / Login', labelEn:'Auth / Login' },
+  web:  { color:'#00e6ff', labelDe:'Web-App', labelEn:'Web App' },
+  bot:  { color:'#b56cff', labelDe:'Bot / Crawler', labelEn:'Bot / Crawler' },
+  dos:  { color:'#ff3333', labelDe:'DoS / Flood', labelEn:'DoS / Flood' },
+  ids:  { color:'#ffaa00', labelDe:'IDS / Suricata', labelEn:'IDS / Suricata' },
   recon:{ color:'#00cc66', labelDe:'Aufklärung', labelEn:'Reconnaissance' },
   scan: { color:'#4488ff', labelDe:'Schwachstellen-Scan', labelEn:'Vulnerability Scan' },
   other:{ color:'#888899', labelDe:'Sonstige', labelEn:'Other' },
 };
-function scenarioCategory(s){const x=(s||'').toLowerCase();if(/cve|exploit|sqli|rce|lfi|rfi/.test(x))return 'cve';if(/ssh|bf|brute|force|login|rdp/.test(x))return 'brute';if(/scan|probing|probe|discovery/.test(x))return 'scan';if(/http|sensitive|recon|path/.test(x))return 'recon';return 'other';}
+function scenarioCategory(s){
+  const x=(s||'').toLowerCase();
+  if(/suricata|ids|cve|exploit|sqli|sql[-_ ]?inject|rce|lfi|rfi|xss|shellshock|log4j|wordpress|wp-|joomla|drupal|nuclei/.test(x))return x.includes('suricata')||x.includes('ids')?'ids':'cve';
+  if(/ssh|rdp|ftp|smb|smtp|imap|pop3|auth|login|credential|password|bf|brute|force|bouncer/.test(x))return /bf|brute|force/.test(x)?'brute':'auth';
+  if(/http|nginx|apache|traefik|crawler|crawl|bot|bad[-_ ]?user[-_ ]?agent|user-agent|scraper|nikto|acunetix|zgrab|masscan/.test(x))return /bot|crawler|crawl|scraper|user-agent|zgrab/.test(x)?'bot':'web';
+  if(/dos|ddos|flood|syn|udp|amplification|slowloris/.test(x))return 'dos';
+  if(/scan|portscan|probing|probe|discovery|recon|enumeration|exposed|sensitive|path|dirbuster/.test(x))return x.includes('scan')||x.includes('prob')?'scan':'recon';
+  return 'other';
+}
 function scenarioColor(s){return THREAT_TYPES[scenarioCategory(s)]?.color||THREAT_TYPES.other.color;}
 function threatLabel(cat){const tr=THREAT_TYPES[cat];return tr?(currentLang==='de'?tr.labelDe:tr.labelEn):cat;}
 
-let allEvents=[],liveMode=false,replayPlaying=false,replayRangeH=48,replaySpeed=1;
+let allEvents=[],liveMode=true,replayPlaying=false,replayRangeH=48,replaySpeed=1;
 let replayCursor=0,replayWinStart=0,replayWinEnd=0,replayLastFrame=0,activeRockets=[],lastReplaySpawnTs=0;
 let lastMetricsText='',replayInitialized=false,replayAutoStarted=false;
 let countriesGeo=null;
@@ -3501,15 +3514,23 @@ function liveDropsVisible(){
 function liveAttacksVisible(){
   return mapSettings.showLiveAttacks!==false;
 }
+function liveDropIps(){
+  return new Set(dropFeedData.map(d=>d.ip).filter(Boolean));
+}
+function suppressDroppedAttackEvents(events){
+  if(!liveDropsVisible()||!dropFeedData.length)return events;
+  const dropped=liveDropIps();
+  return events.filter(e=>!dropped.has(e.ip));
+}
 function getVisibleLiveEvents(){
   const list=[];
-  if(liveAttacksVisible())list.push(...attackFeedData);
+  if(liveAttacksVisible())list.push(...suppressDroppedAttackEvents(attackFeedData));
   if(liveDropsVisible())list.push(...dropFeedData);
   return list;
 }
 function getVisibleLiveAttackData(metricAttacks){
   const list=[];
-  if(liveAttacksVisible())list.push(...metricAttacks);
+  if(liveAttacksVisible())list.push(...suppressDroppedAttackEvents(metricAttacks));
   if(liveDropsVisible())list.push(...aggregateFromEvents(dropFeedData));
   return list;
 }

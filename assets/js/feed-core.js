@@ -6,6 +6,8 @@ function parseMetrics(text){
       const ls=line.match(/\{(.+)\}/)?.[1]||'';
       const val=parseFloat(line.split('} ')[1])||1;
       const lb={};ls.replace(/(\w+)="([^"]*)"/g,(_,k,v)=>{lb[k]=v;});
+      if((lb.type||'').toLowerCase()==='drop')continue;
+      if((lb.scenario||'').toLowerCase()==='crowdsec-ban')continue;
       if(lb.src_lat&&lb.src_lon)flows.push({lat:parseFloat(lb.src_lat),lon:parseFloat(lb.src_lon),country:lb.country||'??',city:lb.city||lb.src_city||'',scenario:lb.scenario||'unknown',ip:lb.ip||'',count:val,source:'attack'});
     }catch(e){}
   }
@@ -47,6 +49,8 @@ function parseFeedData(text){
     try{
       const ls=line.match(/\{(.+)\}/)?.[1]||'';
       const lb={};ls.replace(/(\w+)="([^"]*)"/g,(_,k,v)=>{lb[k]=v;});
+      if((lb.type||'').toLowerCase()==='drop')continue;
+      if((lb.scenario||'').toLowerCase()==='crowdsec-ban')continue;
       if(!lb.ip||!lb.attack_time_iso)continue;
       const key=lb.ip+'|'+lb.scenario+'|'+lb.attack_time_iso;
       if(seen.has(key))continue;
