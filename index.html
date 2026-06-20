@@ -759,81 +759,82 @@
     #map-window-stats{display:block!important;}
   }
 
-  /* Readability scale: keep CTM usable on wall screens and high-DPI desktops. */
-  body{font-size:30px!important;}
-  #map-title-overlay{height:38px!important;}
-  #map-title-overlay #h-title{font-size:clamp(18px,2.2vw,26px)!important;}
-  #map-version-badge{font-size:16px!important;padding:4px 10px!important;}
-  .stat-val{font-size:clamp(20px,2vw,26px)!important;}
-  .stat-lbl,.mws-lbl,.mob-stat-lbl{font-size:13px!important;}
-  .mws-val,.mob-stat-val{font-size:20px!important;}
-  #toggle-row #lines-toggle,
-  #toggle-row #anim-toggle,
-  #toggle-row #autozoom-toggle,
-  .settings-open-btn,
-  .ctrl-btn,
-  .pill-btn,
-  .mob-ctrl-pill,
-  .csv-feed-btn,
-  #mode-live-btn,
-  .live-filter-btn,
-  .replay-ctrl-btn{
-    font-size:16px!important;
-    min-height:30px!important;
-  }
-  #replay-clock,#timeline-labels,#feed-info,#mob-feed-info,#sidebar-bottom,
-  #sparkline-title,#mob-sparkline-title,#theme-lbl,#zoom-level,#zoom-prefs-status{
-    font-size:16px!important;
-  }
-  .tab,.mob-tab-btn{font-size:16px!important;min-height:42px!important;}
-  #feed-filter span,#feed-filter button,.filter-chip,#feed-search,#mob-feed-search{
-    font-size:16px!important;
-  }
-  .feed-item,.top-item,.drop-item{font-size:18px!important;}
-  .feed-ip{font-size:22px!important;}
-  .feed-meta,.feed-scenario,.top-country,.top-count,.top-rank,.ctx-item,.ctx-icon,.ctx-close{
-    font-size:18px!important;
-  }
-  .feed-action-btn{font-size:22px!important;min-width:34px!important;min-height:34px!important;}
-  .drop-summary,.drop-meta,.drop-empty{font-size:18px!important;}
-  .drop-main{font-size:22px!important;}
-  .map-panel{font-size:18px!important;min-width:220px!important;max-width:320px!important;}
-  .map-panel h4,.map-window-stats-title,.ctrl-group-lbl,.threat-leg,.leg-item,#leg-anim-hint,#leg-hint{
-    font-size:16px!important;
-  }
-  #tip{font-size:18px!important;min-width:280px!important;max-width:420px!important;}
-  #tip-close{font-size:18px!important;width:28px!important;height:28px!important;line-height:28px!important;}
-  #ctx-title,#ctx-close{font-size:18px!important;}
-  .settings-panel{width:min(760px,96vw)!important;}
-  .settings-panel header h3{font-size:24px!important;}
-  #settings-close-btn{font-size:28px!important;}
-  .settings-nav button,.settings-body section h4,.settings-field,.settings-check,.settings-hint,.settings-help,.settings-panel footer button{
-    font-size:18px!important;
-  }
-  .settings-field{grid-template-columns:1fr 150px!important;gap:10px 16px!important;}
-  .settings-field input[type=number],.settings-field input[type=text],.settings-field select{
-    font-size:18px!important;
-    min-height:34px!important;
-  }
-  #loading h2{font-size:26px!important;}
-  #loading p,#err{font-size:20px!important;}
-
-  @media(max-width:900px){
-    #map-title-overlay{height:34px!important;}
-    #map-title-overlay #h-title{font-size:18px!important;}
-    #map-version-badge{font-size:13px!important;}
-    #mob-sheet{min-height:320px!important;height:min(58vh,520px)!important;max-height:62vh!important;}
-    #map-window-stats{padding:5px 8px!important;}
-    #map-mob-controls .mob-ctrl-pill,#console-controls .pill-btn,#console-controls .ctrl-group-lbl{
-      font-size:14px!important;
+  /* Readability scale: about 1.85x on desktop, with a lighter mobile pass. */
+  @media(min-width:901px){
+    body{font-size:28px!important;}
+    #map-title-overlay{height:35px!important;}
+    #map-title-overlay #h-title{font-size:clamp(17px,2.05vw,24px)!important;}
+    #map-version-badge{font-size:15px!important;padding:4px 10px!important;}
+    .stat-val{font-size:clamp(19px,1.85vw,24px)!important;}
+    .stat-lbl,.mws-lbl{font-size:12px!important;}
+    .mws-val{font-size:19px!important;}
+    #toggle-row #lines-toggle,
+    #toggle-row #anim-toggle,
+    #toggle-row #autozoom-toggle,
+    .settings-open-btn,
+    .ctrl-btn,
+    .pill-btn,
+    .csv-feed-btn,
+    #mode-live-btn,
+    .live-filter-btn,
+    .replay-ctrl-btn{
+      font-size:15px!important;
       min-height:28px!important;
     }
-    #console-controls .ctrl-group-lbl{width:86px!important;}
-    #mob-legend-bar .threat-leg{font-size:13px!important;}
-    #replay-clock{font-size:14px!important;}
-    #mode-live-btn,.live-filter-btn{font-size:14px!important;}
-    .mob-stat-val{font-size:18px!important;}
-    .mob-stat-lbl{font-size:12px!important;}
+    #replay-clock,#timeline-labels,#feed-info,#sidebar-bottom,
+    #sparkline-title,#theme-lbl,#zoom-level,#zoom-prefs-status{
+      font-size:15px!important;
+    }
+    .tab{font-size:15px!important;min-height:39px!important;}
+    #feed-filter span,#feed-filter button,.filter-chip,#feed-search{
+      font-size:15px!important;
+    }
+    .feed-item,.top-item,.drop-item{font-size:17px!important;}
+    .feed-ip{font-size:20px!important;}
+    .feed-meta,.feed-scenario,.top-country,.top-count,.top-rank,.ctx-item,.ctx-icon,.ctx-close{
+      font-size:17px!important;
+    }
+    .feed-action-btn{font-size:20px!important;min-width:32px!important;min-height:32px!important;}
+    .drop-summary,.drop-meta,.drop-empty{font-size:17px!important;}
+    .drop-main{font-size:20px!important;}
+    .map-panel{font-size:17px!important;min-width:205px!important;max-width:300px!important;}
+    .map-panel h4,.map-window-stats-title,.ctrl-group-lbl,.threat-leg,.leg-item,#leg-anim-hint,#leg-hint{
+      font-size:15px!important;
+    }
+    #tip{font-size:17px!important;min-width:260px!important;max-width:400px!important;}
+    #tip-close{font-size:17px!important;width:26px!important;height:26px!important;line-height:26px!important;}
+    #ctx-title,#ctx-close{font-size:17px!important;}
+    .settings-panel{width:min(720px,96vw)!important;}
+    .settings-panel header h3{font-size:22px!important;}
+    #settings-close-btn{font-size:26px!important;}
+    .settings-nav button,.settings-body section h4,.settings-field,.settings-check,.settings-hint,.settings-help,.settings-panel footer button{
+      font-size:17px!important;
+    }
+    .settings-field{grid-template-columns:1fr 140px!important;gap:10px 15px!important;}
+    .settings-field input[type=number],.settings-field input[type=text],.settings-field select{
+      font-size:17px!important;
+      min-height:32px!important;
+    }
+    #loading h2{font-size:24px!important;}
+    #loading p,#err{font-size:18px!important;}
+  }
+
+  @media(max-width:900px){
+    #map-title-overlay #h-title{font-size:12px!important;}
+    #map-version-badge{font-size:9px!important;}
+    #mob-sheet{min-height:260px!important;height:min(54vh,440px)!important;max-height:58vh!important;}
+    #map-mob-controls .mob-ctrl-pill,#console-controls .pill-btn,#console-controls .ctrl-group-lbl{
+      font-size:8px!important;
+      min-height:18px!important;
+    }
+    #console-controls .ctrl-group-lbl{width:54px!important;}
+    #mob-legend-bar .threat-leg{font-size:8px!important;}
+    #replay-clock,#mode-live-btn,.live-filter-btn{font-size:9px!important;}
+    .mob-tab-btn{font-size:10px!important;}
+    .mob-stat-val{font-size:12px!important;}
+    .mob-stat-lbl{font-size:8px!important;}
+    #mob-feed .feed-ip{font-size:13px!important;}
+    #mob-feed .feed-meta,#mob-feed .feed-scenario,#mob-feed-info,#mob-feed-search{font-size:11px!important;}
   }
 </style>
 </head>
