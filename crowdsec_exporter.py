@@ -1043,19 +1043,6 @@ def load_metrics():
                 }
                 label_str = ",".join(f'{k}="{v}"' for k, v in labels.items())
                 lines.append(f"cs_lapi_realtime{{{label_str}}} {int(d.get('packets', 1))}")
-                lines.append(
-                    f'cs_attack_flow{{'
-                    f'src_lat="{round(lat, 4)}",'
-                    f'src_lon="{round(lon, 4)}",'
-                    f'dst_lat="{SERVER_LAT}",'
-                    f'dst_lon="{SERVER_LON}",'
-                    f'country="{sanitize_label(d.get("country", "??"))}",'
-                    f'city="{sanitize_label(d.get("city", ""))}",'
-                    f'scenario="{sanitize_label(scenario)}",'
-                    f'ip="{sanitize_label(d["ip"])}",'
-                    f'server="{SERVER_NAME}"'
-                    f'}} {int(d.get("packets", 1))}'
-                )
             lines.append("# HELP cs_firewall_drops Live firewall drops from optional JSONL input")
             lines.append("# TYPE cs_firewall_drops counter")
             for d in drops:
